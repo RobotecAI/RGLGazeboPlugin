@@ -1,0 +1,27 @@
+
+material UrbanTile/MineCartEngine_Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture MineCartEngine_Albedo.png
+        }
+      }
+    }
+  }
+material UrbanTile/MineCart_Diffuse
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture MineCart_Albedo.png
+        }
+      }
+    }
+  }
