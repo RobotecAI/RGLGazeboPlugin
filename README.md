@@ -1,5 +1,5 @@
 # RGLGazeboPlugin
-Installation:
+### Installation:
 
 mkdir build
 
@@ -13,7 +13,7 @@ cd ..
 
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/build
 
-test world:
+### test world:
 
 cd test_world
 
