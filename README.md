@@ -19,4 +19,4 @@ cd test_world
 
 ign gazebo -v 4 actor_world.sdf
 
-After pressing play button the parameters of the minecart mesh should be visible in the terminal as [Msg]
+After pressing play button the parameters of the mine-cart mesh should be visible in the terminal as [Msg]

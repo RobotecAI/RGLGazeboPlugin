@@ -4,6 +4,7 @@
 #include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/components/Pose.hh>
 #include <set>
+#include <ignition/gazebo/components/Geometry.hh>
 
 namespace rgl {
     class RGLGazeboPlugin :
@@ -25,15 +26,20 @@ namespace rgl {
                 const ignition::gazebo::EntityComponentManager &_ecm) override;
 
     private:
-        std::chrono::steady_clock::duration simTime{0};
+        std::chrono::steady_clock::duration sim_time{0};
 
-        std::set<std::string> mesh_names;
+        std::set<ignition::gazebo::Entity> entities_in_rgl;
 
-        ignition::gazebo::Entity rgl_entity{0};
+        ignition::gazebo::Entity lidar{0};
 
-        ignition::common::MeshManager* meshManager{ignition::common::MeshManager::Instance()};
+        ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
 
         static ignition::math::Pose3<double> FindWorldPose(const ignition::gazebo::Entity &_entity,
                                                            const ignition::gazebo::EntityComponentManager &_ecm);
+
+        bool EntityInRGL(ignition::gazebo::Entity entity);
+
+        bool GetMesh(const ignition::gazebo::components::Geometry* geometry, unsigned int* v_count,
+                     unsigned int* i_count, float** vertices, int** indices);
     };
 }
