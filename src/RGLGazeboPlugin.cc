@@ -5,6 +5,8 @@
 #include <ignition/gazebo/EntityComponentManager.hh>
 #include <ignition/plugin/Register.hh>
 #include <sdf/Mesh.hh>
+#include <rgl/api/experimental.h>
+#include <rgl/api/e2e_extensions.h>
 
 #define WORLD_ENTITY_ID 1
 
@@ -35,6 +37,11 @@ void RGLGazeboPlugin::PreUpdate(const ignition::gazebo::UpdateInfo &_info,
     }
 
     // TODO: import and render result mesh from RGL
+    int major;
+    int minor;
+    int patch;
+    rgl_get_version_info(&major, &minor, &patch);
+    ignmsg << "RGL version: " << major << "." << minor << "." << patch << std::endl;
 }
 
 void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
@@ -61,16 +68,6 @@ void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         return true;
     };
 
-    auto UpdatePoseInRGL = [&](const ignition::gazebo::Entity &_entity,
-                                 const ignition::gazebo::components::Visual*,
-                                 const ignition::gazebo::components::Geometry* _geometry) -> bool {
-        if (!EntityInRGL(_entity)) return true;
-        auto pose_matrix = ignition::math::Matrix4<double>(FindWorldPose(_entity, _ecm));
-        // TODO: update Pose in RGL
-        ignmsg << "pose_matrix: " << pose_matrix << std::endl;
-        return true;
-    };
-
     auto RemoveEntityInRGL = [&](const ignition::gazebo::Entity &_entity,
                                const ignition::gazebo::components::Visual*,
                                const ignition::gazebo::components::Geometry* _geometry) -> bool {
@@ -91,8 +88,11 @@ void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
     _ecm.EachNew<ignition::gazebo::components::Visual,
               ignition::gazebo::components::Geometry> (LoadEntitiesToRGL);
 
-    _ecm.Each<ignition::gazebo::components::Visual,
-            ignition::gazebo::components::Geometry> (UpdatePoseInRGL);
+    for (auto entity : entities_in_rgl) {
+        auto pose_matrix = ignition::math::Matrix4<double>(FindWorldPose(entity, _ecm));
+        // TODO: update Pose in RGL
+        ignmsg << "pose_matrix: " << pose_matrix << std::endl;
+    }
 
     _ecm.EachRemoved<ignition::gazebo::components::Visual,
             ignition::gazebo::components::Geometry> (RemoveEntityInRGL);

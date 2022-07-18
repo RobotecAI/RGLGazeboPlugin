@@ -12,4 +12,5 @@ add_library(RGLGazeboPlugin SHARED src/RGLGazeboPlugin.cc)
 target_link_libraries(RGLGazeboPlugin
     ignition-gazebo6::ignition-gazebo6
     ignition-plugin1::ignition-plugin1
+    RobotecGPULidar
 )
