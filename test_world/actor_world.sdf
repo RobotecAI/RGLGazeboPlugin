@@ -211,7 +211,7 @@
         name="rgl::RGLGazeboPlugin">
     </plugin>
     <model name="minecartengine">
-        <pose>10 10 10 0 -0 0</pose>
+        <pose> 0 0 10 0 -0 0</pose>
         <link name="base_link">
           <collision name="collision">
             <geometry>
@@ -225,7 +225,7 @@
             <geometry>
               <mesh>
                 <uri>meshes/minecartengine.dae</uri>
-                <scale>5.0 1.0 1.0</scale>
+                <scale>1.0 1.0 1.0</scale>
                 <submesh>
                   <name>MineCartEngine</name>
                   <center>false</center>

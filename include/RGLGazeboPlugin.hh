@@ -3,8 +3,10 @@
 #include <ignition/common/MeshManager.hh>
 #include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/components/Pose.hh>
-#include <set>
+#include <unordered_map>
 #include <ignition/gazebo/components/Geometry.hh>
+#include <rgl/api/experimental.h>
+#include <rgl/api/e2e_extensions.h>
 
 namespace rgl {
     class RGLGazeboPlugin :
@@ -26,11 +28,11 @@ namespace rgl {
                 const ignition::gazebo::EntityComponentManager &_ecm) override;
 
     private:
-        std::chrono::steady_clock::duration sim_time{0};
+        std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t ,rgl_mesh_t>> entities_in_rgl;
 
-        std::set<ignition::gazebo::Entity> entities_in_rgl;
+        ignition::gazebo::Entity gazebo_lidar{8};
 
-        ignition::gazebo::Entity lidar{0};
+        rgl_lidar_t rgl_lidar{0};
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
 
@@ -39,7 +41,15 @@ namespace rgl {
 
         bool EntityInRGL(ignition::gazebo::Entity entity);
 
-        bool GetMesh(const ignition::gazebo::components::Geometry* geometry, unsigned int* v_count,
-                     unsigned int* i_count, float** vertices, int** indices);
+        bool GetMesh(const ignition::gazebo::components::Geometry* geometry, int& v_count,
+                     int& i_count, rgl_vec3f*& vertices, rgl_vec3i*& indices);
+
+        void UpdateRGLEntitiesPose(const ignition::gazebo::EntityComponentManager &_ecm);
+
+        void UpdateLidarPose(const ignition::gazebo::EntityComponentManager &_ecm);
+
+        void CreateLidar(ignition::gazebo::EntityComponentManager &_ecm);
+
+        rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity, const ignition::gazebo::EntityComponentManager &_ecm);
     };
 }
