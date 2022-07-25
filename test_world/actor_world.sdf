@@ -70,7 +70,11 @@
       <self_collide>false</self_collide>
     </model>
     <model name='box'>
-      <pose>5 0 0.7 0 -0 0</pose>
+        <plugin
+            filename="RGLGazeboPlugin"
+            name="rgl::RGLGazeboPlugin">
+        </plugin>
+      <pose>0 0 0.7 0 -0 0</pose>
       <link name='box_link'>
         <inertial>
           <inertia>
@@ -116,77 +120,6 @@
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
-    <model name='camera'>
-      <static>true</static>
-      <pose>3 -3 10 0 1.57 0</pose>
-      <link name='link'>
-        <pose>0.05 0.05 0.05 0 -0 0</pose>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </visual>
-        <sensor name='camera' type='camera'>
-          <pose>0 0 0 0 -0 0</pose>
-          <topic>camera</topic>
-          <update_rate>30</update_rate>
-          <enable_metrics>false</enable_metrics>
-          <camera name='__default__'>
-            <pose>0 0 0 0 -0 0</pose>
-            <horizontal_fov>1.0469999999999999</horizontal_fov>
-            <image>
-              <width>320</width>
-              <height>240</height>
-              <format>RGB_INT8</format>
-              <anti_aliasing>4</anti_aliasing>
-            </image>
-            <clip>
-              <near>0.10000000000000001</near>
-              <far>100</far>
-            </clip>
-            <save enabled='false'>
-              <path>__default__</path>
-            </save>
-            <visibility_mask>4294967295</visibility_mask>
-            <noise>
-              <type>none</type>
-              <mean>0</mean>
-              <stddev>0</stddev>
-            </noise>
-            <distortion>
-              <k1>0</k1>
-              <k2>0</k2>
-              <k3>0</k3>
-              <p1>0</p1>
-              <p2>0</p2>
-              <center>0.5 0.5</center>
-            </distortion>
-            <lens>
-              <type>stereographic</type>
-              <scale_to_hfov>true</scale_to_hfov>
-              <cutoff_angle>1.5708</cutoff_angle>
-              <env_texture_size>256</env_texture_size>
-            </lens>
-          </camera>
-        </sensor>
-        <inertial>
-          <pose>0 0 0 0 -0 0</pose>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <enable_wind>false</enable_wind>
-      </link>
-      <self_collide>false</self_collide>
-    </model>
     <light name='sun' type='directional'>
       <pose>0 0 10 0 -0 0</pose>
       <cast_shadows>true</cast_shadows>
@@ -206,10 +139,6 @@
         <falloff>0</falloff>
       </spot>
     </light>
-    <plugin
-        filename="RGLGazeboPlugin"
-        name="rgl::RGLGazeboPlugin">
-    </plugin>
     <model name="minecartengine">
         <pose> 0 0 10 0 -0 0</pose>
         <link name="base_link">

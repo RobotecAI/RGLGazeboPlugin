@@ -6,7 +6,7 @@
 #include <ignition/plugin/Register.hh>
 #include <sdf/Mesh.hh>
 #include <rgl/api/experimental.h>
-#include <rgl/api/e2e_extensions.h>
+#include <ignition/common/SubMesh.hh>
 
 #define RGL_CHECK(call)                  \
 do {                                     \
@@ -15,6 +15,7 @@ do {                                     \
 		const char* msg;                 \
 		rgl_get_last_error_string(&msg); \
 		ignmsg << msg;                   \
+        exit(1);                         \
 	}                                    \
 } while(0)
 
@@ -23,11 +24,13 @@ do {                                     \
 IGNITION_ADD_PLUGIN(
 	rgl::RGLGazeboPlugin,
 	ignition::gazebo::System,
+    rgl::RGLGazeboPlugin::ISystemConfigure,
     rgl::RGLGazeboPlugin::ISystemPreUpdate,
 	rgl::RGLGazeboPlugin::ISystemPostUpdate
 )
 
 using namespace rgl;
+using namespace std::literals::chrono_literals;
 
 RGLGazeboPlugin::RGLGazeboPlugin() = default;
 
@@ -35,7 +38,8 @@ RGLGazeboPlugin::~RGLGazeboPlugin() = default;
 
 void RGLGazeboPlugin::PreUpdate(const ignition::gazebo::UpdateInfo &_info,
                                       ignition::gazebo::EntityComponentManager &_ecm) {
-    if (_info.paused) return;
+    if (_info.simTime == 0s) return;
+
     static bool lidar_created = false;
     if (!lidar_created) {
         CreateLidar(_ecm);
@@ -53,70 +57,17 @@ void RGLGazeboPlugin::PreUpdate(const ignition::gazebo::UpdateInfo &_info,
         ignmsg <<"hit: " << i << " " << results[i].value[0] << " " << results[i].value[1] << " " << results[i].value[2] << std::endl;
     }
     // TODO: render result mesh from RGL
-
-    /// DEBUG (pasted from apiExample)
-//    rgl_mesh_t cube_mesh = 0;
-//    RGL_CHECK(rgl_mesh_create(&cube_mesh, cube_vertices, cube_vertices_length, cube_indices, cube_indices_length));
-//
-//    // Put an entity on the default scene
-//    rgl_entity_t cube_entity = 0;
-//    RGL_CHECK(rgl_entity_create(&cube_entity, NULL, cube_mesh));
-//
-//    // Set position of the cube entity to (0, 0, 5)
-//    rgl_mat3x4f entity_tf = {
-//            .value = {
-//                    {1, 0, 0, 0},
-//                    {0, 1, 0, 0},
-//                    {0, 0, 1, 5}
-//            }
-//    };
-//    RGL_CHECK(rgl_entity_set_pose(cube_entity, &entity_tf));
-//
-//    // Create a description of lidar that sends 1 ray
-//    // By default, lidar will have infinite ray range
-//    // and will be placed in (0, 0, 0), facing positive Z
-//    rgl_lidar_t lidar = 0;
-//    rgl_mat3x4f ray_tf = {
-//            .value = {
-//                    {1, 0, 0, 0},
-//                    {0, 1, 0, 0},
-//                    {0, 0, 1, 0},
-//            }
-//    };
-//    RGL_CHECK(rgl_lidar_create(&lidar, &ray_tf, 1));
-//
-//    // Start raytracing on the default scene
-//    RGL_CHECK(rgl_lidar_raytrace_async(NULL, lidar));
-//
-//    // Wait for raytracing (if needed) and collect results
-//    int hitpoint_count = 0;
-//    rgl_vec3f results[1] = {0};
-//    RGL_CHECK(rgl_lidar_get_output_size(lidar, &hitpoint_count));
-//    RGL_CHECK(rgl_lidar_get_output_data(lidar, RGL_FORMAT_XYZ, results));
-//
-//    printf("Got %d hitpoint(s)\n", hitpoint_count);
-//    for (int i = 0; i < hitpoint_count; ++i) {
-//        printf("- (%.2f, %.2f, %.2f)\n", results[i].value[0], results[i].value[1], results[i].value[2]);
-//    }
-    /// DEBUG END
 }
 
 void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
                                  const ignition::gazebo::EntityComponentManager &_ecm) {
-    if (_info.paused) return;
+    if (_info.simTime == 0s) return;
 
     auto LoadEntitiesToRGL = [&](const ignition::gazebo::Entity &_entity,
                                  const ignition::gazebo::components::Visual*,
                                  const ignition::gazebo::components::Geometry* _geometry) -> bool {
-        int v_count;
-        int i_count;
-        rgl_vec3f* vertices;
-        rgl_vec3i* indices;
-        if (!GetMesh(_geometry, v_count, i_count, vertices, indices)) return true;
         rgl_mesh_t new_mesh;
-        RGL_CHECK(rgl_mesh_create(&new_mesh, vertices, v_count, indices, i_count));
-        free(vertices);
-        free(indices);
+        if (!LoadMeshToRGL(&new_mesh, _geometry)) return true;
         rgl_entity_t new_rgl_entity;
         RGL_CHECK(rgl_entity_create(&new_rgl_entity, nullptr, new_mesh));
         entities_in_rgl.insert(std::make_pair(_entity, std::make_pair(new_rgl_entity, new_mesh)));
@@ -124,9 +75,9 @@ void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         return true;
     };
 
-    auto RemoveEntityInRGL = [&](const ignition::gazebo::Entity &_entity,
-                               const ignition::gazebo::components::Visual*,
-                               const ignition::gazebo::components::Geometry* _geometry) -> bool {
+    auto RemoveEntityFromRGL = [&](const ignition::gazebo::Entity &_entity,
+                                   const ignition::gazebo::components::Visual*,
+                                   const ignition::gazebo::components::Geometry* _geometry) -> bool {
         if (!EntityInRGL(_entity)) return true;
         RGL_CHECK(rgl_entity_destroy(entities_in_rgl.at(_entity).first));
         RGL_CHECK(rgl_mesh_destroy(entities_in_rgl.at(_entity).second));
@@ -135,18 +86,18 @@ void RGLGazeboPlugin::PostUpdate(const ignition::gazebo::UpdateInfo &_info,
         return true;
     };
 
-    static bool entities_loaded_at_start = false;
-    if (!entities_loaded_at_start) {
+    static bool init = false;
+    if (!init) {
         _ecm.Each<ignition::gazebo::components::Visual,
                 ignition::gazebo::components::Geometry> (LoadEntitiesToRGL);
-        entities_loaded_at_start = true;
+        init = true;
     }
 
     _ecm.EachNew<ignition::gazebo::components::Visual,
-              ignition::gazebo::components::Geometry> (LoadEntitiesToRGL);
+            ignition::gazebo::components::Geometry> (LoadEntitiesToRGL);
 
     _ecm.EachRemoved<ignition::gazebo::components::Visual,
-            ignition::gazebo::components::Geometry> (RemoveEntityInRGL);
+            ignition::gazebo::components::Geometry> (RemoveEntityFromRGL);
 
     UpdateRGLEntitiesPose(_ecm);
 
@@ -176,26 +127,20 @@ bool RGLGazeboPlugin::EntityInRGL(ignition::gazebo::Entity entity) {
 }
 
 bool RGLGazeboPlugin::GetMesh(const ignition::gazebo::components::Geometry* geometry,
-                              int& v_count, int& i_count, rgl_vec3f*& vertices, rgl_vec3i*& indices) {
+                              int& v_count, int& i_count, rgl_vec3f*& vertices, rgl_vec3i** indices) {
     auto mesh_sdf = geometry->Data().MeshShape();
     if (mesh_sdf == nullptr) return false;
 
     auto mesh_common = mesh_manager->MeshByName(mesh_sdf->Uri());
     if (mesh_common == nullptr) return false;
 
-    unsigned int u_ver_count = mesh_common->VertexCount();
-    assert(u_ver_count <= INT_MAX);
-    unsigned int u_ind_count = mesh_common->IndexCount();
-    assert(u_ind_count <= INT_MAX);
-
-    v_count = static_cast<int>(u_ver_count / 3);
-    i_count = static_cast<int>(u_ind_count / 3);
+    v_count = static_cast<int>(mesh_common->VertexCount());
+    i_count = static_cast<int>(mesh_common->IndexCount() / 3);
 
     vertices = static_cast<rgl_vec3f*>(malloc(sizeof(rgl_vec3f) * v_count));
-    indices = static_cast<rgl_vec3i*>(malloc(sizeof(rgl_vec3i) * i_count));
-    auto vertices_double_arr = static_cast<double*>(malloc(sizeof(double) * (v_count * 3)));
+    double* vertices_double_arr = nullptr;
 
-    mesh_common->FillArrays(&vertices_double_arr, (int**)(&indices));
+    mesh_common->FillArrays(&vertices_double_arr, (int**)indices);
 
     int v_index = 0;
 
@@ -205,7 +150,26 @@ bool RGLGazeboPlugin::GetMesh(const ignition::gazebo::components::Geometry* geom
             v_index++;
         }
     }
-
+//    int count = 0;
+//    std::cout << "vertices: ";
+//    for (int i = 0; i < v_count; ++i) {
+//        std::cout << count << ": ";
+//        count++;
+//        for (int j = 0; j < 3; ++j) {
+//            std::cout << vertices[i].value[j] << ",";
+//        }
+//        std::cout << " ";
+//    }
+//    std::cout << "\n";
+//
+//    std::cout << "indices: ";
+//    for (int i = 0; i < i_count; ++i) {
+//        for (int j = 0; j < 3; ++j) {
+//            std::cout << (*indices)[i].value[j] << ",";
+//        }
+//        std::cout << " ";
+//    }
+//    std::cout << "\n";
     free(vertices_double_arr);
     return true;
 }
@@ -237,6 +201,7 @@ void RGLGazeboPlugin::UpdateRGLEntitiesPose(const ignition::gazebo::EntityCompon
 }
 
 void RGLGazeboPlugin::CreateLidar(ignition::gazebo::EntityComponentManager &_ecm) {
+    rgl_configure_logging(RGL_LOG_LEVEL_DEBUG, nullptr, true);
     rgl_mat3x4f ray_tf = {
             .value = {
                     {1, 0, 0, 0},
@@ -250,11 +215,32 @@ void RGLGazeboPlugin::CreateLidar(ignition::gazebo::EntityComponentManager &_ecm
 void RGLGazeboPlugin::UpdateLidarPose(const ignition::gazebo::EntityComponentManager &_ecm) {
     auto rgl_pose_matrix = GetRglMatrix(gazebo_lidar, _ecm);
     RGL_CHECK(rgl_lidar_set_pose(rgl_lidar, &rgl_pose_matrix));
-//    ignmsg << "entity: " << gazebo_lidar << " rgl_pose_matrix: " << std::endl;
+//    ignmsg << "lidar: " << gazebo_lidar << " rgl_pose_matrix: " << std::endl;
 //    for (int i = 0; i < 3; ++i) {
 //        for (int j = 0; j < 4; ++j) {
 //            ignmsg << rgl_pose_matrix.value[i][j] << " ";
 //        }
 //        ignmsg << std::endl;
 //    }
+}
+
+bool RGLGazeboPlugin::LoadMeshToRGL(rgl_mesh_t* new_mesh, const ignition::gazebo::components::Geometry* geometry) {
+    int v_count;
+    int i_count;
+    rgl_vec3f* vertices = nullptr;
+    rgl_vec3i* indices = nullptr;
+    if (!GetMesh(geometry, v_count, i_count, vertices, &indices)) return false;
+    RGL_CHECK(rgl_mesh_create(new_mesh, vertices, v_count, indices, i_count));
+    free(vertices);
+    free(indices);
+    return true;
+}
+
+void RGLGazeboPlugin::Configure(
+        const ignition::gazebo::Entity &_entity,
+        const std::shared_ptr<const sdf::Element> &/*_sdf*/,
+        ignition::gazebo::EntityComponentManager &_ecm,
+        ignition::gazebo::EventManager &_eventMgr) {
+
+    ignmsg << "attached to: " << _entity << std::endl;
 }
