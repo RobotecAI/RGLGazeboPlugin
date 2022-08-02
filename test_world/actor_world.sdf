@@ -120,6 +120,55 @@
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
+    <model name='box2'>
+          <pose>0 0 5 0 -0 0</pose>
+          <link name='box_link'>
+            <inertial>
+              <inertia>
+                <ixx>1</ixx>
+                <ixy>0</ixy>
+                <ixz>0</ixz>
+                <iyy>1</iyy>
+                <iyz>0</iyz>
+                <izz>1</izz>
+              </inertia>
+              <mass>1</mass>
+              <pose>0 0 0 0 -0 0</pose>
+            </inertial>
+            <collision name='box_collision'>
+              <geometry>
+                <capsule>
+                <radius> 1 </radius>
+                <length> 1 </length>
+                </capsule>
+              </geometry>
+              <surface>
+                <friction>
+                  <ode/>
+                </friction>
+                <bounce/>
+                <contact/>
+              </surface>
+            </collision>
+            <visual name='box_visual'>
+              <geometry>
+                              <capsule>
+                              <radius> 1 </radius>
+                              <length> 1 </length>
+                              </capsule>
+              </geometry>
+              <material>
+                <ambient>0.3 0.3 0.3 1</ambient>
+                <diffuse>0.3 0.3 0.3 1</diffuse>
+                <specular>0.3 0.5 0.3 1</specular>
+              </material>
+            </visual>
+            <pose>0 0 0 0 -0 0</pose>
+            <enable_wind>false</enable_wind>
+          </link>
+          <static>false</static>
+          <self_collide>false</self_collide>
+        </model>
     <light name='sun' type='directional'>
       <pose>0 0 10 0 -0 0</pose>
       <cast_shadows>true</cast_shadows>
