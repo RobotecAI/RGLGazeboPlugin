@@ -57,10 +57,11 @@ namespace rgl {
         // the entity id, that the lidar is attached to (is set in Configure function)
         ignition::gazebo::Entity gazebo_lidar{0};
 
+        // to stop processing info when lidar model is removed in gazebo
+        bool gazebo_lidar_exists{true};
+
         // lidar entity from rgl
         rgl_lidar_t rgl_lidar{0};
-
-        bool lidar_created{false};
 
         // entity representing lidar output
         ignition::gazebo::Entity rgl_visual{0};

@@ -37,6 +37,11 @@ bool RGLGazeboPlugin::RemoveEntityFromRGL(
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry*) {
 
+    // detects if gazebo lidar model is removed
+    if (lidar_ignore.contains(entity)) {
+        gazebo_lidar_exists = false;
+        return true;
+    }
     if (!entities_in_rgl.contains(entity)) return true;
     RGL_CHECK(rgl_entity_destroy(entities_in_rgl.at(entity).first));
     RGL_CHECK(rgl_mesh_destroy(entities_in_rgl.at(entity).second));

@@ -28,6 +28,8 @@ void RGLGazeboPlugin::Configure(
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager&) {
 
+    CreateLidar();
+
     ignmsg << "attached to: " << entity << std::endl;
     gazebo_lidar = entity;
     static int next_free_id = 0;
@@ -68,11 +70,7 @@ void RGLGazeboPlugin::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
         ignition::gazebo::EntityComponentManager& ecm) {
 
-    if (!lidar_created) {
-        CreateLidar();
-        lidar_created = true;
-        return;
-    }
+    if (!gazebo_lidar_exists) return;
 
     if (!ray_trace) return;
     ray_trace = false;
@@ -83,6 +81,8 @@ void RGLGazeboPlugin::PreUpdate(
 void RGLGazeboPlugin::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
+
+    if (!gazebo_lidar_exists) return;
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLGazeboPlugin::LoadEntityToRGL, this, _1, _2, _3));
