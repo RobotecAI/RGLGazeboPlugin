@@ -7,6 +7,9 @@
 #include <ignition/gazebo/components/Visual.hh>
 #include <ignition/gazebo/components/Geometry.hh>
 #include <rgl/api/experimental.h>
+#include <ignition/transport/Node.hh>
+
+#define WORLD_ENTITY_ID 1
 
 #define RGL_CHECK(call)                  \
 do {                                     \
@@ -76,6 +79,8 @@ namespace rgl {
 
         bool ray_trace{false};
 
+        ignition::transport::Node::Publisher pcPub;
+
         ////////////////////////////// Mesh /////////////////////////////////
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
@@ -105,52 +110,57 @@ namespace rgl {
         ////////////////////////////// Mesh /////////////////////////////////
 
         const ignition::common::Mesh* LoadBox(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadCapsule(const ignition::gazebo::components::Geometry* geometry);
+        const ignition::common::Mesh* LoadCapsule(const sdf::Geometry& data);
 
         const ignition::common::Mesh* LoadCylinder(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
         const ignition::common::Mesh* LoadEllipsoid(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        // the mathematical kind of plane
+        const ignition::common::Mesh* LoadMesh(
+                const sdf::Geometry& data,
+                double& scale_x,
+                double& scale_y,
+                double& scale_z);
+
         const ignition::common::Mesh* LoadPlane(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y);
 
         const ignition::common::Mesh* LoadSphere(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
         // also gets the scale of the mesh
         const ignition::common::Mesh* GetMeshPointer(
-                const ignition::gazebo::components::Geometry* geometry,
+                const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
         bool GetMesh(
-                const ignition::gazebo::components::Geometry* geometry,
-                int& vertex_count,
-                int& triangle_count,
-                rgl_vec3f*& vertices,
-                rgl_vec3i** triangles);
+                const sdf::Geometry& data,
+                size_t& vertex_count,
+                size_t& triangle_count,
+                std::vector<rgl_vec3f>& vertices,
+                std::vector<rgl_vec3i>& triangles);
 
-        bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const ignition::gazebo::components::Geometry* geometry);
+        bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const sdf::Geometry& data);
 
         ////////////////////////////// Utils /////////////////////////////////
 

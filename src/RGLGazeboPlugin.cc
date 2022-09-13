@@ -1,8 +1,12 @@
 #include <RGLGazeboPlugin.hh>
 
+#include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Pose.hh>
 #include <ignition/gazebo/components/Visual.hh>
+#include <ignition/gazebo/components/VisualCmd.hh>
+#include <ignition/gazebo/components/PoseCmd.hh>
 #include <ignition/gazebo/EntityComponentManager.hh>
+#include <ignition/gazebo/SdfEntityCreator.hh>
 
 #include <ignition/plugin/Register.hh>
 
@@ -26,7 +30,7 @@ void RGLGazeboPlugin::Configure(
         const ignition::gazebo::Entity& entity,
         const std::shared_ptr<const sdf::Element>&,
         ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager&) {
+        ignition::gazebo::EventManager& evm) {
 
     CreateLidar();
 
@@ -40,8 +44,8 @@ void RGLGazeboPlugin::Configure(
         lidar_ignore.insert(descendant);
     };
 
-    rgl_visual = ecm.CreateEntity();
-    lidar_ignore.insert(rgl_visual);
+//    rgl_visual = ecm.CreateEntity();
+//    lidar_ignore.insert(rgl_visual);
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLGazeboPlugin::LoadEntityToRGL, this, _1, _2, _3));
@@ -57,11 +61,34 @@ void RGLGazeboPlugin::Configure(
 //    sdf_geometry.SetType(sdf::GeometryType::MESH);
 //    sdf_geometry.SetMeshShape(sdf_empty_mesh);
 //    auto component_geometry = ignition::gazebo::components::Geometry(sdf_geometry);
-//
-//    ecm.CreateComponent(rgl_visual, component_geometry);
+
+//    sdf::Box box;
+//    box.SetSize(ignition::math::Vector3d(5, 5, 5));
+//    sdf::Geometry geometry;
+//    geometry.SetBoxShape(box);
+//    geometry.SetType(sdf::GeometryType::BOX);
+//    sdf::Visual visual;
+//    visual.SetGeom(geometry);
+//    visual.SetName("test_visual");
+//    visual.SetRawPose(ignition::math::Pose3d(0, 0, 0, 0, 0, 0));
+//    auto sdf_entity_creator = ignition::gazebo::SdfEntityCreator(ecm, evm);
+//    sdf::Link link;
+//    link.SetName("test_link");
+//    link.AddVisual(visual);
+//    link.SetRawPose(ignition::math::Pose3d(0, 0, 0, 0, 0, 0));
+//    sdf::Model model;
+//    model.SetName("test_model");
+//    model.AddLink(link);
+//    model.SetRawPose(ignition::math::Pose3d(3, 3, 0, 0, 0, 0));
+//    sdf_entity_creator.CreateEntities(&model);
+//    ecm.CreateComponent(rgl_visual, ignition::gazebo::components::Geometry(geometry));
 //    ecm.CreateComponent(rgl_visual, ignition::gazebo::components::Visual());
 //    ecm.CreateComponent(rgl_visual, ignition::gazebo::components::Name("rgl_visual"));
 //    ecm.CreateComponent(rgl_visual, ignition::gazebo::components::Pose(ignition::math::Pose3d(0, 0, 0, 0, 0, 0)));
+//    if(!ecm.EntityHasComponentType(rgl_visual, ignition::gazebo::components::VisualCmd::typeId))
+//    {
+//        ecm.CreateComponent(rgl_visual, ignition::gazebo::components::VisualCmd());
+//    }
 //    ecm.SetParentEntity(rgl_visual, WORLD_ENTITY_ID);
     ///end of experiments
 }

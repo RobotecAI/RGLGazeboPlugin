@@ -12,6 +12,6 @@ export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/build
 ### test world:
 ```
 cd test_world
-ign gazebo -v 4 actor_world.sdf
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ign gazebo -v 4 actor_world.sdf
 ```
 After pressing play button the lidar hits should be visible in the terminal as [Msg]

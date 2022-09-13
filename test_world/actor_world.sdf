@@ -195,7 +195,7 @@
             <geometry>
               <mesh>
                 <uri>meshes/minecartengine.dae</uri>
-                <scale>1.0 1.0 1.0</scale>
+                <scale>20.0 20.0 20.0</scale>
               </mesh>
             </geometry>
           </collision>
@@ -203,7 +203,7 @@
             <geometry>
               <mesh>
                 <uri>meshes/minecartengine.dae</uri>
-                <scale>1.0 1.0 1.0</scale>
+                <scale>20.0 20.0 20.0</scale>
                 <submesh>
                   <name>MineCartEngine</name>
                   <center>false</center>

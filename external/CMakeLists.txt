@@ -3,8 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
         RobotecGPULidar
         GIT_REPOSITORY git@github.com:RobotecAI/RobotecGPULidar.git
-        GIT_TAG 7204bc8dec97c3af47cd35c88809fb2a220ecbd5
-        GIT_SHALLOW TRUE
+        GIT_TAG 35deb0de1ce502e683edf2cd0a5b383e19c2fc44
 )
 
 FetchContent_MakeAvailable(RobotecGPULidar)

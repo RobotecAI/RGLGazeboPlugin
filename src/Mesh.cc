@@ -27,14 +27,14 @@
 using namespace rgl;
 
 const ignition::common::Mesh* RGLGazeboPlugin::LoadBox(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
     std::cout << "BOX geometry" << std::endl;
 
-    auto size = geometry->Data().BoxShape()->Size();
+    auto size = data.BoxShape()->Size();
 
     scale_x = size.X();
     scale_y = size.Y();
@@ -43,12 +43,12 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadBox(
     return mesh_manager->MeshByName(UNIT_BOX_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadCapsule(const ignition::gazebo::components::Geometry* geometry) {
+const ignition::common::Mesh* RGLGazeboPlugin::LoadCapsule(const sdf::Geometry& data) {
     std::cout << "CAPSULE geometry" << std::endl;
 
     static unsigned int capsule_id = 0;
 
-    auto shape = geometry->Data().CapsuleShape();
+    auto shape = data.CapsuleShape();
 
     mesh_manager->CreateCapsule(
             RGL_CAPSULE_TEXT + std::to_string(capsule_id),
@@ -63,14 +63,14 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadCapsule(const ignition::gazeb
 }
 
 const ignition::common::Mesh* RGLGazeboPlugin::LoadCylinder(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
     std::cout << "CYLINDER geometry" << std::endl;
 
-    auto shape = geometry->Data().CylinderShape();
+    auto shape = data.CylinderShape();
 
     scale_x = shape->Radius() * 2;
     scale_y = shape->Radius() * 2;
@@ -80,14 +80,14 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadCylinder(
 }
 
 const ignition::common::Mesh* RGLGazeboPlugin::LoadEllipsoid(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
     std::cout << "ELLIPSOID geometry" << std::endl;
 
-    auto shape = geometry->Data().EllipsoidShape()->Radii();
+    auto shape = data.EllipsoidShape()->Radii();
 
     scale_x = shape.X() * 2;
     scale_y = shape.Y() * 2;
@@ -96,14 +96,34 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadEllipsoid(
     return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
 }
 
+const ignition::common::Mesh* RGLGazeboPlugin::LoadMesh(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z) {
+
+    std::cout << "MESH geometry" << std::endl;
+
+    auto scale = data.MeshShape()->Scale();
+
+    scale_x = scale.X();
+    scale_y = scale.Y();
+    scale_z = scale.Z();
+
+    return mesh_manager->MeshByName(
+            ignition::gazebo::asFullPath(
+                    data.MeshShape()->Uri(),
+                    data.MeshShape()->FilePath()));
+}
+
 const ignition::common::Mesh* RGLGazeboPlugin::LoadPlane(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y) {
 
     std::cout << "PLANE geometry" << std::endl;
 
-    auto size = geometry->Data().PlaneShape()->Size();
+    auto size = data.PlaneShape()->Size();
 
     scale_x = size.X() * 2;
     scale_y = size.Y() * 2;
@@ -112,14 +132,14 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadPlane(
 }
 
 const ignition::common::Mesh* RGLGazeboPlugin::LoadSphere(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
     std::cout << "SPHERE geometry" << std::endl;
 
-    auto radius = geometry->Data().SphereShape()->Radius();
+    auto radius = data.SphereShape()->Radius();
 
     scale_x = radius * 2;
     scale_y = radius * 2;
@@ -129,42 +149,37 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadSphere(
 }
 
 const ignition::common::Mesh* RGLGazeboPlugin::GetMeshPointer(
-        const ignition::gazebo::components::Geometry* geometry,
+        const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
     const ignition::common::Mesh* mesh_pointer;
-    const auto& data = geometry->Data();
 
     switch (data.Type()) {
         case sdf::GeometryType::BOX:
-            mesh_pointer = LoadBox(geometry, scale_x, scale_y, scale_z);
+            mesh_pointer = LoadBox(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::CAPSULE:
-            mesh_pointer = LoadCapsule(geometry);
+            mesh_pointer = LoadCapsule(data);
             break;
         case sdf::GeometryType::CYLINDER:
-            mesh_pointer = LoadCylinder(geometry, scale_x, scale_y, scale_z);
+            mesh_pointer = LoadCylinder(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::ELLIPSOID:
-            mesh_pointer = LoadEllipsoid(geometry, scale_x, scale_y, scale_z);
+            mesh_pointer = LoadEllipsoid(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::EMPTY:
-            std::cout << "EMPTY geometry" << std::endl;
+            ignerr << "EMPTY geometry" << std::endl;
             return nullptr;
         case sdf::GeometryType::MESH:
-            std::cout << "MESH geometry" << std::endl;
-            mesh_pointer = mesh_manager->MeshByName(
-                    ignition::gazebo::asFullPath(
-                            data.MeshShape()->Uri(),
-                            data.MeshShape()->FilePath()));
+            mesh_pointer = LoadMesh(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::PLANE:
-            mesh_pointer = LoadPlane(geometry, scale_x, scale_y);
+            mesh_pointer = LoadPlane(data, scale_x, scale_y);
             break;
         case sdf::GeometryType::SPHERE:
-            mesh_pointer = LoadSphere(geometry, scale_x, scale_y, scale_z);
+            mesh_pointer = LoadSphere(data, scale_x, scale_y, scale_z);
             break;
         default:
             ignerr << "geometry type not supported yet" << std::endl;
@@ -175,31 +190,34 @@ const ignition::common::Mesh* RGLGazeboPlugin::GetMeshPointer(
 }
 
 bool RGLGazeboPlugin::GetMesh(
-        const ignition::gazebo::components::Geometry* geometry,
-        int& vertex_count,
-        int& triangle_count,
-        rgl_vec3f*& vertices,
-        rgl_vec3i** triangles) {
+        const sdf::Geometry& data,
+        size_t& vertex_count,
+        size_t& triangle_count,
+        std::vector<rgl_vec3f>& vertices,
+        std::vector<rgl_vec3i>& triangles) {
 
     double scale_x = 1;
     double scale_y = 1;
     double scale_z = 1;
 
-    auto mesh_common = GetMeshPointer(geometry, scale_x, scale_y, scale_z);
+    auto mesh_common = GetMeshPointer(data, scale_x, scale_y, scale_z);
     if (nullptr == mesh_common) return false;
 
-    vertex_count = static_cast<int>(mesh_common->VertexCount());
-    // the naming scheme in rgl could be changed, because i_count is
-    // a misleading name (it's equal to index_count / 3) - better use triangle_count
-    triangle_count = static_cast<int>(mesh_common->IndexCount() / 3);
+    vertex_count = mesh_common->VertexCount();
+    triangle_count = mesh_common->IndexCount() / 3;
 
-    vertices = static_cast<rgl_vec3f*>(malloc(sizeof(rgl_vec3f) * vertex_count));
+    vertices.resize(vertex_count);
+
     double* vertices_double_arr = nullptr;
+    int* triangles_arr = nullptr;
 
-    mesh_common->FillArrays(&vertices_double_arr, (int**) triangles);
+    mesh_common->FillArrays(&vertices_double_arr, &triangles_arr);
+
+    auto* beginning = reinterpret_cast<rgl_vec3i*>(triangles_arr);
+    auto* end = reinterpret_cast<rgl_vec3i*>(triangles_arr + sizeof(rgl_vec3i) * triangle_count);
+    triangles.assign(beginning, end);
 
     int v_index = 0;
-
     for (int i = 0; i < vertex_count; ++i) {
         for (int j = 0; j < 3; ++j) {
             auto vertex_coord = vertices_double_arr[v_index];
@@ -247,18 +265,15 @@ bool RGLGazeboPlugin::GetMesh(
 
 bool RGLGazeboPlugin::LoadMeshToRGL(
         rgl_mesh_t* new_mesh,
-        const ignition::gazebo::components::Geometry* geometry) {
+        const sdf::Geometry& data) {
 
-    int vertex_count;
-    int triangle_count;
-    rgl_vec3f* vertices = nullptr;
-    rgl_vec3i* triangles = nullptr;
+    size_t vertex_count;
+    size_t triangle_count;
+    std::vector<rgl_vec3f> vertices;
+    std::vector<rgl_vec3i> triangles;
 
-    if (!GetMesh(geometry, vertex_count, triangle_count, vertices, &triangles)) return false;
-    RGL_CHECK(rgl_mesh_create(new_mesh, vertices, vertex_count, triangles, triangle_count));
-
-    free(vertices);
-    free(triangles);
+    if (!GetMesh(data, vertex_count, triangle_count, vertices, triangles)) return false;
+    RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles.data(), triangle_count));
 
     return true;
 }

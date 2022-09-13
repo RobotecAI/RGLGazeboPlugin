@@ -1,6 +1,5 @@
 #include <RGLGazeboPlugin.hh>
 
-#define WORLD_ENTITY_ID 1
 #define ROUND_BY_VALUE 10000
 
 using namespace rgl;
