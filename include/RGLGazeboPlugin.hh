@@ -81,6 +81,8 @@ namespace rgl {
 
         ignition::transport::Node::Publisher pcPub;
 
+        ignition::transport::Node node;
+
         ////////////////////////////// Mesh /////////////////////////////////
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};

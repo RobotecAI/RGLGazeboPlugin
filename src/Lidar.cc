@@ -12,6 +12,7 @@
 #include <ignition/common/Mesh.hh>
 #include <ignition/msgs/pointcloud_packed.pb.h>
 #include <ignition/transport/Node.hh>
+#include <fstream>
 
 #define RAYS_IN_ONE_DIR 1000
 
@@ -38,7 +39,6 @@ void RGLGazeboPlugin::CreateLidar() {
         }
     }
     RGL_CHECK(rgl_lidar_create(&rgl_lidar, ray_tf.data(), rays));
-    ignition::transport::Node node;
     pcPub = node.Advertise<ignition::msgs::PointCloudPacked>("/point_cloud");
 }
 
@@ -111,13 +111,23 @@ void RGLGazeboPlugin::UpdateLidarPose(const ignition::gazebo::EntityComponentMan
 }
 
 void RGLGazeboPlugin::RayTrace(ignition::gazebo::EntityComponentManager& ecm) {
+    auto start_raytrace = std::chrono::system_clock::now();
+
     RGL_CHECK(rgl_lidar_raytrace_async(nullptr, rgl_lidar));
+
+    auto end_raytrace = std::chrono::system_clock::now();
+    auto time_to_raytrace = std::chrono::duration_cast<std::chrono::milliseconds>(end_raytrace - start_raytrace);
+    ignmsg << "raytrace time: " << time_to_raytrace.count() << " ms\n";
 
     int hitpoint_count = 0;
     RGL_CHECK(rgl_lidar_get_output_size(rgl_lidar, &hitpoint_count));
     if (hitpoint_count == 0) return;
     std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
     RGL_CHECK(rgl_lidar_get_output_data(rgl_lidar, RGL_FORMAT_XYZ, results.data()));
+
+    auto end_get_results = std::chrono::system_clock::now();
+    auto time_to_get_results = std::chrono::duration_cast<std::chrono::milliseconds>(end_get_results - end_raytrace);
+    ignmsg << "get results time: " << time_to_get_results.count() << " ms\n";
 
     ignmsg << "Lidar id: " << lidar_id << " Got " << hitpoint_count << " hitpoint(s)\n";
 //    for (int i = 0; i < hitpoint_count; ++i) {
@@ -145,5 +155,13 @@ void RGLGazeboPlugin::RayTrace(ignition::gazebo::EntityComponentManager& ecm) {
         *zIter = results[i].value[2];
     }
 
+    auto end_populate_msg = std::chrono::system_clock::now();
+    auto time_to_populate_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_populate_msg - end_get_results);
+    ignmsg << "populate message time: " << time_to_populate_msg.count() << " ms\n";
+
     pcPub.Publish(point_cloud_msg);
+
+    auto end_sending_msg = std::chrono::system_clock::now();
+    auto time_to_send_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_sending_msg - end_populate_msg);
+    ignmsg << "send message time: " << time_to_send_msg.count() << " ms\n";
 }
