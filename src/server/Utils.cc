@@ -1,10 +1,10 @@
-#include "server/ServerPlugin.hh"
+#include "server/RGLServerPlugin.hh"
 
 #define ROUND_BY_VALUE 10000
 
 using namespace rgl;
 
-ignition::math::Pose3<double> ServerPlugin::FindWorldPose(
+ignition::math::Pose3<double> RGLServerPlugin::FindWorldPose(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
@@ -25,7 +25,7 @@ ignition::math::Pose3<double> ServerPlugin::FindWorldPose(
     return world_pose;
 }
 
-rgl_mat3x4f ServerPlugin::GetRglMatrix(
+rgl_mat3x4f RGLServerPlugin::GetRglMatrix(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
@@ -46,6 +46,6 @@ rgl_mat3x4f ServerPlugin::GetRglMatrix(
 }
 
 
-float ServerPlugin::RoundFloat(float value) {
+float RGLServerPlugin::RoundFloat(float value) {
     return std::roundf(value * ROUND_BY_VALUE) / ROUND_BY_VALUE;
 }

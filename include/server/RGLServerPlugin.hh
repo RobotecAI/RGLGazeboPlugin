@@ -23,16 +23,16 @@ do {                                     \
 } while(0)
 
 namespace rgl {
-    class ServerPlugin :
+    class RGLServerPlugin :
             public ignition::gazebo::System,
             public ignition::gazebo::ISystemConfigure,
             public ignition::gazebo::ISystemPreUpdate,
             public ignition::gazebo::ISystemPostUpdate {
 
     public:
-        ServerPlugin();
+        RGLServerPlugin();
 
-        ~ServerPlugin() override;
+        ~RGLServerPlugin() override;
 
         // only called once, when plugin is being loaded
         void Configure(

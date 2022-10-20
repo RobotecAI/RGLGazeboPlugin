@@ -71,8 +71,8 @@
     </model>
     <model name='box'>
         <plugin
-            filename="RGLGazeboPlugin"
-            name="rgl::RGLGazeboPlugin">
+            filename="RGLServerPlugin"
+            name="rgl::RGLServerPlugin">
         </plugin>
       <pose>0 0 0.7 0 -0 0</pose>
       <link name='box_link'>
@@ -137,10 +137,9 @@
             </inertial>
             <collision name='box_collision'>
               <geometry>
-                <capsule>
-                <radius> 1 </radius>
-                <length> 1 </length>
-                </capsule>
+                          <box>
+                            <size>1 1 1</size>
+                          </box>
               </geometry>
               <surface>
                 <friction>
@@ -152,10 +151,9 @@
             </collision>
             <visual name='box_visual'>
               <geometry>
-                              <capsule>
-                              <radius> 1 </radius>
-                              <length> 1 </length>
-                              </capsule>
+                          <box>
+                            <size>1 1 1</size>
+                          </box>
               </geometry>
               <material>
                 <ambient>0.3 0.3 0.3 1</ambient>
