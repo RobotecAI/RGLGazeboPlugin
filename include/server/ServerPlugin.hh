@@ -6,7 +6,7 @@
 #include <ignition/gazebo/components/Pose.hh>
 #include <ignition/gazebo/components/Visual.hh>
 #include <ignition/gazebo/components/Geometry.hh>
-#include <rgl/api/experimental.h>
+#include "rgl/api/experimental.h"
 #include <ignition/transport/Node.hh>
 
 #define WORLD_ENTITY_ID 1
@@ -23,16 +23,16 @@ do {                                     \
 } while(0)
 
 namespace rgl {
-    class RGLGazeboPlugin :
+    class ServerPlugin :
             public ignition::gazebo::System,
             public ignition::gazebo::ISystemConfigure,
             public ignition::gazebo::ISystemPreUpdate,
             public ignition::gazebo::ISystemPostUpdate {
 
     public:
-        RGLGazeboPlugin();
+        ServerPlugin();
 
-        ~RGLGazeboPlugin() override;
+        ~ServerPlugin() override;
 
         // only called once, when plugin is being loaded
         void Configure(

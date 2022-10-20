@@ -1,4 +1,4 @@
-#include <RGLGazeboPlugin.hh>
+#include "server/ServerPlugin.hh"
 
 #include <string>
 
@@ -26,7 +26,7 @@
 
 using namespace rgl;
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadBox(
+const ignition::common::Mesh* ServerPlugin::LoadBox(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -43,7 +43,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadBox(
     return mesh_manager->MeshByName(UNIT_BOX_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadCapsule(const sdf::Geometry& data) {
+const ignition::common::Mesh* ServerPlugin::LoadCapsule(const sdf::Geometry& data) {
     std::cout << "CAPSULE geometry" << std::endl;
 
     static unsigned int capsule_id = 0;
@@ -62,7 +62,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadCapsule(const sdf::Geometry& 
     return mesh_manager->MeshByName(RGL_CAPSULE_TEXT + std::to_string(capsule_id - 1));
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadCylinder(
+const ignition::common::Mesh* ServerPlugin::LoadCylinder(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -79,7 +79,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadCylinder(
     return mesh_manager->MeshByName(UNIT_CYLINDER_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadEllipsoid(
+const ignition::common::Mesh* ServerPlugin::LoadEllipsoid(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -96,7 +96,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadEllipsoid(
     return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadMesh(
+const ignition::common::Mesh* ServerPlugin::LoadMesh(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -116,7 +116,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadMesh(
                     data.MeshShape()->FilePath()));
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadPlane(
+const ignition::common::Mesh* ServerPlugin::LoadPlane(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y) {
@@ -131,7 +131,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadPlane(
     return mesh_manager->MeshByName(UNIT_PLANE_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::LoadSphere(
+const ignition::common::Mesh* ServerPlugin::LoadSphere(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -148,7 +148,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::LoadSphere(
     return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
 }
 
-const ignition::common::Mesh* RGLGazeboPlugin::GetMeshPointer(
+const ignition::common::Mesh* ServerPlugin::GetMeshPointer(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -189,7 +189,7 @@ const ignition::common::Mesh* RGLGazeboPlugin::GetMeshPointer(
     return mesh_pointer;
 }
 
-bool RGLGazeboPlugin::GetMesh(
+bool ServerPlugin::GetMesh(
         const sdf::Geometry& data,
         size_t& vertex_count,
         size_t& triangle_count,
@@ -263,7 +263,7 @@ bool RGLGazeboPlugin::GetMesh(
     return true;
 }
 
-bool RGLGazeboPlugin::LoadMeshToRGL(
+bool ServerPlugin::LoadMeshToRGL(
         rgl_mesh_t* new_mesh,
         const sdf::Geometry& data) {
 

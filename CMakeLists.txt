@@ -10,7 +10,7 @@ add_subdirectory(external)
 
 include_directories(include)
 
-add_library(RGLGazeboPlugin SHARED src/RGLGazeboPlugin.cc src/Mesh.cc src/Utils.cc src/Lidar.cc)
+add_library(RGLGazeboPlugin SHARED src/server/ServerPlugin.cc src/server/Mesh.cc src/server/Utils.cc src/server/Lidar.cc)
 target_link_libraries(RGLGazeboPlugin
     ignition-gazebo6::ignition-gazebo6
     ignition-plugin1::ignition-plugin1

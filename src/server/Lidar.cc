@@ -1,4 +1,4 @@
-#include <RGLGazeboPlugin.hh>
+#include "server/ServerPlugin.hh"
 
 #include <ignition/gazebo/components/VisualCmd.hh>
 #include <ignition/gazebo/components/PoseCmd.hh>
@@ -18,7 +18,7 @@
 
 using namespace rgl;
 
-void RGLGazeboPlugin::CreateLidar() {
+void ServerPlugin::CreateLidar() {
     rgl_configure_logging(RGL_LOG_LEVEL_DEBUG, nullptr, true);
     size_t rays = RAYS_IN_ONE_DIR * RAYS_IN_ONE_DIR;
     std::vector<rgl_mat3x4f> ray_tf;
@@ -43,7 +43,7 @@ void RGLGazeboPlugin::CreateLidar() {
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLGazeboPlugin::LoadEntityToRGL(
+bool ServerPlugin::LoadEntityToRGL(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry* geometry) {
@@ -60,7 +60,7 @@ bool RGLGazeboPlugin::LoadEntityToRGL(
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLGazeboPlugin::RemoveEntityFromRGL(
+bool ServerPlugin::RemoveEntityFromRGL(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry*) {
@@ -78,7 +78,7 @@ bool RGLGazeboPlugin::RemoveEntityFromRGL(
     return true;
 }
 
-void RGLGazeboPlugin::UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm) {
+void ServerPlugin::UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm) {
     for (auto entity: entities_in_rgl) {
         auto rgl_matrix = GetRglMatrix(entity.first, ecm);
         RGL_CHECK(rgl_entity_set_pose(entity.second.first, &rgl_matrix));
@@ -95,7 +95,7 @@ void RGLGazeboPlugin::UpdateRGLEntityPose(const ignition::gazebo::EntityComponen
     }
 }
 
-void RGLGazeboPlugin::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
+void ServerPlugin::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
     auto rgl_pose_matrix = GetRglMatrix(gazebo_lidar, ecm);
     RGL_CHECK(rgl_lidar_set_pose(rgl_lidar, &rgl_pose_matrix));
 
@@ -110,7 +110,7 @@ void RGLGazeboPlugin::UpdateLidarPose(const ignition::gazebo::EntityComponentMan
 
 }
 
-void RGLGazeboPlugin::RayTrace(ignition::gazebo::EntityComponentManager& ecm) {
+void ServerPlugin::RayTrace(ignition::gazebo::EntityComponentManager& ecm) {
     auto start_raytrace = std::chrono::system_clock::now();
 
     RGL_CHECK(rgl_lidar_raytrace_async(nullptr, rgl_lidar));

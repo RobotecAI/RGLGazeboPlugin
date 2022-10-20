@@ -1,4 +1,4 @@
-#include <RGLGazeboPlugin.hh>
+#include "server/ServerPlugin.hh"
 
 #include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Pose.hh>
@@ -11,22 +11,22 @@
 #include <ignition/plugin/Register.hh>
 
 IGNITION_ADD_PLUGIN(
-        rgl::RGLGazeboPlugin,
+        rgl::ServerPlugin,
         ignition::gazebo::System,
-        rgl::RGLGazeboPlugin::ISystemConfigure,
-        rgl::RGLGazeboPlugin::ISystemPreUpdate,
-        rgl::RGLGazeboPlugin::ISystemPostUpdate
+        rgl::ServerPlugin::ISystemConfigure,
+        rgl::ServerPlugin::ISystemPreUpdate,
+        rgl::ServerPlugin::ISystemPostUpdate
 )
 
 using namespace rgl;
 using namespace std::literals::chrono_literals;
 using namespace std::placeholders;
 
-RGLGazeboPlugin::RGLGazeboPlugin() = default;
+ServerPlugin::ServerPlugin() = default;
 
-RGLGazeboPlugin::~RGLGazeboPlugin() = default;
+ServerPlugin::~ServerPlugin() = default;
 
-void RGLGazeboPlugin::Configure(
+void ServerPlugin::Configure(
         const ignition::gazebo::Entity& entity,
         const std::shared_ptr<const sdf::Element>&,
         ignition::gazebo::EntityComponentManager& ecm,
@@ -45,10 +45,10 @@ void RGLGazeboPlugin::Configure(
     };
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLGazeboPlugin::LoadEntityToRGL, this, _1, _2, _3));
+            (std::bind(&ServerPlugin::LoadEntityToRGL, this, _1, _2, _3));
 }
 
-void RGLGazeboPlugin::PreUpdate(
+void ServerPlugin::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
         ignition::gazebo::EntityComponentManager& ecm) {
 
@@ -60,17 +60,17 @@ void RGLGazeboPlugin::PreUpdate(
     RayTrace(ecm);
 }
 
-void RGLGazeboPlugin::PostUpdate(
+void ServerPlugin::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     if (!gazebo_lidar_exists) return;
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLGazeboPlugin::LoadEntityToRGL, this, _1, _2, _3));
+            (std::bind(&ServerPlugin::LoadEntityToRGL, this, _1, _2, _3));
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLGazeboPlugin::RemoveEntityFromRGL, this, _1, _2, _3));
+            (std::bind(&ServerPlugin::RemoveEntityFromRGL, this, _1, _2, _3));
 
     if (info.simTime < last_update + 100ms) return;
     last_update = info.simTime;
