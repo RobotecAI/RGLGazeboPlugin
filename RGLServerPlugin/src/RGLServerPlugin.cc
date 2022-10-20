@@ -1,4 +1,4 @@
-#include "server/RGLServerPlugin.hh"
+#include "RGLServerPlugin.hh"
 
 #include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Pose.hh>

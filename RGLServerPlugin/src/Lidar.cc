@@ -1,4 +1,4 @@
-#include "server/RGLServerPlugin.hh"
+#include "RGLServerPlugin.hh"
 
 #include <ignition/gazebo/components/VisualCmd.hh>
 #include <ignition/gazebo/components/PoseCmd.hh>

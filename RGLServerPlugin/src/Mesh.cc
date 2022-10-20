@@ -1,4 +1,4 @@
-#include "server/RGLServerPlugin.hh"
+#include "RGLServerPlugin.hh"
 
 #include <string>
 

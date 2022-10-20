@@ -1,4 +1,4 @@
-#include "server/RGLServerPlugin.hh"
+#include "RGLServerPlugin.hh"
 
 #define ROUND_BY_VALUE 10000
 
