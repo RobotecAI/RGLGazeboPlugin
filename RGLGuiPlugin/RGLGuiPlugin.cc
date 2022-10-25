@@ -578,7 +578,7 @@ void RGLGuiPlugin::CreateMarker() {
     assert(nullptr != this->scene);
     assert(nullptr == this->dataPtr->marker);
     // Create the name for the marker
-    std::string name = "__RGL_MARKER_VISUAL_" + std::to_string(2137);
+    std::string name = "__RGL_MARKER_VISUAL__" + std::to_string(2137);
 
     // Create the new marker
     visualPtr = this->scene->CreateVisual(name);
