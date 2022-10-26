@@ -1,12 +1,13 @@
 #pragma once
 
-#include <unordered_map>
-#include <ignition/common/MeshManager.hh>
-#include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/components/Pose.hh>
-#include <ignition/gazebo/components/Visual.hh>
-#include <ignition/gazebo/components/Geometry.hh>
 #include "rgl/api/experimental.h"
+
+#include <ignition/common/MeshManager.hh>
+
+#include <ignition/gazebo/components/Geometry.hh>
+#include <ignition/gazebo/components/Visual.hh>
+#include <ignition/gazebo/System.hh>
+
 #include <ignition/transport/Node.hh>
 
 #define WORLD_ENTITY_ID 1
@@ -64,22 +65,19 @@ namespace rgl {
         bool gazebo_lidar_exists{true};
 
         // lidar entity from rgl
-        rgl_lidar_t rgl_lidar{0};
-
-        // entity representing lidar output
-        ignition::gazebo::Entity rgl_visual{0};
+        rgl_lidar_t rgl_lidar{nullptr};
 
         int lidar_id{-1};
 
         // all entities, that the lidar should ignore
-        std::set<ignition::gazebo::Entity> lidar_ignore;
+        std::unordered_set<ignition::gazebo::Entity> lidar_ignore;
 
         // time of last RayTrace call
         std::chrono::steady_clock::duration last_update{0};
 
         bool ray_trace{false};
 
-        ignition::transport::Node::Publisher pcPub;
+        ignition::transport::Node::Publisher pointcloud_publisher;
 
         ignition::transport::Node node;
 

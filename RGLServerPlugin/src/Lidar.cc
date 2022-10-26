@@ -1,19 +1,5 @@
 #include "RGLServerPlugin.hh"
 
-#include <ignition/gazebo/components/VisualCmd.hh>
-#include <ignition/gazebo/components/PoseCmd.hh>
-#include <ignition/gazebo/components/Pose.hh>
-#include <ignition/msgs/visual.pb.h>
-#include <ignition/msgs/geometry.pb.h>
-#include <ignition/msgs/vector3d.pb.h>
-#include <ignition/msgs/Utility.hh>
-#include <sdf/Mesh.hh>
-#include <ignition/common/SubMesh.hh>
-#include <ignition/common/Mesh.hh>
-#include <ignition/msgs/pointcloud_packed.pb.h>
-#include <ignition/transport/Node.hh>
-#include <fstream>
-
 #define RAYS_IN_ONE_DIR 1000
 
 using namespace rgl;
@@ -39,9 +25,12 @@ void RGLServerPlugin::CreateLidar() {
         }
     }
     RGL_CHECK(rgl_lidar_create(&rgl_lidar, ray_tf.data(), rays));
-    pcPub = node.Advertise<ignition::msgs::PointCloudPacked>("/point_cloud");
+    pointcloud_publisher = node.Advertise<ignition::msgs::PointCloudPacked>(
+            "/RGL_point_cloud_" + std::to_string(lidar_id));
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantFunctionResult"
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPlugin::LoadEntityToRGL(
         const ignition::gazebo::Entity& entity,
@@ -77,6 +66,7 @@ bool RGLServerPlugin::RemoveEntityFromRGL(
     ignmsg << "Removed entity: " << entity << std::endl;
     return true;
 }
+#pragma clang diagnostic pop
 
 void RGLServerPlugin::UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm) {
     for (auto entity: entities_in_rgl) {
@@ -159,7 +149,7 @@ void RGLServerPlugin::RayTrace(ignition::gazebo::EntityComponentManager& ecm) {
     auto time_to_populate_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_populate_msg - end_get_results);
     ignmsg << "populate message time: " << time_to_populate_msg.count() << " ms\n";
 
-    pcPub.Publish(point_cloud_msg);
+    pointcloud_publisher.Publish(point_cloud_msg);
 
     auto end_sending_msg = std::chrono::system_clock::now();
     auto time_to_send_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_sending_msg - end_populate_msg);

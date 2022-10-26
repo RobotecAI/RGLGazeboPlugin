@@ -1,10 +1,6 @@
 #include "RGLServerPlugin.hh"
 
-#include <string>
-
 #include <ignition/common/Mesh.hh>
-#include <ignition/common/SubMesh.hh>
-
 #include <ignition/gazebo/Util.hh>
 
 #include <sdf/Box.hh>
@@ -231,6 +227,7 @@ bool RGLServerPlugin::GetMesh(
                 case 2:
                     vertex_coord *= scale_z;
                     break;
+                default:;
             }
             vertices[i].value[j] = RoundFloat(static_cast<float>(vertex_coord));
             v_index++;

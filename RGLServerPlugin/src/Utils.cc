@@ -1,5 +1,7 @@
 #include "RGLServerPlugin.hh"
 
+#include <ignition/gazebo/components/Pose.hh>
+
 #define ROUND_BY_VALUE 10000
 
 using namespace rgl;
