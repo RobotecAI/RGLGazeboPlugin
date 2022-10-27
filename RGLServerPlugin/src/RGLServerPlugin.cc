@@ -1,5 +1,6 @@
 #include "RGLServerPlugin.hh"
 
+#include <ignition/gazebo/components/SystemPluginInfo.hh>
 #include <ignition/plugin/Register.hh>
 
 IGNITION_ADD_PLUGIN(
@@ -38,6 +39,17 @@ void RGLServerPlugin::Configure(
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPlugin::LoadEntityToRGL, this, _1, _2, _3));
+
+    for (auto component_type : ecm.ComponentTypes(gazebo_lidar)) {
+        std::cout << ignition::gazebo::components::Factory::Instance()->Name(component_type) << " -> " << component_type << std::endl;
+        if (component_type == 3246420869490501367) {
+            auto data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(gazebo_lidar);
+            auto plugins = data->plugins();
+            for (const auto& plugin : plugins) {
+                std::cout << plugin.name() << std::endl;
+            }
+        }
+    }
 }
 
 void RGLServerPlugin::PreUpdate(
