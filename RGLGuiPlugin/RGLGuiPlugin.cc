@@ -575,8 +575,10 @@ void RGLGuiPlugin::PerformRenderingOperations()
 //! [performRenderingOperations]
 
 void RGLGuiPlugin::CreateMarker() {
-    assert(nullptr != this->scene);
-    assert(nullptr == this->dataPtr->marker);
+    if (nullptr == this->scene) {
+        ignerr << "RGLGuiPlugin could not find scene while attempting to create marker";
+        return;
+    }
     // Create the name for the marker
     std::string name = "__RGL_MARKER_VISUAL__" + std::to_string(2137);
 

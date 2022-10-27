@@ -11,7 +11,10 @@ ignition::math::Pose3<double> RGLServerPlugin::FindWorldPose(
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     auto local_pose = ecm.Component<ignition::gazebo::components::Pose>(entity);
-    assert(local_pose != nullptr);
+    if (nullptr == local_pose) {
+        std::cout << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+        return ignition::math::Pose3d::Zero;
+    }
     auto world_pose = local_pose->Data();
 
     ignition::gazebo::Entity this_entity = entity;
@@ -19,7 +22,10 @@ ignition::math::Pose3<double> RGLServerPlugin::FindWorldPose(
 
     while ((parent = ecm.ParentEntity(this_entity)) != WORLD_ENTITY_ID) {
         auto parent_pose = ecm.Component<ignition::gazebo::components::Pose>(parent);
-        assert(parent_pose != nullptr);
+        if (nullptr == parent_pose) {
+            std::cout << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+            return ignition::math::Pose3d::Zero;
+        }
         world_pose += parent_pose->Data();
         this_entity = parent;
     }

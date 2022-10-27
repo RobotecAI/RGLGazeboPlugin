@@ -181,7 +181,9 @@ const ignition::common::Mesh* RGLServerPlugin::GetMeshPointer(
             ignerr << "geometry type not supported yet" << std::endl;
             return nullptr;
     }
-    assert(nullptr != mesh_pointer);
+    if (nullptr == mesh_pointer) {
+        std::cout << "Error in importing mesh - it will not be loaded to RGL\n";
+    }
     return mesh_pointer;
 }
 
