@@ -91,7 +91,7 @@ class gz::gui::plugins::RGLGuiPluginPrivate
   public: ignition::math::Color maxColor{0.0f, 1.0f, 0.0f, 1.0f};
 
   /// \brief Size of each point, changeable at runtime
-  public: float pointSize{5};
+  public: float pointSize{1};
 
   /// \brief True if showing, changeable at runtime
   public: bool showing{true};
@@ -364,13 +364,6 @@ void RGLGuiPluginPrivate::PublishMarkers()
   if (!this->showing)
     return;
 
-  // If point cloud empty, do nothing.
-  if (this->pointCloudMsg.height() == 0 &&
-      this->pointCloudMsg.width() == 0)
-  {
-    return;
-  }
-
   std::lock_guard<std::recursive_mutex> lock(this->mutex);
   this->dirty = true;
 
@@ -549,6 +542,14 @@ void RGLGuiPlugin::PerformRenderingOperations()
 
     this->dataPtr->marker->ClearPoints();
 
+    this->dataPtr->marker->SetSize(this->dataPtr->pointSize);
+
+    ignition::rendering::MaterialPtr materialPtr = this->scene->CreateMaterial();
+    materialPtr->SetLightingEnabled(false);
+    materialPtr->SetDiffuse(this->dataPtr->minColor);
+    dataPtr->marker->SetMaterial(materialPtr, true);
+    this->scene->DestroyMaterial(materialPtr);
+
     ignition::msgs::PointCloudPackedIterator<float>
             iterX(this->dataPtr->pointCloudMsg, "x");
     ignition::msgs::PointCloudPackedIterator<float>
@@ -556,7 +557,7 @@ void RGLGuiPlugin::PerformRenderingOperations()
     ignition::msgs::PointCloudPackedIterator<float>
             iterZ(this->dataPtr->pointCloudMsg, "z");
 
-//    auto minC = this->dataPtr->minColor;
+
     auto start_populating_msg = std::chrono::system_clock::now();
 
     for (; iterX != iterX.End(); ++iterX, ++iterY, ++iterZ)
@@ -579,8 +580,12 @@ void RGLGuiPlugin::CreateMarker() {
         ignerr << "RGLGuiPlugin could not find scene while attempting to create marker";
         return;
     }
+
+    static size_t rgl_id = 0;
     // Create the name for the marker
-    std::string name = "__RGL_MARKER_VISUAL__" + std::to_string(2137);
+    std::string name = "__RGL_MARKER_VISUAL__" + std::to_string(rgl_id);
+
+    rgl_id++;
 
     // Create the new marker
     visualPtr = this->scene->CreateVisual(name);
@@ -593,11 +598,13 @@ void RGLGuiPlugin::CreateMarker() {
 
     dataPtr->marker->SetLifetime(10min);
 
+    dataPtr->marker->SetSize(this->dataPtr->pointSize);
+
     dataPtr->marker->SetType(ignition::rendering::MarkerType::MT_POINTS);
 
     ignition::rendering::MaterialPtr materialPtr = this->scene->CreateMaterial();
     materialPtr->SetLightingEnabled(false);
-    materialPtr->SetDiffuse(ignition::math::Color::Red);
+    materialPtr->SetDiffuse(this->dataPtr->minColor);
     dataPtr->marker->SetMaterial(materialPtr, true);
     this->scene->DestroyMaterial(materialPtr);
 

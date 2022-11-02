@@ -31,10 +31,6 @@ ColumnLayout {
   anchors.leftMargin: 10
   anchors.rightMargin: 10
 
-  function isUniform() {
-    return RGLGuiPlugin.minFloatV >= RGLGuiPlugin.maxFloatV
-  }
-
   RowLayout {
     spacing: 10
     Layout.fillWidth: true
@@ -58,7 +54,6 @@ ColumnLayout {
       onClicked: {
         RGLGuiPlugin.OnRefresh();
         pcCombo.currentIndex = 0
-        // floatCombo.currentIndex = 0
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
@@ -80,37 +75,16 @@ ColumnLayout {
       Layout.columnSpan: 2
       id: pcCombo
       Layout.fillWidth: true
-      model: RGLGuiPlugin.RGLGuiPluginTopicList
+      model: RGLGuiPlugin.pointCloudTopicList
       currentIndex: 0
       onCurrentIndexChanged: {
         if (currentIndex < 0)
           return;
-        RGLGuiPlugin.OnRGLGuiPluginTopic(textAt(currentIndex));
+        RGLGuiPlugin.OnPointCloudTopic(textAt(currentIndex));
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Gazebo Transport topics publishing RGLGuiPluginPacked messages")
-    }
-
-    Label {
-      Layout.columnSpan: 1
-      text: "Float vector"
-    }
-
-    ComboBox {
-      Layout.columnSpan: 2
-      id: floatCombo
-      Layout.fillWidth: true
-      model: RGLGuiPlugin.floatVTopicList
-      currentIndex: 0
-      onCurrentIndexChanged: {
-        if (currentIndex < 0)
-          return;
-        RGLGuiPlugin.OnFloatVTopic(textAt(currentIndex));
-      }
-      ToolTip.visible: hovered
-      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Gazebo Transport topics publishing FloatV messages, used to color each point on the cloud")
+      ToolTip.text: qsTr("Gazebo Transport topics publishing PointCloudPacked messages")
     }
 
     Label {
@@ -136,15 +110,7 @@ ColumnLayout {
 
     Label {
       Layout.columnSpan: 1
-      text: isUniform() ? "Color" : "Min"
-    }
-
-    Label {
-      Layout.columnSpan: 1
-      Layout.maximumWidth: 50
-      text: RGLGuiPlugin.minFloatV.toFixed(4)
-      elide: Text.ElideRight
-      visible: !isUniform()
+      text: "Color"
     }
 
     Button {
@@ -174,50 +140,6 @@ ColumnLayout {
           minColorDialog.close()
         }
       }
-    }
-
-    Button {
-      Layout.columnSpan: 1
-      id: maxColorButton
-      visible: !isUniform()
-      ToolTip.visible: hovered
-      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Color for maximum value")
-      onClicked: maxColorDialog.open()
-      background: Rectangle {
-        implicitWidth: 40
-        implicitHeight: 40
-        radius: 5
-        border.color: RGLGuiPlugin.maxColor
-        border.width: 2
-        color: RGLGuiPlugin.maxColor
-      }
-      ColorDialog {
-        id: maxColorDialog
-        title: "Choose a color for the maximum value"
-        visible: false
-        onAccepted: {
-          RGLGuiPlugin.SetMaxColor(maxColorDialog.color)
-          maxColorDialog.close()
-        }
-        onRejected: {
-          maxColorDialog.close()
-        }
-      }
-    }
-
-    Label {
-      Layout.columnSpan: 1
-      Layout.maximumWidth: 50
-      text: RGLGuiPlugin.maxFloatV.toFixed(4)
-      elide: Text.ElideRight
-      visible: !isUniform()
-    }
-
-    Label {
-      Layout.columnSpan: 1
-      text: "Max"
-      visible: !isUniform()
     }
   }
 

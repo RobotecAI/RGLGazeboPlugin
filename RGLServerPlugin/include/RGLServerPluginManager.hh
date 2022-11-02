@@ -18,22 +18,22 @@ do {                                     \
     if (status != RGL_SUCCESS) {         \
         const char* msg;                 \
         rgl_get_last_error_string(&msg); \
-        ignmsg << msg;                   \
+        ignerr << msg;                   \
         exit(1);                         \
     }                                    \
 } while(0)
 
 namespace rgl {
-    class RGLServerPlugin :
+    class RGLServerPluginManager :
             public ignition::gazebo::System,
             public ignition::gazebo::ISystemConfigure,
             public ignition::gazebo::ISystemPreUpdate,
             public ignition::gazebo::ISystemPostUpdate {
 
     public:
-        RGLServerPlugin();
+        RGLServerPluginManager();
 
-        ~RGLServerPlugin() override;
+        ~RGLServerPluginManager() override;
 
         // only called once, when plugin is being loaded
         void Configure(
@@ -52,44 +52,45 @@ namespace rgl {
                 const ignition::gazebo::UpdateInfo& info,
                 const ignition::gazebo::EntityComponentManager& ecm) override;
 
+        ////////////////////////////// Utils /////////////////////////////////
+
+        static ignition::math::Pose3<double> FindWorldPose(
+                const ignition::gazebo::Entity& entity,
+                const ignition::gazebo::EntityComponentManager& ecm);
+
+        // get the local to global transform matrix
+        static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
+                                        const ignition::gazebo::EntityComponentManager& ecm);
+
+        // gazebo mesh factory had problems with adding multiple floats becoming unreliable
+        static float RoundFloat(float value);
+
     private:
         ////////////////////////////////////////////// Variables /////////////////////////////////////////////
         ////////////////////////////// Lidar ////////////////////////////////
         // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
         std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entities_in_rgl;
 
-        // the entity id, that the lidar is attached to (is set in Configure function)
-        ignition::gazebo::Entity gazebo_lidar{0};
-
-        // to stop processing info when lidar model is removed in gazebo
-        bool gazebo_lidar_exists{true};
-
-        // lidar entity from rgl
-        rgl_lidar_t rgl_lidar{nullptr};
-
-        int lidar_id{-1};
+        // the entity ids, that the lidars are attached to
+        std::unordered_set<ignition::gazebo::Entity> gazebo_lidars;
 
         // all entities, that the lidar should ignore
         std::unordered_set<ignition::gazebo::Entity> lidar_ignore;
-
-        // time of last RayTrace call
-        std::chrono::steady_clock::duration last_update{0};
-
-        bool ray_trace{false};
-
-        ignition::transport::Node::Publisher pointcloud_publisher;
-
-        ignition::transport::Node node;
 
         ////////////////////////////// Mesh /////////////////////////////////
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
 
-        ////////////////////////////// Utils /////////////////////////////////
-
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
-        ////////////////////////////// Lidar ////////////////////////////////
-        void CreateLidar();
+        ////////////////////////////// Scene ////////////////////////////////
+
+        bool CheckNewLidars(
+                ignition::gazebo::Entity entity,
+                const ignition::gazebo::EntityComponentManager& ecm);
+
+        bool CheckRemovedLidars(
+                ignition::gazebo::Entity entity,
+                const ignition::gazebo::EntityComponentManager& ecm);
 
         bool LoadEntityToRGL(
                 const ignition::gazebo::Entity& entity,
@@ -101,11 +102,7 @@ namespace rgl {
                 const ignition::gazebo::components::Visual*,
                 const ignition::gazebo::components::Geometry*);
 
-        void RayTrace(ignition::gazebo::EntityComponentManager& ecm);
-
         void UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm);
-
-        void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm);
 
         ////////////////////////////// Mesh /////////////////////////////////
 
@@ -161,18 +158,5 @@ namespace rgl {
                 std::vector<rgl_vec3i>& triangles);
 
         bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const sdf::Geometry& data);
-
-        ////////////////////////////// Utils /////////////////////////////////
-
-        static ignition::math::Pose3<double> FindWorldPose(
-                const ignition::gazebo::Entity& entity,
-                const ignition::gazebo::EntityComponentManager& ecm);
-
-        // get the local to global transform matrix
-        static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
-                                        const ignition::gazebo::EntityComponentManager& ecm);
-
-        // gazebo mesh factory had problems with adding multiple floats becoming unreliable
-        static float RoundFloat(float value);
     };
 }

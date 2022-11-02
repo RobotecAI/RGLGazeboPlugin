@@ -1,4 +1,4 @@
-#include "RGLServerPlugin.hh"
+#include "RGLServerPluginManager.hh"
 
 #include <ignition/gazebo/components/Pose.hh>
 
@@ -6,7 +6,7 @@
 
 using namespace rgl;
 
-ignition::math::Pose3<double> RGLServerPlugin::FindWorldPose(
+ignition::math::Pose3<double> RGLServerPluginManager::FindWorldPose(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
@@ -33,7 +33,7 @@ ignition::math::Pose3<double> RGLServerPlugin::FindWorldPose(
     return world_pose;
 }
 
-rgl_mat3x4f RGLServerPlugin::GetRglMatrix(
+rgl_mat3x4f RGLServerPluginManager::GetRglMatrix(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
@@ -54,6 +54,6 @@ rgl_mat3x4f RGLServerPlugin::GetRglMatrix(
 }
 
 
-float RGLServerPlugin::RoundFloat(float value) {
+float RGLServerPluginManager::RoundFloat(float value) {
     return std::roundf(value * ROUND_BY_VALUE) / ROUND_BY_VALUE;
 }

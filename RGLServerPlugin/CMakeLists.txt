@@ -10,8 +10,15 @@ add_subdirectory(external)
 
 include_directories(include)
 
-add_library(RGLServerPlugin SHARED src/RGLServerPlugin.cc src/Mesh.cc src/Utils.cc src/Lidar.cc)
-target_link_libraries(RGLServerPlugin
+add_library(RGLServerPluginManager SHARED src/RGLServerPluginManager.cc src/Mesh.cc src/Utils.cc src/Scene.cc)
+target_link_libraries(RGLServerPluginManager
+    ignition-gazebo6::ignition-gazebo6
+    ignition-plugin1::ignition-plugin1
+    RobotecGPULidar
+)
+
+add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc)
+target_link_libraries(RGLServerPluginInstance
     ignition-gazebo6::ignition-gazebo6
     ignition-plugin1::ignition-plugin1
     RobotecGPULidar
