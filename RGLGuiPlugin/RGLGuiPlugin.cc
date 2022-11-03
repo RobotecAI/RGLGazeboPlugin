@@ -58,16 +58,10 @@ class gz::gui::plugins::RGLGuiPluginPrivate
   public: ignition::transport::Node node;
 
   /// \brief Name of topic for PointCloudPacked
-  public: std::string pointCloudTopic{""};
-
-  /// \brief Name of topic for FloatV
-  public: std::string floatVTopic{""};
+  public: std::string pointCloudTopic;
 
   /// \brief List of topics publishing PointCloudPacked.
   public: QStringList pointCloudTopicList;
-
-  /// \brief List of topics publishing FloatV.
-  public: QStringList floatVTopicList;
 
   /// \brief Protect variables changed from transport and the user
   public: std::recursive_mutex mutex;
@@ -75,20 +69,8 @@ class gz::gui::plugins::RGLGuiPluginPrivate
   /// \brief Point cloud message containing XYZ positions
   public: ignition::msgs::PointCloudPacked pointCloudMsg;
 
-  /// \brief Message holding a float vector.
-  public: ignition::msgs::Float_V floatVMsg;
-
-  /// \brief Minimum value in latest float vector
-  public: float minFloatV{std::numeric_limits<float>::max()};
-
-  /// \brief Maximum value in latest float vector
-  public: float maxFloatV{-std::numeric_limits<float>::max()};
-
   /// \brief Color for minimum value, changeable at runtime
-  public: ignition::math::Color minColor{1.0f, 0.0f, 0.0f, 1.0f};
-
-  /// \brief Color for maximum value, changeable at runtime
-  public: ignition::math::Color maxColor{0.0f, 1.0f, 0.0f, 1.0f};
+public: ignition::math::Color minColor{ignition::math::Color::Red};
 
   /// \brief Size of each point, changeable at runtime
   public: float pointSize{1};
@@ -107,9 +89,7 @@ using namespace ignition::gui::plugins;
 /////////////////////////////////////////////////
 RGLGuiPlugin::RGLGuiPlugin()
   : ignition::gui::Plugin(),
-    dataPtr(std::make_unique<RGLGuiPluginPrivate>())
-{
-}
+    dataPtr(std::make_unique<RGLGuiPluginPrivate>()) {}
 
 /////////////////////////////////////////////////
 RGLGuiPlugin::~RGLGuiPlugin()
@@ -121,7 +101,7 @@ RGLGuiPlugin::~RGLGuiPlugin()
 void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
   if (this->title.empty())
-    this->title = "Point cloud";
+    this->title = "RGL Visualize";
 
   // Parameters from XML
   if (_pluginElem)
@@ -134,16 +114,6 @@ void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
       this->SetPointCloudTopicList({pointCloudTopicElem->GetText()});
       this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
     }
-
-    auto floatVTopicElem =
-        _pluginElem->FirstChildElement("float_v_topic");
-    if (nullptr != floatVTopicElem &&
-        nullptr != floatVTopicElem->GetText())
-    {
-      this->SetFloatVTopicList({floatVTopicElem->GetText()});
-      this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
-    }
-
   }
 
   ignition::gui::App()->findChild<
@@ -183,38 +153,6 @@ void RGLGuiPlugin::OnPointCloudTopic(const QString &_pointCloudTopic)
 }
 
 //////////////////////////////////////////////////
-void RGLGuiPlugin::OnFloatVTopic(const QString &_floatVTopic)
-{
-  std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
-  // Unsubscribe from previous choice
-  if (!this->dataPtr->floatVTopic.empty() &&
-      !this->dataPtr->node.Unsubscribe(this->dataPtr->floatVTopic))
-  {
-    ignerr << "Unable to unsubscribe from topic ["
-           << this->dataPtr->floatVTopic <<"]" <<std::endl;
-  }
-
-  // Clear visualization
-  this->dataPtr->ClearMarkers();
-
-  this->dataPtr->floatVTopic = _floatVTopic.toStdString();
-
-  // Request service
-  this->dataPtr->node.Request(this->dataPtr->floatVTopic,
-			      &RGLGuiPlugin::OnFloatVService, this);
-
-  // Create new subscription
-  if (!this->dataPtr->node.Subscribe(this->dataPtr->floatVTopic,
-				     &RGLGuiPlugin::OnFloatV, this))
-  {
-    ignerr << "Unable to subscribe to topic ["
-           << this->dataPtr->floatVTopic << "]\n";
-    return;
-  }
-  ignmsg << "Subscribed to " << this->dataPtr->floatVTopic << std::endl;
-}
-
-//////////////////////////////////////////////////
 void RGLGuiPlugin::Show(bool _show)
 {
   this->dataPtr->showing = _show;
@@ -236,36 +174,25 @@ void RGLGuiPlugin::OnRefresh()
 
   // Clear
   this->dataPtr->pointCloudTopicList.clear();
-  this->dataPtr->floatVTopicList.clear();
 
   // Get updated list
   std::vector<std::string> allTopics;
   this->dataPtr->node.TopicList(allTopics);
-  for (auto topic : allTopics)
+  for (const auto& topic : allTopics)
   {
     std::vector<ignition::transport::MessagePublisher> publishers;
     this->dataPtr->node.TopicInfo(topic, publishers);
-    for (auto pub : publishers)
+    for (const auto& pub : publishers)
     {
       if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
       {
         this->dataPtr->pointCloudTopicList.push_back(
             QString::fromStdString(topic));
       }
-      else if (pub.MsgTypeName() == "ignition.msgs.Float_V")
-      {
-        this->dataPtr->floatVTopicList.push_back(QString::fromStdString(topic));
-      }
     }
   }
-  // Handle floats first, so by the time we get the point cloud it can be
-  // colored
-  if (this->dataPtr->floatVTopicList.size() > 0)
-  {
-    this->OnFloatVTopic(this->dataPtr->floatVTopicList.at(0));
-  }
 
-  if (this->dataPtr->pointCloudTopicList.size() > 0)
+  if (!this->dataPtr->pointCloudTopicList.empty())
   {
     this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
   }
@@ -288,47 +215,12 @@ void RGLGuiPlugin::SetPointCloudTopicList(
   this->PointCloudTopicListChanged();
 }
 
-/////////////////////////////////////////////////
-QStringList RGLGuiPlugin::FloatVTopicList() const
-{
-  return this->dataPtr->floatVTopicList;
-}
-
-/////////////////////////////////////////////////
-void RGLGuiPlugin::SetFloatVTopicList(
-    const QStringList &_floatVTopicList)
-{
-  this->dataPtr->floatVTopicList = _floatVTopicList;
-  this->FloatVTopicListChanged();
-}
-
 //////////////////////////////////////////////////
 void RGLGuiPlugin::OnPointCloud(
     const ignition::msgs::PointCloudPacked &_msg)
 {
   std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
   this->dataPtr->pointCloudMsg = _msg;
-  this->dataPtr->PublishMarkers();
-}
-
-//////////////////////////////////////////////////
-void RGLGuiPlugin::OnFloatV(const ignition::msgs::Float_V &_msg)
-{
-  std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
-  this->dataPtr->floatVMsg = _msg;
-
-  this->dataPtr->minFloatV = std::numeric_limits<float>::max();
-  this->dataPtr->maxFloatV = -std::numeric_limits<float>::max();
-
-  for (auto i = 0; i < _msg.data_size(); ++i)
-  {
-    auto data = _msg.data(i);
-    if (data < this->dataPtr->minFloatV)
-      this->SetMinFloatV(data);
-    if (data > this->dataPtr->maxFloatV)
-      this->SetMaxFloatV(data);
-  }
-
   this->dataPtr->PublishMarkers();
 }
 
@@ -345,18 +237,6 @@ void RGLGuiPlugin::OnPointCloudService(
 }
 
 //////////////////////////////////////////////////
-void RGLGuiPlugin::OnFloatVService(
-    const ignition::msgs::Float_V &_msg, bool _result)
-{
-  if (!_result)
-  {
-    ignerr << "Service request failed." << std::endl;
-    return;
-  }
-  this->OnFloatV(_msg);
-}
-
-//////////////////////////////////////////////////
 void RGLGuiPluginPrivate::PublishMarkers()
 {
   IGN_PROFILE("RGLGuiPlugin::PublishMarkers");
@@ -364,56 +244,7 @@ void RGLGuiPluginPrivate::PublishMarkers()
   if (!this->showing)
     return;
 
-  std::lock_guard<std::recursive_mutex> lock(this->mutex);
   this->dirty = true;
-
-
-//  ignition::msgs::Marker marker;
-//  marker.set_ns(this->pointCloudTopic + this->floatVTopic);
-//  marker.set_id(1);
-//  marker.set_action(ignition::msgs::Marker::ADD_MODIFY);
-//  marker.set_type(ignition::msgs::Marker::POINTS);
-//  marker.set_visibility(ignition::msgs::Marker::GUI);
-//
-//  ignition::msgs::Set(marker.mutable_scale(),
-//    ignition::math::Vector3d::One * this->pointSize);
-//
-//  ignition::msgs::PointCloudPackedIterator<float>
-//      iterX(this->pointCloudMsg, "x");
-//  ignition::msgs::PointCloudPackedIterator<float>
-//      iterY(this->pointCloudMsg, "y");
-//  ignition::msgs::PointCloudPackedIterator<float>
-//      iterZ(this->pointCloudMsg, "z");
-//
-//  // Index of point in point cloud, visualized or not
-//  int ptIdx{0};
-//  auto minC = this->minColor;
-////  auto maxC = this->maxColor;
-////  auto floatRange = this->maxFloatV - this->minFloatV;
-//
-//    auto start_populating_msg = std::chrono::system_clock::now();
-//
-//  for (; iterX != iterX.End(); ++iterX, ++iterY, ++iterZ, ++ptIdx)
-//  {
-//    ignition::msgs::Set(marker.add_point(), ignition::math::Vector3d(
-//      *iterX,
-//      *iterY,
-//      *iterZ));
-//  }
-//
-//    auto end_populating_msg = std::chrono::system_clock::now();
-//    auto time_to_populate_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_populating_msg - start_populating_msg);
-//    ignmsg << "GUI populate message time: " << time_to_populate_msg.count() << " ms\n";
-//
-//  auto material = new ignition::msgs::Material(ignition::msgs::Material::default_instance());
-//  ignition::msgs::Set(material->mutable_diffuse(), minC);
-//  marker.set_allocated_material(material);
-//
-//  this->node.Request("/marker", marker);
-//
-//    auto end_req_msg = std::chrono::system_clock::now();
-//    auto time_to_req_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_req_msg - end_populating_msg);
-//    ignmsg << "GUI request message time: " << time_to_req_msg.count() << " ms\n";
 }
 
 //////////////////////////////////////////////////
@@ -423,15 +254,6 @@ void RGLGuiPluginPrivate::ClearMarkers()
     return;
 
   marker->ClearPoints();
-
-//  std::lock_guard<std::recursive_mutex> lock(this->mutex);
-//  ignition::msgs::Marker msg;
-//  msg.set_id(2137);
-//  msg.set_action(ignition::msgs::Marker::DELETE_MARKER);
-//
-//  igndbg << "Clearing marker on id: 2137" << std::endl;
-//
-//  this->node.Request("/marker", msg);
 }
 
 /////////////////////////////////////////////////
@@ -446,46 +268,6 @@ void RGLGuiPlugin::SetMinColor(const QColor &_minColor)
   this->dataPtr->minColor = ignition::gui::convert(_minColor);
   this->MinColorChanged();
   this->dataPtr->PublishMarkers();
-}
-
-/////////////////////////////////////////////////
-QColor RGLGuiPlugin::MaxColor() const
-{
-  return ignition::gui::convert(this->dataPtr->maxColor);
-}
-
-/////////////////////////////////////////////////
-void RGLGuiPlugin::SetMaxColor(const QColor &_maxColor)
-{
-  this->dataPtr->maxColor = ignition::gui::convert(_maxColor);
-  this->MaxColorChanged();
-  this->dataPtr->PublishMarkers();
-}
-
-/////////////////////////////////////////////////
-float RGLGuiPlugin::MinFloatV() const
-{
-  return this->dataPtr->minFloatV;
-}
-
-/////////////////////////////////////////////////
-void RGLGuiPlugin::SetMinFloatV(float _minFloatV)
-{
-  this->dataPtr->minFloatV = _minFloatV;
-  this->MinFloatVChanged();
-}
-
-/////////////////////////////////////////////////
-float RGLGuiPlugin::MaxFloatV() const
-{
-  return this->dataPtr->maxFloatV;
-}
-
-/////////////////////////////////////////////////
-void RGLGuiPlugin::SetMaxFloatV(float _maxFloatV)
-{
-  this->dataPtr->maxFloatV = _maxFloatV;
-  this->MaxFloatVChanged();
 }
 
 /////////////////////////////////////////////////
@@ -563,7 +345,7 @@ void RGLGuiPlugin::PerformRenderingOperations()
     for (; iterX != iterX.End(); ++iterX, ++iterY, ++iterZ)
     {
         // setting the color here doesn't work
-        dataPtr->marker->AddPoint(*iterX, *iterY, *iterZ, ignition::math::Color::Green);
+        dataPtr->marker->AddPoint(*iterX, *iterY, *iterZ, ignition::math::Color::Red);
     }
 
     auto end_populating_msg = std::chrono::system_clock::now();
