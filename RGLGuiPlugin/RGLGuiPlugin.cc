@@ -46,7 +46,7 @@
 using namespace std::literals::chrono_literals;
 
 /// \brief Private data class for RGLGuiPlugin
-class gz::gui::plugins::RGLGuiPluginPrivate
+class ignition::gui::plugins::RGLGuiPluginPrivate
 {
   /// \brief Makes a request to populate the scene with markers
   public: void PublishMarkers();
