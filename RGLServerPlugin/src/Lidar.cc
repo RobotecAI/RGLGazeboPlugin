@@ -2,6 +2,7 @@
 #include "RGLServerPluginManager.hh"
 
 #define RAYS_IN_ONE_DIR 1000
+#define LIDAR_RANGE 1000
 
 using namespace rgl;
 
@@ -33,7 +34,24 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
             ray_tf.push_back(rgl_matrix);
         }
     }
-    RGL_CHECK(rgl_lidar_create(&rgl_lidar, ray_tf.data(), rays));
+
+    rgl_mat3x4f identity = {
+            .value = {
+                    { 1, 0, 0, 0 },
+                    { 0, 1, 0, 0 },
+                    { 0, 0, 1, 0 },
+            }
+    };
+
+    RGL_CHECK(rgl_node_rays_from_mat3x4f(&node_use_rays, ray_tf.data(), rays));
+    RGL_CHECK(rgl_node_rays_transform(&node_lidar_pose, &identity));
+    RGL_CHECK(rgl_node_raytrace(&node_raytrace, nullptr, LIDAR_RANGE));
+    RGL_CHECK(rgl_node_points_compact(&node_compact));
+
+    RGL_CHECK(rgl_graph_node_add_child(node_use_rays, node_lidar_pose));
+    RGL_CHECK(rgl_graph_node_add_child(node_lidar_pose, node_raytrace));
+    RGL_CHECK(rgl_graph_node_add_child(node_raytrace, node_compact));
+
     pointcloud_publisher = node.Advertise<ignition::msgs::PointCloudPacked>(
             "/RGL_point_cloud_" + std::to_string(lidar_id));
 }
@@ -45,7 +63,7 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
         return;
     }
     auto rgl_pose_matrix = RGLServerPluginManager::GetRglMatrix(gazebo_lidar, ecm);
-    RGL_CHECK(rgl_lidar_set_pose(rgl_lidar, &rgl_pose_matrix));
+    RGL_CHECK(rgl_node_rays_transform(&node_lidar_pose, &rgl_pose_matrix));
 
     /// Debug printf
 //    ignmsg << "lidar: " << gazebo_lidar << " rgl_pose_matrix: " << std::endl;
@@ -79,13 +97,14 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
 
     last_raytrace_update = current_update;
 
-    RGL_CHECK(rgl_lidar_raytrace_async(nullptr, rgl_lidar));
+    RGL_CHECK(rgl_graph_run(node_compact));
 
     int hitpoint_count = 0;
-    RGL_CHECK(rgl_lidar_get_output_size(rgl_lidar, &hitpoint_count));
+    int size;
+    RGL_CHECK(rgl_graph_get_result_size(node_compact, RGL_FIELD_XYZ_F32, &hitpoint_count, &size));
     if (hitpoint_count == 0) return;
     std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
-    RGL_CHECK(rgl_lidar_get_output_data(rgl_lidar, RGL_FORMAT_XYZ, results.data()));
+    RGL_CHECK(rgl_graph_get_result_data(node_compact, RGL_FIELD_XYZ_F32, results.data()));
 
     ignmsg << "Lidar id: " << lidar_id << " Got " << hitpoint_count << " hitpoint(s)\n";
 //    for (int i = 0; i < hitpoint_count; ++i) {
@@ -119,7 +138,7 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
 bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) {
     if (entity == gazebo_lidar) {
         lidar_exists = false;
-        rgl_lidar_destroy(rgl_lidar);
+        rgl_graph_destroy(node_compact);
         pointcloud_publisher.Publish(ignition::msgs::PointCloudPacked());
     }
     return true;

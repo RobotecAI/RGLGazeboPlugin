@@ -73,7 +73,10 @@ namespace rgl {
 
         bool lidar_exists = true;
 
-        rgl_lidar_t rgl_lidar = nullptr;
+        rgl_node_t node_use_rays = nullptr;
+        rgl_node_t node_lidar_pose = nullptr;
+        rgl_node_t node_raytrace = nullptr;
+        rgl_node_t node_compact = nullptr;
 
         std::chrono::steady_clock::duration last_raytrace_time = 0ms;
 
