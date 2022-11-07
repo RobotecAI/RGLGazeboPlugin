@@ -2,7 +2,7 @@
 
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
 
-#define RGLINSTANCE "rgl::RGLServerPluginInstance"
+#define RGL_INSTANCE "rgl::RGLServerPluginInstance"
 
 using namespace rgl;
 
@@ -10,15 +10,17 @@ using namespace rgl;
 #pragma ide diagnostic ignored "ConstantFunctionResult"
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::CheckNewLidars(
+bool RGLServerPluginManager::CheckNewLidarsCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     auto data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
-    if (data == std::nullopt) return true;
+    if (data == std::nullopt) {
+        return true;
+    }
     auto plugins = data->plugins();
     for (const auto& plugin : plugins) {
-        if (plugin.name() == RGLINSTANCE) {
+        if (plugin.name() == RGL_INSTANCE) {
             gazebo_lidars.insert(entity);
             for (auto descendant: ecm.Descendants(entity)) {
                 lidar_ignore.insert(descendant);
@@ -29,7 +31,7 @@ bool RGLServerPluginManager::CheckNewLidars(
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::CheckRemovedLidars(
+bool RGLServerPluginManager::CheckRemovedLidarsCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
     if (!gazebo_lidars.contains(entity)) {
@@ -43,14 +45,20 @@ bool RGLServerPluginManager::CheckRemovedLidars(
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::LoadEntityToRGL(
+bool RGLServerPluginManager::LoadEntityToRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry* geometry) {
-    if (lidar_ignore.contains(entity)) return true;
-    if (entities_in_rgl.contains(entity)) return true;
+    if (lidar_ignore.contains(entity)) {
+        return true;
+    }
+    if (entities_in_rgl.contains(entity)) {
+        return true;
+    }
     rgl_mesh_t new_mesh;
-    if (!LoadMeshToRGL(&new_mesh, geometry->Data())) return true;
+    if (!LoadMeshToRGL(&new_mesh, geometry->Data())) {
+        return true;
+    }
     rgl_entity_t new_rgl_entity;
     RGL_CHECK(rgl_entity_create(&new_rgl_entity, nullptr, new_mesh));
     entities_in_rgl.insert(std::make_pair(entity, std::make_pair(new_rgl_entity, new_mesh)));
@@ -59,7 +67,7 @@ bool RGLServerPluginManager::LoadEntityToRGL(
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::RemoveEntityFromRGL(
+bool RGLServerPluginManager::RemoveEntityFromRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry*) {
@@ -67,7 +75,9 @@ bool RGLServerPluginManager::RemoveEntityFromRGL(
         lidar_ignore.erase(entity);
         return true;
     }
-    if (!entities_in_rgl.contains(entity)) return true;
+    if (!entities_in_rgl.contains(entity)) {
+        return true;
+    }
     RGL_CHECK(rgl_entity_destroy(entities_in_rgl.at(entity).first));
     RGL_CHECK(rgl_mesh_destroy(entities_in_rgl.at(entity).second));
     entities_in_rgl.erase(entity);

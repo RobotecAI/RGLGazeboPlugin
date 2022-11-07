@@ -100,8 +100,9 @@ RGLGuiPlugin::~RGLGuiPlugin()
 /////////////////////////////////////////////////
 void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
-  if (this->title.empty())
-    this->title = "rgl Visualize";
+  if (this->title.empty()) {
+      this->title = "rgl Visualize";
+  }
 
   // Parameters from XML
   if (_pluginElem)
@@ -241,8 +242,9 @@ void RGLGuiPluginPrivate::PublishMarkers()
 {
   IGN_PROFILE("RGLGuiPlugin::PublishMarkers");
 
-  if (!this->showing)
+  if (!this->showing) {
     return;
+  }
 
   this->dirty = true;
 }
@@ -250,8 +252,9 @@ void RGLGuiPluginPrivate::PublishMarkers()
 //////////////////////////////////////////////////
 void RGLGuiPluginPrivate::ClearMarkers()
 {
-  if (this->pointCloudTopic.empty() || marker == nullptr)
-    return;
+  if (this->pointCloudTopic.empty() || marker == nullptr) {
+      return;
+  }
 
   marker->ClearPoints();
 }
@@ -314,13 +317,17 @@ void RGLGuiPlugin::PerformRenderingOperations()
         this->FindScene();
     }
 
-    if (nullptr == this->scene) return;
+    if (nullptr == this->scene) {
+        return;
+    }
 
     if (nullptr == this->dataPtr->marker) {
         this->CreateMarker();
     }
 
-    if (nullptr == this->dataPtr->marker) return;
+    if (nullptr == this->dataPtr->marker) {
+        return;
+    }
 
     this->dataPtr->marker->ClearPoints();
 
