@@ -101,7 +101,7 @@ RGLGuiPlugin::~RGLGuiPlugin()
 void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
   if (this->title.empty())
-    this->title = "RGL Visualize";
+    this->title = "rgl Visualize";
 
   // Parameters from XML
   if (_pluginElem)
