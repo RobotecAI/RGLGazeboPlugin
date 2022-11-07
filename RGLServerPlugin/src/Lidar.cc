@@ -16,7 +16,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
     next_free_id++;
 
     rgl_configure_logging(RGL_LOG_LEVEL_DEBUG, nullptr, true);
-    size_t rays = RAYS_IN_ONE_DIR * RAYS_IN_ONE_DIR;
+    int rays = RAYS_IN_ONE_DIR * RAYS_IN_ONE_DIR;
     std::vector<rgl_mat3x4f> ray_tf;
     ignition::math::Angle X;
     ignition::math::Angle Y;
@@ -102,7 +102,9 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
     int hitpoint_count = 0;
     int size;
     RGL_CHECK(rgl_graph_get_result_size(node_compact, RGL_FIELD_XYZ_F32, &hitpoint_count, &size));
-    if (hitpoint_count == 0) return;
+    if (hitpoint_count == 0) {
+        return;
+    }
     std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
     RGL_CHECK(rgl_graph_get_result_data(node_compact, RGL_FIELD_XYZ_F32, results.data()));
 

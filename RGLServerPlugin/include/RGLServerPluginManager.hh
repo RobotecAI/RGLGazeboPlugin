@@ -84,20 +84,20 @@ namespace rgl {
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
         ////////////////////////////// Scene ////////////////////////////////
 
-        bool CheckNewLidars(
+        bool CheckNewLidarsCb(
                 ignition::gazebo::Entity entity,
                 const ignition::gazebo::EntityComponentManager& ecm);
 
-        bool CheckRemovedLidars(
+        bool CheckRemovedLidarsCb(
                 ignition::gazebo::Entity entity,
                 const ignition::gazebo::EntityComponentManager& ecm);
 
-        bool LoadEntityToRGL(
+        bool LoadEntityToRGLCb(
                 const ignition::gazebo::Entity& entity,
                 const ignition::gazebo::components::Visual*,
                 const ignition::gazebo::components::Geometry* geometry);
 
-        bool RemoveEntityFromRGL(
+        bool RemoveEntityFromRGLCb(
                 const ignition::gazebo::Entity& entity,
                 const ignition::gazebo::components::Visual*,
                 const ignition::gazebo::components::Geometry*);
@@ -112,7 +112,11 @@ namespace rgl {
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadCapsule(const sdf::Geometry& data);
+        const ignition::common::Mesh* LoadCapsule(
+                const sdf::Geometry& data,
+                double& scale_x,
+                double& scale_y,
+                double& scale_z);
 
         const ignition::common::Mesh* LoadCylinder(
                 const sdf::Geometry& data,
@@ -149,13 +153,6 @@ namespace rgl {
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
-
-        bool GetMesh(
-                const sdf::Geometry& data,
-                size_t& vertex_count,
-                size_t& triangle_count,
-                std::vector<rgl_vec3f>& vertices,
-                std::vector<rgl_vec3i>& triangles);
 
         bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const sdf::Geometry& data);
     };

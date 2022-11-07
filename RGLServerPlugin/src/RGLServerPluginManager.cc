@@ -25,10 +25,10 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EventManager& evm) {
 
     ecm.Each<>([&](const ignition::gazebo::Entity& entity)-> bool {
-                return CheckNewLidars(entity, ecm);});
+                return CheckNewLidarsCb(entity, ecm);});
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::LoadEntityToRGL, this, _1, _2, _3));
+            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
 }
 
 void RGLServerPluginManager::PreUpdate(
@@ -41,16 +41,16 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return CheckNewLidars(entity, ecm);});
+        return CheckNewLidarsCb(entity, ecm);});
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::LoadEntityToRGL, this, _1, _2, _3));
+            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
 
     ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return CheckRemovedLidars(entity, ecm);});
+        return CheckRemovedLidarsCb(entity, ecm);});
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGL, this, _1, _2, _3));
+            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
 
     UpdateRGLEntityPose(ecm);
 }

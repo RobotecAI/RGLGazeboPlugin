@@ -57,11 +57,11 @@ namespace rgl {
     private:
         ////////////////////////////////////////////// Variables /////////////////////////////////////////////
 
-        size_t current_update = 0;
+        int current_update = 0;
 
-        size_t updates_between_raytraces = 0;
+        int updates_between_raytraces = 0;
 
-        size_t last_raytrace_update = 0;
+        int last_raytrace_update = 0;
 
         ignition::transport::Node::Publisher pointcloud_publisher;
 

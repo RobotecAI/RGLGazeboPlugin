@@ -15,7 +15,7 @@
 #define UNIT_CYLINDER_TEXT "unit_cylinder"
 #define UNIT_PLANE_TEXT "unit_plane"
 #define UNIT_SPHERE_TEXT "unit_sphere"
-#define RGL_CAPSULE_TEXT "RGLGazeboPlugin_capsule_"
+#define RGL_UNIT_CAPSULE_TEXT "RGLGazeboPlugin_unit_capsule"
 
 #define CAPSULE_RINGS 1
 #define CAPSULE_SEGMENTS 32
@@ -28,8 +28,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
         double& scale_y,
         double& scale_z) {
 
-    std::cout << "BOX geometry" << std::endl;
-
     auto size = data.BoxShape()->Size();
 
     scale_x = size.X();
@@ -39,23 +37,30 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
     return mesh_manager->MeshByName(UNIT_BOX_TEXT);
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data) {
-    std::cout << "CAPSULE geometry" << std::endl;
+const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z) {
 
-    static unsigned int capsule_id = 0;
+    static bool unit_capsule_mesh_created = false;
+    if (!unit_capsule_mesh_created) {
+        mesh_manager->CreateCapsule(
+                RGL_UNIT_CAPSULE_TEXT,
+                0.5f,
+                1.0f,
+                CAPSULE_RINGS,
+                CAPSULE_SEGMENTS);
+        unit_capsule_mesh_created = true;
+    }
 
     auto shape = data.CapsuleShape();
 
-    mesh_manager->CreateCapsule(
-            RGL_CAPSULE_TEXT + std::to_string(capsule_id),
-            shape->Radius(),
-            shape->Length(),
-            CAPSULE_RINGS,
-            CAPSULE_SEGMENTS);
+    scale_x = shape->Radius() * 2;
+    scale_y = shape->Radius() * 2;
+    scale_z = shape->Length();
 
-    capsule_id++;
-
-    return mesh_manager->MeshByName(RGL_CAPSULE_TEXT + std::to_string(capsule_id - 1));
+    return mesh_manager->MeshByName(RGL_UNIT_CAPSULE_TEXT);
 }
 
 const ignition::common::Mesh* RGLServerPluginManager::LoadCylinder(
@@ -63,8 +68,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadCylinder(
         double& scale_x,
         double& scale_y,
         double& scale_z) {
-
-    std::cout << "CYLINDER geometry" << std::endl;
 
     auto shape = data.CylinderShape();
 
@@ -81,8 +84,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadEllipsoid(
         double& scale_y,
         double& scale_z) {
 
-    std::cout << "ELLIPSOID geometry" << std::endl;
-
     auto shape = data.EllipsoidShape()->Radii();
 
     scale_x = shape.X() * 2;
@@ -97,8 +98,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadMesh(
         double& scale_x,
         double& scale_y,
         double& scale_z) {
-
-    std::cout << "MESH geometry" << std::endl;
 
     auto scale = data.MeshShape()->Scale();
 
@@ -117,8 +116,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadPlane(
         double& scale_x,
         double& scale_y) {
 
-    std::cout << "PLANE geometry" << std::endl;
-
     auto size = data.PlaneShape()->Size();
 
     scale_x = size.X() * 2;
@@ -132,8 +129,6 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadSphere(
         double& scale_x,
         double& scale_y,
         double& scale_z) {
-
-    std::cout << "SPHERE geometry" << std::endl;
 
     auto radius = data.SphereShape()->Radius();
 
@@ -157,7 +152,7 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
             mesh_pointer = LoadBox(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::CAPSULE:
-            mesh_pointer = LoadCapsule(data);
+            mesh_pointer = LoadCapsule(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::CYLINDER:
             mesh_pointer = LoadCylinder(data, scale_x, scale_y, scale_z);
@@ -178,31 +173,32 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
             mesh_pointer = LoadSphere(data, scale_x, scale_y, scale_z);
             break;
         default:
-            ignerr << "geometry type not supported yet" << std::endl;
+            ignerr << "geometry type: " << (int)data.Type() << " not supported yet" << std::endl;
             return nullptr;
     }
     if (nullptr == mesh_pointer) {
-        std::cout << "Error in importing mesh - it will not be loaded to rgl\n";
+        ignerr << "Error in importing mesh - it will not be loaded to rgl\n";
     }
     return mesh_pointer;
 }
 
-bool RGLServerPluginManager::GetMesh(
-        const sdf::Geometry& data,
-        size_t& vertex_count,
-        size_t& triangle_count,
-        std::vector<rgl_vec3f>& vertices,
-        std::vector<rgl_vec3i>& triangles) {
+bool RGLServerPluginManager::LoadMeshToRGL(
+        rgl_mesh_t* new_mesh,
+        const sdf::Geometry& data) {
 
     double scale_x = 1;
     double scale_y = 1;
     double scale_z = 1;
 
     auto mesh_common = GetMeshPointer(data, scale_x, scale_y, scale_z);
-    if (nullptr == mesh_common) return false;
+    if (nullptr == mesh_common) {
+        return false;
+    }
 
-    vertex_count = mesh_common->VertexCount();
-    triangle_count = mesh_common->IndexCount() / 3;
+    int vertex_count = (int)mesh_common->VertexCount();
+    int triangle_count = (int)mesh_common->IndexCount() / 3;
+    std::vector<rgl_vec3f> vertices;
+    std::vector<rgl_vec3i> triangles;
 
     vertices.resize(vertex_count);
 
@@ -211,67 +207,18 @@ bool RGLServerPluginManager::GetMesh(
 
     mesh_common->FillArrays(&vertices_double_arr, &triangles_arr);
 
-    auto* beginning = reinterpret_cast<rgl_vec3i*>(triangles_arr);
+    auto* beg = reinterpret_cast<rgl_vec3i*>(triangles_arr);
     auto* end = reinterpret_cast<rgl_vec3i*>(triangles_arr + sizeof(rgl_vec3i) * triangle_count);
-    triangles.assign(beginning, end);
+    triangles.assign(beg, end);
 
-    int v_index = 0;
     for (int i = 0; i < vertex_count; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            auto vertex_coord = vertices_double_arr[v_index];
-            switch (j) {
-                case 0:
-                    vertex_coord *= scale_x;
-                    break;
-                case 1:
-                    vertex_coord *= scale_y;
-                    break;
-                case 2:
-                    vertex_coord *= scale_z;
-                    break;
-                default:;
-            }
-            vertices[i].value[j] = RoundFloat(static_cast<float>(vertex_coord));
-            v_index++;
-        }
+        vertices[i].value[0] = RoundFloat(static_cast<float>(scale_x * vertices_double_arr[3 * i + 0]));
+        vertices[i].value[1] = RoundFloat(static_cast<float>(scale_y * vertices_double_arr[3 * i + 1]));
+        vertices[i].value[2] = RoundFloat(static_cast<float>(scale_z * vertices_double_arr[3 * i + 2]));
     }
 
-    /// Debug printf
-//    int count = 0;
-//    std::cout << "vertices: ";
-//    for (int i = 0; i < vertex_count; ++i) {
-//        std::cout << count << ": ";
-//        count++;
-//        for (int j = 0; j < 3; ++j) {
-//            std::cout << vertices[i].value[j] << ",";
-//        }
-//        std::cout << " ";
-//    }
-//    std::cout << "\n";
-//
-//    std::cout << "triangles: ";
-//    for (int i = 0; i < triangle_count; ++i) {
-//        for (int j = 0; j < 3; ++j) {
-//            std::cout << (*triangles)[i].value[j] << ",";
-//        }
-//        std::cout << " ";
-//    }
-//    std::cout << "\n";
-
     free(vertices_double_arr);
-    return true;
-}
 
-bool RGLServerPluginManager::LoadMeshToRGL(
-        rgl_mesh_t* new_mesh,
-        const sdf::Geometry& data) {
-
-    size_t vertex_count;
-    size_t triangle_count;
-    std::vector<rgl_vec3f> vertices;
-    std::vector<rgl_vec3i> triangles;
-
-    if (!GetMesh(data, vertex_count, triangle_count, vertices, triangles)) return false;
     RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles.data(), triangle_count));
 
     return true;

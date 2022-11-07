@@ -1,7 +1,11 @@
 # RGLGazeboPlugin
-## Warning:
+## Requirements:
 
-Currently tested only on ubuntu 20.04 (ubuntu 22 has faulty gazebo fortress atm)
+OS: [Ubuntu v22.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010709.1162335333.1667845331-1529863968.1667845331)
+
+Gazebo: [Fortress v6.12](https://gazebosim.org/docs/fortress/install)
+
+RGL: [v0.11.0](https://github.com/RobotecAI/RobotecGPULidar/tree/v11)
 
 ### Installation:
 From RGLGazeboPlugin directory:
