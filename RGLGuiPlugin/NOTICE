@@ -1,0 +1,6 @@
+This product includes software developed by
+Open Source Robotics Foundation (https://www.openrobotics.org)
+
+Originated from https://github.com/gazebosim/gz-gui/blob/gz-gui7/src/plugins/point_cloud.
+About one third of the code is changed to better suit the needs of Robotec.ai.
+Main changes include overhaul of marker usage and deleting FloatV msgs usage in GUI (no colour gradient supported now).
