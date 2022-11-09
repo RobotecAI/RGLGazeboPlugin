@@ -212,28 +212,25 @@ bool RGLServerPluginManager::LoadMeshToRGL(
     int vertex_count = (int)mesh_common->VertexCount();
     int triangle_count = (int)mesh_common->IndexCount() / 3;
     std::vector<rgl_vec3f> vertices;
-    std::vector<rgl_vec3i> triangles;
 
-    vertices.resize(vertex_count);
+    vertices.reserve(vertex_count);
 
     double* vertices_double_arr = nullptr;
-    int* triangles_arr = nullptr;
+    rgl_vec3i* triangles = nullptr;
 
-    mesh_common->FillArrays(&vertices_double_arr, &triangles_arr);
-
-    auto* beg = reinterpret_cast<rgl_vec3i*>(triangles_arr);
-    auto* end = reinterpret_cast<rgl_vec3i*>(triangles_arr + sizeof(rgl_vec3i) * triangle_count);
-    triangles.assign(beg, end);
+    mesh_common->FillArrays(&vertices_double_arr, (int**)&triangles);
 
     for (int i = 0; i < vertex_count; ++i) {
-        vertices[i].value[0] = RoundFloat(static_cast<float>(scale_x * vertices_double_arr[3 * i + 0]));
-        vertices[i].value[1] = RoundFloat(static_cast<float>(scale_y * vertices_double_arr[3 * i + 1]));
-        vertices[i].value[2] = RoundFloat(static_cast<float>(scale_z * vertices_double_arr[3 * i + 2]));
+        vertices.emplace_back(rgl_vec3f{
+                RoundFloat(static_cast<float>(scale_x * vertices_double_arr[3 * i + 0])),
+                RoundFloat(static_cast<float>(scale_y * vertices_double_arr[3 * i + 1])),
+                RoundFloat(static_cast<float>(scale_z * vertices_double_arr[3 * i + 2]))});
     }
 
-    free(vertices_double_arr);
+    RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles, triangle_count));
 
-    RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles.data(), triangle_count));
+    free(vertices_double_arr);
+    free(triangles);
 
     return true;
 }
