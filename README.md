@@ -10,6 +10,8 @@ Gazebo: [Fortress v6.12](https://gazebosim.org/docs/fortress/install)
 
 RGL: [v0.11.0](https://github.com/RobotecAI/RobotecGPULidar/tree/v11)
 
+GNU Wget: [v1.20.3](https://www.gnu.org/software/wget/)
+
 ### Installation:
 From RGLGazeboPlugin/test_world directory:
 
