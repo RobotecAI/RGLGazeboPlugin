@@ -191,7 +191,7 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
             return nullptr;
     }
     if (nullptr == mesh_pointer) {
-        ignerr << "Error in importing mesh - it will not be loaded to rgl\n";
+        ignerr << "Error in importing mesh - it will not be loaded to RGL\n";
     }
     return mesh_pointer;
 }
