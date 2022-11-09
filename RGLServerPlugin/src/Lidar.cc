@@ -22,8 +22,6 @@ using namespace rgl;
 
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
     updates_between_raytraces = std::chrono::duration_cast<std::chrono::milliseconds>(time_between_raytraces).count();
-
-    ignmsg << "attached to: " << entity << std::endl;
     gazebo_lidar = entity;
     static int next_free_id = 0;
     lidar_id = next_free_id;
@@ -78,24 +76,14 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
     }
     auto rgl_pose_matrix = RGLServerPluginManager::GetRglMatrix(gazebo_lidar, ecm);
     RGL_CHECK(rgl_node_rays_transform(&node_lidar_pose, &rgl_pose_matrix));
-
-    /// Debug printf
-//    ignmsg << "lidar: " << gazebo_lidar << " rgl_pose_matrix: " << std::endl;
-//    for (int i = 0; i < 3; ++i) {
-//        for (int j = 0; j < 4; ++j) {
-//            ignmsg << rgl_pose_matrix.value[i][j] << " ";
-//        }
-//        ignmsg << std::endl;
-//    }
-
 }
 
 void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager& ecm,
-                                       std::chrono::steady_clock::duration sim_time, bool paused) {
+                                       std::chrono::steady_clock::duration sim_time,
+                                       bool paused) {
     if (!lidar_exists) {
         return;
     }
-
     current_update++;
 
     if (!paused && sim_time < last_raytrace_time + time_between_raytraces) {
@@ -116,21 +104,19 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
     int hitpoint_count = 0;
     int size;
     RGL_CHECK(rgl_graph_get_result_size(node_compact, RGL_FIELD_XYZ_F32, &hitpoint_count, &size));
+    if (size != sizeof(rgl_vec3f)) {
+        ignerr << "invalid raytrace size of element: " << size << "\n";
+        return;
+    }
     if (hitpoint_count == 0) {
         return;
     }
     std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
     RGL_CHECK(rgl_graph_get_result_data(node_compact, RGL_FIELD_XYZ_F32, results.data()));
 
-    ignmsg << "Lidar id: " << lidar_id << " Got " << hitpoint_count << " hitpoint(s)\n";
-//    for (int i = 0; i < hitpoint_count; ++i) {
-//        ignmsg << " hit: " << i << " coordinates: " << results[i].value[0] << "," << results[i].value[1] << ","
-//               << results[i].value[2] << std::endl;
-//    }
-
     // Create message
     ignition::msgs::PointCloudPacked point_cloud_msg;
-    ignition::msgs::InitPointCloudPacked(point_cloud_msg, "some_frame", true,
+    ignition::msgs::InitPointCloudPacked(point_cloud_msg, "RGL", true,
                                          {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
     point_cloud_msg.mutable_data()->resize(hitpoint_count * point_cloud_msg.point_step());
     point_cloud_msg.set_height(1);

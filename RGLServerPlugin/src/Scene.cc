@@ -27,7 +27,6 @@ using namespace rgl;
 bool RGLServerPluginManager::CheckNewLidarsCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
-
     auto data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
     if (data == std::nullopt) {
         return true;
@@ -76,7 +75,6 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
     rgl_entity_t new_rgl_entity;
     RGL_CHECK(rgl_entity_create(&new_rgl_entity, nullptr, new_mesh));
     entities_in_rgl.insert(std::make_pair(entity, std::make_pair(new_rgl_entity, new_mesh)));
-    ignmsg << "Added entity: " << entity << std::endl;
     return true;
 }
 
@@ -95,7 +93,6 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
     RGL_CHECK(rgl_entity_destroy(entities_in_rgl.at(entity).first));
     RGL_CHECK(rgl_mesh_destroy(entities_in_rgl.at(entity).second));
     entities_in_rgl.erase(entity);
-    ignmsg << "Removed entity: " << entity << std::endl;
     return true;
 }
 #pragma clang diagnostic pop
@@ -104,15 +101,5 @@ void RGLServerPluginManager::UpdateRGLEntityPose(const ignition::gazebo::EntityC
     for (auto entity: entities_in_rgl) {
         auto rgl_matrix = GetRglMatrix(entity.first, ecm);
         RGL_CHECK(rgl_entity_set_pose(entity.second.first, &rgl_matrix));
-
-        /// Debug printf
-//        ignmsg << "entity: " << entity.first << " rgl_matrix: " << std::endl;
-//        for (int i = 0; i < 3; ++i) {
-//            for (int j = 0; j < 4; ++j) {
-//                ignmsg << rgl_matrix.value[i][j] << " ";
-//            }
-//            ignmsg << std::endl;
-//        }
-
     }
 }
