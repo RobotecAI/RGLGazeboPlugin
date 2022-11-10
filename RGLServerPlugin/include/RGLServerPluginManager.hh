@@ -98,7 +98,7 @@ namespace rgl {
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
         ////////////////////////////// Scene ////////////////////////////////
 
-        bool CheckNewLidarsCb(
+        bool RegisterNewLidarsCb(
                 ignition::gazebo::Entity entity,
                 const ignition::gazebo::EntityComponentManager& ecm);
 
