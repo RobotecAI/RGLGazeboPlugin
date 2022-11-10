@@ -24,7 +24,7 @@ using namespace rgl;
 #pragma ide diagnostic ignored "ConstantFunctionResult"
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::CheckNewLidarsCb(
+bool RGLServerPluginManager::RegisterNewLidarsCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
     auto data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);

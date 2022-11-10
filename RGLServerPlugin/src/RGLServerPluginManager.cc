@@ -39,7 +39,7 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EventManager& evm) {
 
     ecm.Each<>([&](const ignition::gazebo::Entity& entity)-> bool {
-                return CheckNewLidarsCb(entity, ecm);});
+                return RegisterNewLidarsCb(entity, ecm);});
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
@@ -55,7 +55,7 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return CheckNewLidarsCb(entity, ecm);});
+        return RegisterNewLidarsCb(entity, ecm);});
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));

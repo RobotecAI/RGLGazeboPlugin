@@ -51,6 +51,9 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
     return mesh_manager->MeshByName(UNIT_BOX_TEXT);
 }
 
+//The difference between capsule and other primitive geometry types is
+// that "unit_capsule" mesh is not created by the gazebo MeshManager,
+// while other primitive types have their unit meshes created and ready to query by name
 const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(
         const sdf::Geometry& data,
         double& scale_x,
