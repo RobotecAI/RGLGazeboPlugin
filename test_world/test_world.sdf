@@ -236,5 +236,10 @@
           </visual>
         </link>
       </model>
+      <include>
+      <uri>
+      https://fuel.gazebosim.org/1.0/Elene/models/bosdyn_spot
+      </uri>
+      </include>
   </world>
 </sdf>

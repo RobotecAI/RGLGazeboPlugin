@@ -70,10 +70,23 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
 
 
 
-void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
+void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm,
+                                              std::chrono::steady_clock::duration sim_time,
+                                              bool paused) {
     if (!lidar_exists) {
         return;
     }
+    if (!paused && sim_time < last_raytrace_time + time_between_raytraces) {
+        return;
+    }
+    if (!paused) {
+        last_raytrace_time = sim_time;
+    }
+
+    if (paused && current_update < last_raytrace_update + updates_between_raytraces) {
+        return;
+    }
+    last_raytrace_update = current_update;
     auto rgl_pose_matrix = RGLServerPluginManager::GetRglMatrix(gazebo_lidar, ecm);
     RGL_CHECK(rgl_node_rays_transform(&node_lidar_pose, &rgl_pose_matrix));
 }
@@ -89,15 +102,10 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
     if (!paused && sim_time < last_raytrace_time + time_between_raytraces) {
         return;
     }
-    if (!paused) {
-        last_raytrace_time = sim_time;
-    }
 
     if (paused && current_update < last_raytrace_update + updates_between_raytraces) {
         return;
     }
-
-    last_raytrace_update = current_update;
 
     RGL_CHECK(rgl_graph_run(node_compact));
 

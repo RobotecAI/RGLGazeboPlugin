@@ -54,11 +54,18 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
+    current_update++;
+
     ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
         return RegisterNewLidarsCb(entity, ecm);});
 
-    ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
+    if (current_update == 10) {
+        ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
+    } else {
+        ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
+                (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
+    }
 
     ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
         return CheckRemovedLidarsCb(entity, ecm);});
