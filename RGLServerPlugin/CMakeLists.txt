@@ -13,7 +13,7 @@ set(RGL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rgl")
 set(RGL_SO_PATH "${RGL_PATH}/libRobotecGPULidar.so")
 set(RGL_API_PATH "${RGL_PATH}/api/core.h")
 set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v${RGL_VERSION}-alpha-${RGL_ALPHA_VERSION}/libRobotecGPULidar.so")
-set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/v11/include/rgl/api/core.h")
+set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/27293bb3618d8834df9a3dcccf18b87bd253ca68/include/rgl/api/core.h")
 
 # you have to delete old files to download new ones if a new version is available
 if(NOT EXISTS ${RGL_SO_PATH})

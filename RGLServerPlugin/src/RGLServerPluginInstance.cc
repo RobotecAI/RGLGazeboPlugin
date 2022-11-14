@@ -54,5 +54,5 @@ void RGLServerPluginInstance::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
-    UpdateLidarPose(ecm);
+    UpdateLidarPose(ecm, info.simTime, info.paused);
 }

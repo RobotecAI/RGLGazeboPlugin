@@ -37,6 +37,8 @@ do {                                     \
     }                                    \
 } while(0)
 
+using namespace std::literals::chrono_literals;
+
 namespace rgl {
     class RGLServerPluginManager :
             public ignition::gazebo::System,
@@ -94,6 +96,14 @@ namespace rgl {
         ////////////////////////////// Mesh /////////////////////////////////
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
+
+        ////////////////////////////// Scene ////////////////////////////////
+
+        int current_update = 0;
+
+        int updates_between_pose_update = 20;
+
+        int last_pose_update = -20;
 
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
         ////////////////////////////// Scene ////////////////////////////////

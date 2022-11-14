@@ -100,9 +100,13 @@ namespace rgl {
 
         void CreateLidar(ignition::gazebo::Entity entity);
 
-        void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm);
+        void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm,
+                             std::chrono::steady_clock::duration sim_time,
+                             bool paused);
 
-        void RayTrace(ignition::gazebo::EntityComponentManager& ecm, std::chrono::steady_clock::duration sim_time, bool paused);
+        void RayTrace(ignition::gazebo::EntityComponentManager& ecm,
+                      std::chrono::steady_clock::duration sim_time,
+                      bool paused);
 
         bool CheckLidarExists(ignition::gazebo::Entity entity);
     };
