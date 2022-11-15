@@ -75,7 +75,7 @@ namespace rgl {
 
         int updates_between_raytraces = 0;
 
-        int last_raytrace_update = 0;
+        int last_raytrace_update = -1000;
 
         ignition::transport::Node::Publisher pointcloud_publisher;
 
@@ -85,7 +85,7 @@ namespace rgl {
 
         int lidar_id = -1;
 
-        bool lidar_exists = true;
+        bool lidar_exists = false;
 
         rgl_node_t node_use_rays = nullptr;
         rgl_node_t node_lidar_pose = nullptr;

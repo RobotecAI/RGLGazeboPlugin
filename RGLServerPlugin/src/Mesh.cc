@@ -193,7 +193,15 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
             return nullptr;
     }
     if (nullptr == mesh_pointer) {
-        ignerr << "Error in importing mesh - it will not be loaded to RGL\n";
+        if (data.Type() == sdf::GeometryType::MESH) {
+            ignerr << "Error in importing mesh: " <<
+            ignition::gazebo::asFullPath(
+                    data.MeshShape()->Uri(),
+                    data.MeshShape()->FilePath())
+            << " - it will not be loaded to RGL\n";
+        } else {
+            ignerr << "Error in importing mesh - it will not be loaded to RGL\n";
+        }
     }
     return mesh_pointer;
 }

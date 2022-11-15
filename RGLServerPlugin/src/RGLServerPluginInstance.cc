@@ -45,14 +45,14 @@ void RGLServerPluginInstance::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
         ignition::gazebo::EntityComponentManager& ecm) {
 
-    ecm.EachRemoved<>(std::bind(&RGLServerPluginInstance::CheckLidarExists, this, _1));
-
     RayTrace(ecm, info.simTime, info.paused);
 }
 
 void RGLServerPluginInstance::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
+
+    ecm.EachRemoved<>(std::bind(&RGLServerPluginInstance::CheckLidarExists, this, _1));
 
     UpdateLidarPose(ecm, info.simTime, info.paused);
 }

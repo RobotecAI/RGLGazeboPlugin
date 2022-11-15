@@ -21,7 +21,6 @@ IGNITION_ADD_PLUGIN(
         rgl::RGLServerPluginManager,
         ignition::gazebo::System,
         rgl::RGLServerPluginManager::ISystemConfigure,
-        rgl::RGLServerPluginManager::ISystemPreUpdate,
         rgl::RGLServerPluginManager::ISystemPostUpdate
 )
 
@@ -38,16 +37,13 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager& evm) {
 
+    checkSameRGLVersion();
+
     ecm.Each<>([&](const ignition::gazebo::Entity& entity)-> bool {
                 return RegisterNewLidarsCb(entity, ecm);});
 
     ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
-}
-
-void RGLServerPluginManager::PreUpdate(
-        const ignition::gazebo::UpdateInfo& info,
-        ignition::gazebo::EntityComponentManager& ecm) {
 }
 
 void RGLServerPluginManager::PostUpdate(

@@ -67,3 +67,13 @@ rgl_mat3x4f RGLServerPluginManager::GetRglMatrix(
 float RGLServerPluginManager::RoundFloat(float value) {
     return std::roundf(value * ROUND_BY_VALUE) / ROUND_BY_VALUE;
 }
+
+void RGLServerPluginManager::checkSameRGLVersion() {
+    int32_t out_major, out_minor, out_patch;
+    rgl_get_version_info(&out_major, &out_minor, &out_patch);
+    if (out_major != RGL_VERSION_MAJOR || out_minor != RGL_VERSION_MINOR || out_patch != RGL_VERSION_PATCH) {
+        ignerr << "RGL library version: " << out_major << "." << out_minor << "." << out_patch
+        << " does not match RGL core.h version: " << RGL_VERSION_MAJOR << "." << RGL_VERSION_MINOR
+        << "." << RGL_VERSION_PATCH << "\n";
+    }
+}
