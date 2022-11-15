@@ -43,7 +43,6 @@ namespace rgl {
     class RGLServerPluginManager :
             public ignition::gazebo::System,
             public ignition::gazebo::ISystemConfigure,
-            public ignition::gazebo::ISystemPreUpdate,
             public ignition::gazebo::ISystemPostUpdate {
 
     public:
@@ -57,11 +56,6 @@ namespace rgl {
                 const std::shared_ptr<const sdf::Element>& sdf,
                 ignition::gazebo::EntityComponentManager& ecm,
                 ignition::gazebo::EventManager& eventMgr) override;
-
-        // called every time before physics update runs (can change entities)
-        void PreUpdate(
-                const ignition::gazebo::UpdateInfo& info,
-                ignition::gazebo::EntityComponentManager& ecm) override;
 
         // called every time after physics runs (can't change entities)
         void PostUpdate(
@@ -80,6 +74,8 @@ namespace rgl {
 
         // gazebo mesh factory had problems with adding multiple floats becoming unreliable
         static float RoundFloat(float value);
+
+        static void checkSameRGLVersion();
 
     private:
         ////////////////////////////////////////////// Variables /////////////////////////////////////////////

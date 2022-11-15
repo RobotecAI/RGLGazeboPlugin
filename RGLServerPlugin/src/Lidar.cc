@@ -21,13 +21,14 @@
 using namespace rgl;
 
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
+    lidar_exists = true;
     updates_between_raytraces = std::chrono::duration_cast<std::chrono::milliseconds>(time_between_raytraces).count();
     gazebo_lidar = entity;
     static int next_free_id = 0;
     lidar_id = next_free_id;
     next_free_id++;
 
-    rgl_configure_logging(RGL_LOG_LEVEL_DEBUG, nullptr, true);
+    rgl_configure_logging(RGL_LOG_LEVEL_CRITICAL, nullptr, true);
     int rays = RAYS_IN_ONE_DIR * RAYS_IN_ONE_DIR;
     std::vector<rgl_mat3x4f> ray_tf;
     ignition::math::Angle X;
@@ -98,6 +99,10 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
         return;
     }
     current_update++;
+
+    if (current_update == 1) {
+        return;
+    }
 
     if (!paused && sim_time < last_raytrace_time + time_between_raytraces) {
         return;

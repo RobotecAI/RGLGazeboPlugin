@@ -78,7 +78,7 @@
             filename="RGLServerPluginInstance"
             name="rgl::RGLServerPluginInstance">
         </plugin>
-      <pose>0 0 0.7 0 -0 0</pose>
+      <pose>0 5 0.7 0 -0 0</pose>
       <link name='box_link'>
         <inertial>
           <inertia>

@@ -95,7 +95,9 @@ RGLGuiPlugin::RGLGuiPlugin()
 /////////////////////////////////////////////////
 RGLGuiPlugin::~RGLGuiPlugin()
 {
-  this->dataPtr->ClearMarkers();
+    if (this->dataPtr->marker != nullptr) {
+        this->dataPtr->marker->Destroy();
+    }
 }
 
 /////////////////////////////////////////////////
