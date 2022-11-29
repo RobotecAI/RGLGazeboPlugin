@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2022 Open Source Robotics Foundation
- * Copyright 2022 Robotec.AI
+ * Copyright (C) 2022 Robotec.AI
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import "qrc:/qml"
 ColumnLayout {
   spacing: 10
   Layout.minimumWidth: 350
-  Layout.minimumHeight: 180
+  Layout.minimumHeight: 250
   anchors.fill: parent
   anchors.leftMargin: 10
   anchors.rightMargin: 10
@@ -44,7 +44,7 @@ ColumnLayout {
       text: qsTr("Show")
       checked: true
       onToggled: {
-        RGLGuiPlugin.Show(checked)
+        RGLVisualize.Show(checked)
       }
     }
 
@@ -53,8 +53,9 @@ ColumnLayout {
       text: "\u21bb"
       Material.background: Material.primary
       onClicked: {
-        RGLGuiPlugin.OnRefresh();
+        RGLVisualize.OnRefresh();
         pcCombo.currentIndex = 0
+        floatCombo.currentIndex = 0
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
@@ -76,16 +77,32 @@ ColumnLayout {
       Layout.columnSpan: 2
       id: pcCombo
       Layout.fillWidth: true
-      model: RGLGuiPlugin.pointCloudTopicList
+      model: RGLVisualize.pointCloudTopicList
       currentIndex: 0
       onCurrentIndexChanged: {
         if (currentIndex < 0)
           return;
-        RGLGuiPlugin.OnPointCloudTopic(textAt(currentIndex));
+        RGLVisualize.OnPointCloudTopic(textAt(currentIndex));
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Gazebo Transport topics publishing PointCloudPacked messages")
+    }
+
+    Label {
+      Layout.columnSpan: 1
+      text: "Point size"
+    }
+
+    IgnSpinBox {
+      id: pointSizeSpin
+      value: RGLVisualize.pointSize
+      minimumValue: 1
+      maximumValue: 1000
+      decimals: 0
+      onEditingFinished: {
+        RGLVisualize.SetPointSize(pointSizeSpin.value)
+      }
     }
   }
 }
