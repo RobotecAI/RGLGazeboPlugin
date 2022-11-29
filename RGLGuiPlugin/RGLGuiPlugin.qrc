@@ -1,5 +1,0 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="RGLGuiPlugin/">
-  <file>RGLGuiPlugin.qml</file>
-</qresource>
-</RCC>
