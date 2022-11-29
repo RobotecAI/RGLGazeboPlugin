@@ -18,6 +18,8 @@
 #define RAYS_IN_ONE_DIR 1000
 #define LIDAR_RANGE 1000
 
+#define RGL_POINT_CLOUD_TEXT "/RGL_point_cloud_"
+
 using namespace rgl;
 
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
@@ -66,7 +68,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
     RGL_CHECK(rgl_graph_node_add_child(node_raytrace, node_compact));
 
     pointcloud_publisher = node.Advertise<ignition::msgs::PointCloudPacked>(
-            "/RGL_point_cloud_" + std::to_string(lidar_id));
+             RGL_POINT_CLOUD_TEXT + std::to_string(lidar_id));
 }
 
 
@@ -155,6 +157,7 @@ bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) 
         lidar_exists = false;
         rgl_graph_destroy(node_compact);
         pointcloud_publisher.Publish(ignition::msgs::PointCloudPacked());
+        pointcloud_publisher = ignition::transport::Node::Publisher();
     }
     return true;
 }

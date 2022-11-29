@@ -122,7 +122,7 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadMesh(
     scale_y = scale.Y();
     scale_z = scale.Z();
 
-    return mesh_manager->MeshByName(ignition::gazebo::asFullPath(
+    return mesh_manager->Load(ignition::gazebo::asFullPath(
             data.MeshShape()->Uri(),
             data.MeshShape()->FilePath()));
 }
