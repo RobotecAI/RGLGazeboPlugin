@@ -156,7 +156,6 @@ bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) 
     if (entity == gazebo_lidar) {
         lidar_exists = false;
         rgl_graph_destroy(node_compact);
-        pointcloud_publisher.Publish(ignition::msgs::PointCloudPacked());
         pointcloud_publisher = ignition::transport::Node::Publisher();
     }
     return true;
