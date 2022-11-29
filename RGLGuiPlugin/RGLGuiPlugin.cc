@@ -90,13 +90,16 @@ using namespace ignition::gui::plugins;
 /////////////////////////////////////////////////
 RGLGuiPlugin::RGLGuiPlugin()
   : ignition::gui::Plugin(),
-    dataPtr(std::make_unique<RGLGuiPluginPrivate>()) {}
+    dataPtr(std::make_unique<RGLGuiPluginPrivate>()) {
+    OnRefresh();
+}
 
 /////////////////////////////////////////////////
 RGLGuiPlugin::~RGLGuiPlugin()
 {
-    if (this->dataPtr->marker != nullptr) {
-        this->dataPtr->marker->Destroy();
+    std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
+    if (visualPtr != nullptr) {
+        scene->DestroyVisual(visualPtr);
     }
 }
 
@@ -104,7 +107,7 @@ RGLGuiPlugin::~RGLGuiPlugin()
 void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
   if (this->title.empty()) {
-      this->title = "rgl Visualize";
+      this->title = "RGL Gui Plugin";
   }
 
   // Parameters from XML
@@ -121,7 +124,7 @@ void RGLGuiPlugin::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
   }
 
   ignition::gui::App()->findChild<
-    ignition::gui::MainWindow *>()->installEventFilter(this);
+  ignition::gui::MainWindow *>()->installEventFilter(this);
 }
 
 //////////////////////////////////////////////////
@@ -349,20 +352,12 @@ void RGLGuiPlugin::PerformRenderingOperations()
     ignition::msgs::PointCloudPackedIterator<float>
             iterZ(this->dataPtr->pointCloudMsg, "z");
 
-
-    auto start_populating_msg = std::chrono::system_clock::now();
-
     for (; iterX != iterX.End(); ++iterX, ++iterY, ++iterZ)
     {
         // setting the color here doesn't work
         dataPtr->marker->AddPoint(*iterX, *iterY, *iterZ, ignition::math::Color::Red);
     }
 
-    auto end_populating_msg = std::chrono::system_clock::now();
-    auto time_to_populate_msg = std::chrono::duration_cast<std::chrono::milliseconds>(end_populating_msg - start_populating_msg);
-    ignmsg << "GUI populate message and visualize time: " << time_to_populate_msg.count() << " ms\n";
-
-    std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
     this->dataPtr->dirty = false;
 }
 //! [performRenderingOperations]

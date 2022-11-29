@@ -27,7 +27,7 @@ import "qrc:/qml"
 ColumnLayout {
   spacing: 10
   Layout.minimumWidth: 350
-  Layout.minimumHeight: 350
+  Layout.minimumHeight: 180
   anchors.fill: parent
   anchors.leftMargin: 10
   anchors.rightMargin: 10
@@ -87,66 +87,5 @@ ColumnLayout {
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Gazebo Transport topics publishing PointCloudPacked messages")
     }
-
-    Label {
-      Layout.columnSpan: 1
-      text: "Point size"
-    }
-
-    IgnSpinBox {
-      id: pointSizeSpin
-      value: RGLGuiPlugin.pointSize
-      minimumValue: 1
-      maximumValue: 1000
-      decimals: 0
-      onEditingFinished: {
-        RGLGuiPlugin.SetPointSize(pointSizeSpin.value)
-      }
-    }
-  }
-
-  RowLayout {
-    spacing: 10
-    Layout.fillWidth: true
-
-    Label {
-      Layout.columnSpan: 1
-      text: "Color"
-    }
-
-    Button {
-      Layout.columnSpan: 1
-      id: minColorButton
-      ToolTip.visible: hovered
-      ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Color for minimum value")
-      onClicked: minColorDialog.open()
-      background: Rectangle {
-        implicitWidth: 40
-        implicitHeight: 40
-        radius: 5
-        border.color: RGLGuiPlugin.minColor
-        border.width: 2
-        color: RGLGuiPlugin.minColor
-      }
-      ColorDialog {
-        id: minColorDialog
-        title: "Choose a color for the minimum value"
-        visible: false
-        onAccepted: {
-          RGLGuiPlugin.SetMinColor(minColorDialog.color)
-          minColorDialog.close()
-        }
-        onRejected: {
-          minColorDialog.close()
-        }
-      }
-    }
-  }
-
-  Item {
-    Layout.columnSpan: 6
-    width: 10
-    Layout.fillHeight: true
   }
 }
