@@ -15,7 +15,7 @@
 #include "RGLServerPluginInstance.hh"
 #include "RGLServerPluginManager.hh"
 
-#define RAYS_IN_ONE_DIR 1000
+#define RAYS_IN_ONE_DIR 500
 #define LIDAR_RANGE 1000
 
 #define RGL_POINT_CLOUD_TEXT "/RGL_point_cloud_"
@@ -24,13 +24,12 @@ using namespace rgl;
 
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity) {
     lidar_exists = true;
-    updates_between_raytraces = std::chrono::duration_cast<std::chrono::milliseconds>(time_between_raytraces).count();
+    updates_between_raytraces = (int)std::chrono::duration_cast<std::chrono::milliseconds>(time_between_raytraces).count();
     gazebo_lidar = entity;
     static int next_free_id = 0;
     lidar_id = next_free_id;
     next_free_id++;
 
-    rgl_configure_logging(RGL_LOG_LEVEL_CRITICAL, nullptr, true);
     int rays = RAYS_IN_ONE_DIR * RAYS_IN_ONE_DIR;
     std::vector<rgl_mat3x4f> ray_tf;
     ignition::math::Angle X;
@@ -79,9 +78,11 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
     if (!lidar_exists) {
         return;
     }
+
     if (!paused && sim_time < last_raytrace_time + time_between_raytraces) {
         return;
     }
+
     if (!paused) {
         last_raytrace_time = sim_time;
     }
@@ -90,12 +91,12 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
         return;
     }
     last_raytrace_update = current_update;
+
     auto rgl_pose_matrix = RGLServerPluginManager::GetRglMatrix(gazebo_lidar, ecm);
     RGL_CHECK(rgl_node_rays_transform(&node_lidar_pose, &rgl_pose_matrix));
 }
 
-void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager& ecm,
-                                       std::chrono::steady_clock::duration sim_time,
+void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration sim_time,
                                        bool paused) {
     if (!lidar_exists) {
         return;
@@ -119,13 +120,16 @@ void RGLServerPluginInstance::RayTrace(ignition::gazebo::EntityComponentManager&
     int hitpoint_count = 0;
     int size;
     RGL_CHECK(rgl_graph_get_result_size(node_compact, RGL_FIELD_XYZ_F32, &hitpoint_count, &size));
+
     if (size != sizeof(rgl_vec3f)) {
         ignerr << "invalid raytrace size of element: " << size << "\n";
         return;
     }
+
     if (hitpoint_count == 0) {
         return;
     }
+
     std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
     RGL_CHECK(rgl_graph_get_result_data(node_compact, RGL_FIELD_XYZ_F32, results.data()));
 

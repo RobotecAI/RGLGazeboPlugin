@@ -16,8 +16,6 @@
 
 #include <ignition/gazebo/components/Pose.hh>
 
-#define ROUND_BY_VALUE 10000
-
 using namespace rgl;
 
 ignition::math::Pose3<double> RGLServerPluginManager::FindWorldPose(
@@ -61,11 +59,6 @@ rgl_mat3x4f RGLServerPluginManager::GetRglMatrix(
     }
 
     return rgl_matrix;
-}
-
-
-float RGLServerPluginManager::RoundFloat(float value) {
-    return std::roundf(value * ROUND_BY_VALUE) / ROUND_BY_VALUE;
 }
 
 void RGLServerPluginManager::checkSameRGLVersion() {
