@@ -34,9 +34,11 @@ RGLServerPluginInstance::~RGLServerPluginInstance() = default;
 
 void RGLServerPluginInstance::Configure(
         const ignition::gazebo::Entity& entity,
-        const std::shared_ptr<const sdf::Element>&,
+        const std::shared_ptr<const sdf::Element>& sdf,
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager& evm) {
+
+//    sdf->Get<double>("length")
 
     CreateLidar(entity);
 }
@@ -45,7 +47,7 @@ void RGLServerPluginInstance::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
         ignition::gazebo::EntityComponentManager& ecm) {
 
-    RayTrace(ecm, info.simTime, info.paused);
+    RayTrace(info.simTime, info.paused);
 }
 
 void RGLServerPluginInstance::PostUpdate(

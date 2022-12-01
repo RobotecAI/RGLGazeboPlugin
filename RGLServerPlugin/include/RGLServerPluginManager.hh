@@ -72,9 +72,6 @@ namespace rgl {
         static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
                                         const ignition::gazebo::EntityComponentManager& ecm);
 
-        // gazebo mesh factory had problems with adding multiple floats becoming unreliable
-        static float RoundFloat(float value);
-
         static void checkSameRGLVersion();
 
     private:

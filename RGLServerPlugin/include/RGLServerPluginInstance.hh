@@ -92,7 +92,7 @@ namespace rgl {
         rgl_node_t node_raytrace = nullptr;
         rgl_node_t node_compact = nullptr;
 
-        std::chrono::steady_clock::duration last_raytrace_time = 0ms;
+        std::chrono::steady_clock::duration last_raytrace_time = -1000ms;
 
         std::chrono::steady_clock::duration time_between_raytraces = 100ms;
 
@@ -104,8 +104,7 @@ namespace rgl {
                              std::chrono::steady_clock::duration sim_time,
                              bool paused);
 
-        void RayTrace(ignition::gazebo::EntityComponentManager& ecm,
-                      std::chrono::steady_clock::duration sim_time,
+        void RayTrace(std::chrono::steady_clock::duration sim_time,
                       bool paused);
 
         bool CheckLidarExists(ignition::gazebo::Entity entity);
