@@ -31,8 +31,8 @@
 #define UNIT_SPHERE_TEXT "unit_sphere"
 #define RGL_UNIT_CAPSULE_TEXT "RGLGazeboPlugin_unit_capsule"
 
-#define CAPSULE_RINGS 1
-#define CAPSULE_SEGMENTS 32
+#define CAPSULE_RINGS 100
+#define CAPSULE_SEGMENTS 128
 
 using namespace rgl;
 
@@ -51,34 +51,36 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
     return mesh_manager->MeshByName(UNIT_BOX_TEXT);
 }
 
+// Currently disabled due to being untrue with the sim gui, find out default values and reimplement
+
 //The difference between capsule and other primitive geometry types is
 // that "unit_capsule" mesh is not created by the gazebo MeshManager,
 // while other primitive types have their unit meshes created and ready to query by name
-const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(
-        const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
-
-    static bool unit_capsule_mesh_created = false;
-    if (!unit_capsule_mesh_created) {
-        mesh_manager->CreateCapsule(
-                RGL_UNIT_CAPSULE_TEXT,
-                0.5f,
-                1.0f,
-                CAPSULE_RINGS,
-                CAPSULE_SEGMENTS);
-        unit_capsule_mesh_created = true;
-    }
-
-    auto shape = data.CapsuleShape();
-
-    scale_x = shape->Radius() * 2;
-    scale_y = shape->Radius() * 2;
-    scale_z = shape->Length();
-
-    return mesh_manager->MeshByName(RGL_UNIT_CAPSULE_TEXT);
-}
+//const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(
+//        const sdf::Geometry& data,
+//        double& scale_x,
+//        double& scale_y,
+//        double& scale_z) {
+//
+//    static bool unit_capsule_mesh_created = false;
+//    if (!unit_capsule_mesh_created) {
+//        mesh_manager->CreateCapsule(
+//                RGL_UNIT_CAPSULE_TEXT,
+//                0.5f,
+//                1.0f,
+//                CAPSULE_RINGS,
+//                CAPSULE_SEGMENTS);
+//        unit_capsule_mesh_created = true;
+//    }
+//
+//    auto shape = data.CapsuleShape();
+//
+//    scale_x = shape->Radius() * 2;
+//    scale_y = shape->Radius() * 2;
+//    scale_z = shape->Length();
+//
+//    return mesh_manager->MeshByName(RGL_UNIT_CAPSULE_TEXT);
+//}
 
 const ignition::common::Mesh* RGLServerPluginManager::LoadCylinder(
         const sdf::Geometry& data,
@@ -167,9 +169,9 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
         case sdf::GeometryType::BOX:
             mesh_pointer = LoadBox(data, scale_x, scale_y, scale_z);
             break;
-        case sdf::GeometryType::CAPSULE:
-            mesh_pointer = LoadCapsule(data, scale_x, scale_y, scale_z);
-            break;
+//        case sdf::GeometryType::CAPSULE:
+//            mesh_pointer = LoadCapsule(data, scale_x, scale_y, scale_z);
+//            break;
         case sdf::GeometryType::CYLINDER:
             mesh_pointer = LoadCylinder(data, scale_x, scale_y, scale_z);
             break;
@@ -232,9 +234,9 @@ bool RGLServerPluginManager::LoadMeshToRGL(
 
     for (int i = 0; i < vertex_count; ++i) {
         vertices.emplace_back(rgl_vec3f{
-                RoundFloat(static_cast<float>(scale_x * vertices_double_arr[3 * i + 0])),
-                RoundFloat(static_cast<float>(scale_y * vertices_double_arr[3 * i + 1])),
-                RoundFloat(static_cast<float>(scale_z * vertices_double_arr[3 * i + 2]))});
+                static_cast<float>(scale_x * vertices_double_arr[3 * i + 0]),
+                static_cast<float>(scale_y * vertices_double_arr[3 * i + 1]),
+                static_cast<float>(scale_z * vertices_double_arr[3 * i + 2])});
     }
 
     RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles, triangle_count));
