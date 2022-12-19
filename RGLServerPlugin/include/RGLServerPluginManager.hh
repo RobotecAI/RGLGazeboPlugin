@@ -33,7 +33,6 @@ do {                                     \
         const char* msg;                 \
         rgl_get_last_error_string(&msg); \
         ignerr << msg;                   \
-        exit(1);                         \
     }                                    \
 } while(0)
 

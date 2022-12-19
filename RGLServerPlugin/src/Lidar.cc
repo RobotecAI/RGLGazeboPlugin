@@ -161,7 +161,6 @@ void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
             ignmsg << "using Alpha Prime pattern\n";
         } else {
             //TODO: implement when patterns will be supported in RGL
-            //pattern_name = sdf->Get<std::string>(PATTERN_TEXT);
             ignmsg << "patterns not implemented yet, using default pattern with " << samples_vertical << " samples_vertical and "
                    << samples_horizontal << " rays each, " << "vertical fov of " << vertical_max - vertical_min
                    << " radians and horizontal fov of " << horizontal_max - horizontal_min << " radians. "
@@ -183,9 +182,9 @@ void RGLServerPluginInstance::AddToRayTf(std::vector<rgl_mat3x4f>& ray_tf,
     ignition::math::Quaterniond quaternion(roll.Radian(), pitch.Radian(), jaw.Radian());
     ignition::math::Matrix4d matrix4D(quaternion);
     rgl_mat3x4f rgl_matrix;
-    for (int l = 0; l < 3; ++l) {
-        for (int m = 0; m < 4; ++m) {
-            rgl_matrix.value[l][m] = static_cast<float>(matrix4D(l, m));
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            rgl_matrix.value[i][j] = static_cast<float>(matrix4D(i, j));
         }
     }
     ray_tf.push_back(rgl_matrix);
@@ -238,7 +237,7 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
 
 bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration sim_time,
                                              bool paused) {
-
+    current_update++;
     if (!lidar_exists) {
         return false;
     }
@@ -270,15 +269,10 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration sim_t
     last_raytrace_time = sim_time;
     last_raytrace_update = current_update;
 
-    //TODO: remove this when rgl is fixed
-    if (current_update == 1) {
-        return;
-    }
-
     RGL_CHECK(rgl_graph_run(node_compact));
 
-    int hitpoint_count = 0;
-    int size;
+    int32_t hitpoint_count = 0;
+    int32_t size;
     RGL_CHECK(rgl_graph_get_result_size(node_compact, RGL_FIELD_XYZ_F32, &hitpoint_count, &size));
 
     if (size != sizeof(rgl_vec3f)) {
@@ -289,27 +283,30 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration sim_t
     if (hitpoint_count == 0) {
         return;
     }
-
-    std::vector<rgl_vec3f> results(hitpoint_count, rgl_vec3f());
+    bool should_resize = false;
+    auto new_length = results.size();
+    while (new_length < hitpoint_count) {
+        should_resize = true;
+        if (new_length == 0) {
+            new_length = 1;
+        } else {
+            new_length = new_length << 1;
+        }
+    }
+    if (should_resize) {
+        results.resize(new_length);
+    }
     RGL_CHECK(rgl_graph_get_result_data(node_compact, RGL_FIELD_XYZ_F32, results.data()));
 
     ignition::msgs::PointCloudPacked point_cloud_msg;
-    ignition::msgs::InitPointCloudPacked(point_cloud_msg, "RGL", true,
+    ignition::msgs::InitPointCloudPacked(point_cloud_msg, "RGL", false,
                                          {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
     point_cloud_msg.mutable_data()->resize(hitpoint_count * point_cloud_msg.point_step());
     point_cloud_msg.set_height(1);
     point_cloud_msg.set_width(hitpoint_count);
 
     ignition::msgs::PointCloudPackedIterator<float> xIter(point_cloud_msg, "x");
-    ignition::msgs::PointCloudPackedIterator<float> yIter(point_cloud_msg, "y");
-    ignition::msgs::PointCloudPackedIterator<float> zIter(point_cloud_msg, "z");
-
-    for (int i = 0; i < hitpoint_count; ++i, ++xIter, ++yIter, ++zIter)
-    {
-        *xIter = results[i].value[0];
-        *yIter = results[i].value[1];
-        *zIter = results[i].value[2];
-    }
+    memcpy(&(*xIter), results.data(), hitpoint_count * sizeof(rgl_vec3f));
 
     pointcloud_publisher.Publish(point_cloud_msg);
 }
@@ -317,7 +314,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration sim_t
 bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) {
     if (entity == gazebo_lidar) {
         lidar_exists = false;
-        rgl_graph_destroy(node_compact);
+        RGL_CHECK(rgl_graph_destroy(node_compact));
         pointcloud_publisher = ignition::transport::Node::Publisher();
     }
     return true;
