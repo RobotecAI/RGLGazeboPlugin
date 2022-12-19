@@ -16,7 +16,7 @@ set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v
 set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/${RGL_COMMIT}/include/rgl/api/core.h")
 
 # You have to delete old files manually in order to download
-# new ones automatically if a new version is available
+# new ones automatically if a new version is available.
 if(NOT EXISTS ${RGL_SO_PATH})
     file(DOWNLOAD ${RGL_SO_URL} ${RGL_SO_PATH})
 endif()

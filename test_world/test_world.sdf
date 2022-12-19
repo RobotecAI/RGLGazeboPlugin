@@ -77,7 +77,7 @@
             <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
                 <range>245</range>
                 <update_rate>10</update_rate>
-                <always_on>false</always_on>
+                <always_on>true</always_on>
                 <pattern>Alpha Prime</pattern>
             </plugin>
             <pose>0 5 0.7 0 -0 0</pose>

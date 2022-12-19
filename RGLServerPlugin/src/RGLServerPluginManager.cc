@@ -38,21 +38,7 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EventManager& evm) {
 
     checkSameRGLVersion();
-
-    rgl_configure_logging(RGL_LOG_LEVEL_CRITICAL, nullptr, true);
-
-    //TODO: dont use each in Configure!!!
-//    ecm.Each<>([&](const ignition::gazebo::Entity& entity)-> bool {
-//                return RegisterNewLidarsCb(entity, ecm);});
-//
-//    ecm.Each<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-//            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
-//
-//    ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
-//        return CheckRemovedLidarsCb(entity, ecm);});
-//
-//    ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-//            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
+    RGL_CHECK(rgl_configure_logging(RGL_LOG_LEVEL_CRITICAL, nullptr, true));
 }
 
 void RGLServerPluginManager::PostUpdate(
