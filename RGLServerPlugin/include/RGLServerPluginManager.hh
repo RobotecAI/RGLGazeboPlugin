@@ -38,8 +38,10 @@ do {                                     \
 } while(0)
 
 using namespace std::literals::chrono_literals;
+using MeshInfo = std::variant<const ignition::common::Mesh*, ignition::common::SubMesh>;
 
 namespace rgl {
+
     class RGLServerPluginManager :
             public ignition::gazebo::System,
             public ignition::gazebo::ISystemConfigure,
@@ -90,14 +92,6 @@ namespace rgl {
 
         ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
 
-        ////////////////////////////// Scene ////////////////////////////////
-
-        int current_update = 0;
-
-        int updates_between_pose_update = 20;
-
-        int last_pose_update = -20;
-
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
         ////////////////////////////// Scene ////////////////////////////////
 
@@ -123,49 +117,49 @@ namespace rgl {
 
         ////////////////////////////// Mesh /////////////////////////////////
 
-        const ignition::common::Mesh* LoadBox(
+        MeshInfo LoadBox(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadCapsule(
+//        MeshInfo LoadCapsule(
+//                const sdf::Geometry& data,
+//                double& scale_x,
+//                double& scale_y,
+//                double& scale_z);
+
+        MeshInfo LoadCylinder(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadCylinder(
+        MeshInfo LoadEllipsoid(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadEllipsoid(
+        MeshInfo LoadMesh(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
-        const ignition::common::Mesh* LoadMesh(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
-
-        const ignition::common::Mesh* LoadPlane(
+        MeshInfo LoadPlane(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y);
 
-        const ignition::common::Mesh* LoadSphere(
+        MeshInfo LoadSphere(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
                 double& scale_z);
 
         // also gets the scale of the mesh
-        const ignition::common::Mesh* GetMeshPointer(
+        MeshInfo GetMeshPointer(
                 const sdf::Geometry& data,
                 double& scale_x,
                 double& scale_y,
