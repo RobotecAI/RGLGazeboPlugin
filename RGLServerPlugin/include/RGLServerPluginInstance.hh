@@ -26,17 +26,6 @@
 
 #define WORLD_ENTITY_ID 1
 
-#define RGL_CHECK(call)                  \
-do {                                     \
-    rgl_status_t status = call;          \
-    if (status != RGL_SUCCESS) {         \
-        const char* msg;                 \
-        rgl_get_last_error_string(&msg); \
-        ignerr << msg;                   \
-        exit(1);                         \
-    }                                    \
-} while(0)
-
 using namespace std::literals::chrono_literals;
 
 namespace rgl {
@@ -80,10 +69,10 @@ namespace rgl {
         int samples_vertical = 100;
         int samples_horizontal = 2500;
 
-        int current_update = 0;
+        int64_t current_update = 0;
         int updates_between_raytraces = 100;
         bool before_first_raytrace = true;
-        int last_raytrace_update = 0;
+        int64_t last_raytrace_update = 0;
 
         ignition::transport::Node::Publisher pointcloud_publisher;
         ignition::transport::Node node;
@@ -99,6 +88,8 @@ namespace rgl {
 
         std::chrono::steady_clock::duration last_raytrace_time = 0ms;
         std::chrono::steady_clock::duration time_between_raytraces = 100ms;
+
+        std::vector<rgl_vec3f> results;
 
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
 

@@ -63,10 +63,10 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry* geometry) {
     if (lidar_ignore.contains(entity)) {
-        ignwarn << "trying to add same entity to rgl multiple times!\n";
         return true;
     }
     if (entities_in_rgl.contains(entity)) {
+        ignwarn << "trying to add same entity to rgl multiple times!\n";
         return true;
     }
     rgl_mesh_t new_mesh;

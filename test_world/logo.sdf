@@ -73,7 +73,7 @@
             <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
                 <range>50</range>
                 <update_rate>10</update_rate>
-                <always_on>false</always_on>
+                <always_on>true</always_on>
                 <custom_pattern>
                     <horizontal>
                         <samples>1000</samples>

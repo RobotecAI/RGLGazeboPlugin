@@ -159,7 +159,7 @@
                     <always_on>1</always_on>
                     <visualize>true</visualize>
                 </sensor>
-                <pose>0 0.3 1.65 0 -0 0</pose>
+                <pose>0 0.5 2.1 0 -0 0</pose>
                 <collision name='cylinder_collision'>
                     <geometry>
                         <cylinder>

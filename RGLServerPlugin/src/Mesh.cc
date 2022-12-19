@@ -30,10 +30,10 @@
 #define UNIT_CYLINDER_TEXT "unit_cylinder"
 #define UNIT_PLANE_TEXT "unit_plane"
 #define UNIT_SPHERE_TEXT "unit_sphere"
-#define RGL_UNIT_CAPSULE_TEXT "RGLGazeboPlugin_unit_capsule"
+//#define RGL_UNIT_CAPSULE_TEXT "RGLGazeboPlugin_unit_capsule"
 
-#define CAPSULE_RINGS 100
-#define CAPSULE_SEGMENTS 128
+//#define CAPSULE_RINGS 100
+//#define CAPSULE_SEGMENTS 128
 
 using namespace rgl;
 
@@ -203,7 +203,7 @@ MeshInfo RGLServerPluginManager::GetMeshPointer(
             mesh_info = LoadSphere(data, scale_x, scale_y, scale_z);
             break;
         default:
-            ignerr << "geometry type: " << (int)data.Type() << " not supported yet" << std::endl;
+            ignerr << "geometry type: " << static_cast<int>(data.Type()) << " not supported yet" << std::endl;
             return {};
     }
     if (std::get_if<const ignition::common::Mesh*>(&mesh_info) == nullptr &&
@@ -246,13 +246,13 @@ bool RGLServerPluginManager::LoadMeshToRGL(
         vertex_count = static_cast<int>(submesh.VertexCount());
         triangle_count = static_cast<int>(submesh.IndexCount() / 3);
         vertices.reserve(vertex_count);
-        submesh.FillArrays(&vertices_double_arr, (int**)&triangles);
+        submesh.FillArrays(&vertices_double_arr, reinterpret_cast<int**>(&triangles));
     } else {
         auto mesh = get<const ignition::common::Mesh*>(mesh_info);
         vertex_count = static_cast<int>(mesh->VertexCount());
         triangle_count = static_cast<int>(mesh->IndexCount() / 3);
         vertices.reserve(vertex_count);
-        mesh->FillArrays(&vertices_double_arr, (int**)&triangles);
+        mesh->FillArrays(&vertices_double_arr, reinterpret_cast<int**>(&triangles));
     }
 
     for (int i = 0; i < vertex_count; ++i) {
