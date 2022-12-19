@@ -7,15 +7,16 @@ find_package(ignition-plugin1 REQUIRED)
 
 include_directories(include)
 
-set(RGL_VERSION "0.11.0")
-set(RGL_ALPHA_VERSION "1")
+set(RGL_VERSION "0.11.2")
 set(RGL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rgl")
 set(RGL_SO_PATH "${RGL_PATH}/libRobotecGPULidar.so")
 set(RGL_API_PATH "${RGL_PATH}/api/core.h")
-set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v${RGL_VERSION}-alpha-${RGL_ALPHA_VERSION}/libRobotecGPULidar.so")
-set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/27293bb3618d8834df9a3dcccf18b87bd253ca68/include/rgl/api/core.h")
+set(RGL_COMMIT "e113be2206fe27e1434ab6337c932c1d6aaa7afe")
+set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v${RGL_VERSION}/libRobotecGPULidar.so")
+set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/${RGL_COMMIT}/include/rgl/api/core.h")
 
-# you have to delete old files to download new ones if a new version is available
+# You have to delete old files manually in order to download
+# new ones automatically if a new version is available
 if(NOT EXISTS ${RGL_SO_PATH})
     file(DOWNLOAD ${RGL_SO_URL} ${RGL_SO_PATH})
 endif()

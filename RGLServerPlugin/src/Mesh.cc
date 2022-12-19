@@ -15,6 +15,7 @@
 #include "RGLServerPluginManager.hh"
 
 #include <ignition/common/Mesh.hh>
+#include <ignition/common/SubMesh.hh>
 #include <ignition/gazebo/Util.hh>
 
 #include <sdf/Box.hh>
@@ -36,7 +37,7 @@
 
 using namespace rgl;
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
+MeshInfo RGLServerPluginManager::LoadBox(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -82,7 +83,7 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadBox(
 //    return mesh_manager->MeshByName(RGL_UNIT_CAPSULE_TEXT);
 //}
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadCylinder(
+MeshInfo RGLServerPluginManager::LoadCylinder(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -97,7 +98,7 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadCylinder(
     return mesh_manager->MeshByName(UNIT_CYLINDER_TEXT);
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadEllipsoid(
+MeshInfo RGLServerPluginManager::LoadEllipsoid(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -112,7 +113,7 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadEllipsoid(
     return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadMesh(
+MeshInfo RGLServerPluginManager::LoadMesh(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -124,12 +125,23 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadMesh(
     scale_y = scale.Y();
     scale_z = scale.Z();
 
-    return mesh_manager->Load(ignition::gazebo::asFullPath(
+    auto mesh = mesh_manager->Load(ignition::gazebo::asFullPath(
             data.MeshShape()->Uri(),
             data.MeshShape()->FilePath()));
+
+    auto submesh_name = data.MeshShape()->Submesh();
+    if (!submesh_name.empty()) {
+        ignition::common::SubMesh submesh_copy(*(mesh->SubMeshByName(submesh_name).lock()));
+        if (data.MeshShape()->CenterSubmesh()) {
+            submesh_copy.Center();
+        }
+        return submesh_copy;
+    } else {
+        return mesh;
+    }
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadPlane(
+MeshInfo RGLServerPluginManager::LoadPlane(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y) {
@@ -142,7 +154,7 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadPlane(
     return mesh_manager->MeshByName(UNIT_PLANE_TEXT);
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::LoadSphere(
+MeshInfo RGLServerPluginManager::LoadSphere(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
@@ -157,44 +169,45 @@ const ignition::common::Mesh* RGLServerPluginManager::LoadSphere(
     return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
 }
 
-const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
+MeshInfo RGLServerPluginManager::GetMeshPointer(
         const sdf::Geometry& data,
         double& scale_x,
         double& scale_y,
         double& scale_z) {
 
-    const ignition::common::Mesh* mesh_pointer;
+    MeshInfo mesh_info;
 
     switch (data.Type()) {
         case sdf::GeometryType::BOX:
-            mesh_pointer = LoadBox(data, scale_x, scale_y, scale_z);
+            mesh_info = LoadBox(data, scale_x, scale_y, scale_z);
             break;
 //        case sdf::GeometryType::CAPSULE:
-//            mesh_pointer = LoadCapsule(data, scale_x, scale_y, scale_z);
+//            mesh_info = LoadCapsule(data, scale_x, scale_y, scale_z);
 //            break;
         case sdf::GeometryType::CYLINDER:
-            mesh_pointer = LoadCylinder(data, scale_x, scale_y, scale_z);
+            mesh_info = LoadCylinder(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::ELLIPSOID:
-            mesh_pointer = LoadEllipsoid(data, scale_x, scale_y, scale_z);
+            mesh_info = LoadEllipsoid(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::EMPTY:
             ignerr << "EMPTY geometry" << std::endl;
-            return nullptr;
+            return {};
         case sdf::GeometryType::MESH:
-            mesh_pointer = LoadMesh(data, scale_x, scale_y, scale_z);
+            mesh_info = LoadMesh(data, scale_x, scale_y, scale_z);
             break;
         case sdf::GeometryType::PLANE:
-            mesh_pointer = LoadPlane(data, scale_x, scale_y);
+            mesh_info = LoadPlane(data, scale_x, scale_y);
             break;
         case sdf::GeometryType::SPHERE:
-            mesh_pointer = LoadSphere(data, scale_x, scale_y, scale_z);
+            mesh_info = LoadSphere(data, scale_x, scale_y, scale_z);
             break;
         default:
             ignerr << "geometry type: " << (int)data.Type() << " not supported yet" << std::endl;
-            return nullptr;
+            return {};
     }
-    if (nullptr == mesh_pointer) {
+    if (std::get_if<const ignition::common::Mesh*>(&mesh_info) == nullptr &&
+        std::get_if<ignition::common::SubMesh>(&mesh_info) == nullptr) {
         if (data.Type() == sdf::GeometryType::MESH) {
             ignerr << "Error in importing mesh: " <<
             ignition::gazebo::asFullPath(
@@ -205,7 +218,7 @@ const ignition::common::Mesh* RGLServerPluginManager::GetMeshPointer(
             ignerr << "Error in importing mesh - it will not be loaded to RGL\n";
         }
     }
-    return mesh_pointer;
+    return mesh_info;
 }
 
 bool RGLServerPluginManager::LoadMeshToRGL(
@@ -216,21 +229,31 @@ bool RGLServerPluginManager::LoadMeshToRGL(
     double scale_y = 1;
     double scale_z = 1;
 
-    auto mesh_common = GetMeshPointer(data, scale_x, scale_y, scale_z);
-    if (nullptr == mesh_common) {
+    auto mesh_info = GetMeshPointer(data, scale_x, scale_y, scale_z);
+    if (std::get_if<const ignition::common::Mesh*>(&mesh_info) == nullptr &&
+        std::get_if<ignition::common::SubMesh>(&mesh_info) == nullptr) {
         return false;
     }
 
-    int vertex_count = (int)mesh_common->VertexCount();
-    int triangle_count = (int)mesh_common->IndexCount() / 3;
+    int vertex_count;
+    int triangle_count;
     std::vector<rgl_vec3f> vertices;
-
-    vertices.reserve(vertex_count);
-
     double* vertices_double_arr = nullptr;
     rgl_vec3i* triangles = nullptr;
 
-    mesh_common->FillArrays(&vertices_double_arr, (int**)&triangles);
+    if (std::holds_alternative<ignition::common::SubMesh>(mesh_info)) {
+        auto submesh = get<ignition::common::SubMesh>(mesh_info);
+        vertex_count = static_cast<int>(submesh.VertexCount());
+        triangle_count = static_cast<int>(submesh.IndexCount() / 3);
+        vertices.reserve(vertex_count);
+        submesh.FillArrays(&vertices_double_arr, (int**)&triangles);
+    } else {
+        auto mesh = get<const ignition::common::Mesh*>(mesh_info);
+        vertex_count = static_cast<int>(mesh->VertexCount());
+        triangle_count = static_cast<int>(mesh->IndexCount() / 3);
+        vertices.reserve(vertex_count);
+        mesh->FillArrays(&vertices_double_arr, (int**)&triangles);
+    }
 
     for (int i = 0; i < vertex_count; ++i) {
         vertices.emplace_back(rgl_vec3f{
