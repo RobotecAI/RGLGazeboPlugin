@@ -1,6 +1,4 @@
-# RGLGazeboPlugin
-
-![](docs/videos/prius.gif)
+![](docs/images/RGLGazeboPlugin_logo.png)
 
 ## Requirements:
 
@@ -21,7 +19,10 @@ make -j
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin
 export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize
 ```
-### demo:
+### Demo:
+
+![](docs/videos/prius.gif)
+
 From RGLGazeboPlugin/test_world directory:
 ```
 ign gazebo -v 4 prius_world_RGL.sdf
