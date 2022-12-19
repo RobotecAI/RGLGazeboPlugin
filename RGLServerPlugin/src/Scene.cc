@@ -99,10 +99,6 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
 #pragma clang diagnostic pop
 
 void RGLServerPluginManager::UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm) {
-    if (current_update < last_pose_update + updates_between_pose_update) {
-        return;
-    }
-    last_pose_update = current_update;
     for (auto entity: entities_in_rgl) {
         auto rgl_matrix = GetRglMatrix(entity.first, ecm);
         RGL_CHECK(rgl_entity_set_pose(entity.second.first, &rgl_matrix));

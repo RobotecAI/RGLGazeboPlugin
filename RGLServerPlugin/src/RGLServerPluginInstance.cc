@@ -36,18 +36,20 @@ void RGLServerPluginInstance::Configure(
         const ignition::gazebo::Entity& entity,
         const std::shared_ptr<const sdf::Element>& sdf,
         ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager& evm) {
+        ignition::gazebo::EventManager&) {
 
-//    sdf->Get<double>("length")
-
-    CreateLidar(entity);
+    LoadConfiguration(sdf);
+    CreateLidar(entity, ecm);
 }
 
 void RGLServerPluginInstance::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
         ignition::gazebo::EntityComponentManager& ecm) {
 
-    RayTrace(info.simTime, info.paused);
+    if (ShouldRayTrace(info.simTime, info.paused)) {
+        UpdateLidarPose(ecm);
+        RayTrace(info.simTime);
+    }
 }
 
 void RGLServerPluginInstance::PostUpdate(
@@ -55,6 +57,4 @@ void RGLServerPluginInstance::PostUpdate(
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     ecm.EachRemoved<>(std::bind(&RGLServerPluginInstance::CheckLidarExists, this, _1));
-
-    UpdateLidarPose(ecm, info.simTime, info.paused);
 }

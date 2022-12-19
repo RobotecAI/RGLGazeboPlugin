@@ -1,0 +1,198 @@
+<sdf version='1.9'>
+    <world name='test_world'>
+        <plugin name='rgl::RGLServerPluginManager' filename='RGLServerPluginManager'/>
+        <plugin name='ignition::gazebo::systems::Physics' filename='ignition-gazebo-physics-system'/>
+        <plugin name='ignition::gazebo::systems::Sensors' filename='ignition-gazebo-sensors-system'>
+            <render_engine>ogre2</render_engine>
+        </plugin>
+        <plugin name='ignition::gazebo::systems::UserCommands' filename='ignition-gazebo-user-commands-system'/>
+        <plugin name='ignition::gazebo::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
+        <gravity>0 0 -9.8</gravity>
+        <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+        <atmosphere type='adiabatic'/>
+        <physics type='ode'>
+            <max_step_size>0.001</max_step_size>
+            <real_time_factor>1</real_time_factor>
+            <real_time_update_rate>1000</real_time_update_rate>
+        </physics>
+        <scene>
+            <ambient>0.4 0.4 0.4 1</ambient>
+            <background>0.7 0.7 0.7 1</background>
+            <shadows>false</shadows>
+        </scene>
+        <model name='ground_plane'>
+            <static>true</static>
+            <link name='link'>
+                <collision name='collision'>
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>100 100</size>
+                        </plane>
+                    </geometry>
+                    <surface>
+                        <friction>
+                            <ode/>
+                        </friction>
+                        <bounce/>
+                        <contact/>
+                    </surface>
+                </collision>
+                <visual name='visual'>
+                    <geometry>
+                        <plane>
+                            <normal>0 0 1</normal>
+                            <size>1000 1000</size>
+                        </plane>
+                    </geometry>
+                    <material>
+                        <ambient>1 0 0 1</ambient>
+                        <diffuse>1 0 0 1</diffuse>
+                        <specular>1 0 0 1</specular>
+                    </material>
+                </visual>
+                <pose>0 0 15 0 -0 0</pose>
+                <inertial>
+                    <pose>0 0 0 0 -0 0</pose>
+                    <mass>1</mass>
+                    <inertia>
+                        <ixx>1</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>1</iyy>
+                        <iyz>0</iyz>
+                        <izz>1</izz>
+                    </inertia>
+                </inertial>
+                <enable_wind>false</enable_wind>
+            </link>
+            <pose>0 0 0 0 -0 0</pose>
+            <self_collide>false</self_collide>
+        </model>
+        <model name='sphere'>
+            <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+                <range>50</range>
+                <update_rate>10</update_rate>
+                <always_on>false</always_on>
+                <custom_pattern>
+                    <horizontal>
+                        <samples>1000</samples>
+                    </horizontal>
+                    <vertical>
+                        <samples>1000</samples>
+                    </vertical>
+                </custom_pattern>
+            </plugin>
+            <pose>18.1162 -3.69317 120.288 -1.65922 0 0</pose>
+            <link name='sphere_link'>
+                <inertial>
+                    <inertia>
+                        <ixx>1</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>1</iyy>
+                        <iyz>0</iyz>
+                        <izz>1</izz>
+                    </inertia>
+                    <mass>1</mass>
+                    <pose>0 0 0 0 -0 0</pose>
+                </inertial>
+                <collision name='sphere_collision'>
+                    <geometry>
+                        <sphere>
+                            <radius>2</radius>
+                        </sphere>
+                    </geometry>
+                    <surface>
+                        <friction>
+                            <ode/>
+                        </friction>
+                        <bounce/>
+                        <contact/>
+                    </surface>
+                </collision>
+                <visual name='sphere_visual'>
+                    <geometry>
+                        <sphere>
+                            <radius>2</radius>
+                        </sphere>
+                    </geometry>
+                    <material>
+                        <ambient>1 0 0 1</ambient>
+                        <diffuse>1 0 0 1</diffuse>
+                        <specular>1 0 0 1</specular>
+                    </material>
+                </visual>
+                <pose>0 0 0 0 -0 0</pose>
+                <enable_wind>false</enable_wind>
+            </link>
+            <static>false</static>
+            <self_collide>false</self_collide>
+        </model>
+        <model name='minecartengine'>
+            <pose>-30.8524 -32.2975 100.5111 0.011708 -0 0</pose>
+            <link name='base_link'>
+                <collision name='collision'>
+                    <geometry>
+                        <mesh>
+                            <uri>
+                                file:///home/jakub/CLionProjects/RGLGazeboPlugin/test_world/meshes/RGLGazeoboPlugin.obj
+                            </uri>
+                            <scale>20 20 20</scale>
+                        </mesh>
+                    </geometry>
+                </collision>
+                <visual name='MineCartEngine_visual'>
+                    <geometry>
+                        <mesh>
+                            <uri>
+                                file:///home/jakub/CLionProjects/RGLGazeboPlugin/test_world/meshes/RGLGazeoboPlugin.obj
+                            </uri>
+                            <scale>20 20 20</scale>
+                        </mesh>
+                    </geometry>
+                    <material>
+                        <ambient>1 0 0 1</ambient>
+                        <diffuse>1 0 0 1</diffuse>
+                        <specular>1 0 0 1</specular>
+                    </material>
+                </visual>
+                <pose>0 0 0 0 -0 0</pose>
+                <inertial>
+                    <pose>0 0 0 0 -0 0</pose>
+                    <mass>1</mass>
+                    <inertia>
+                        <ixx>1</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>1</iyy>
+                        <iyz>0</iyz>
+                        <izz>1</izz>
+                    </inertia>
+                </inertial>
+                <enable_wind>false</enable_wind>
+            </link>
+            <static>false</static>
+            <self_collide>false</self_collide>
+        </model>
+        <light name='sun' type='directional'>
+            <pose>0 0 10 0 -0 0</pose>
+            <cast_shadows>false</cast_shadows>
+            <intensity>1</intensity>
+            <direction>-0.5 0.1 -0.9</direction>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <linear>0.01</linear>
+                <constant>0.90000000000000002</constant>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0</inner_angle>
+                <outer_angle>0</outer_angle>
+                <falloff>0</falloff>
+            </spot>
+        </light>
+    </world>
+</sdf>
