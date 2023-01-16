@@ -66,17 +66,13 @@
                 <real_time_factor>true</real_time_factor>
                 <iterations>true</iterations>
             </plugin>
-            <plugin name='dis' filename='ImageDisplay'>
-                <ignition-gui>
-                    <property key='state' type='string'>docked</property>
-                </ignition-gui>
-                <topic>front_camera</topic>
-            </plugin>
             <plugin name='Teleop' filename='Teleop'>
                 <ignition-gui>
                     <property type='string' key='state'>docked</property>
                 </ignition-gui>
                 <topic>/cmd_vel</topic>
+            </plugin>
+            <plugin name='VisualizeLidar' filename='VisualizeLidar'>
             </plugin>
         </gui>
         <gravity>0 0 -9.8</gravity>
@@ -138,7 +134,7 @@
                     <ray>
                         <scan>
                             <horizontal>
-                                <samples>3600</samples>
+                                <samples>1800</samples>
                                 <resolution>1</resolution>
                                 <min_angle>-3.14159</min_angle>
                                 <max_angle>3.14159</max_angle>
@@ -157,14 +153,14 @@
                         </range>
                     </ray>
                     <always_on>1</always_on>
-                    <visualize>true</visualize>
+                    <visualize>false</visualize>
                 </sensor>
                 <pose>0 0.5 2.1 0 -0 0</pose>
                 <collision name='cylinder_collision'>
                     <geometry>
                         <cylinder>
-                            <radius>0.5</radius>
-                            <length>1</length>
+                            <radius>0.1</radius>
+                            <length>0.1</length>
                         </cylinder>
                     </geometry>
                 </collision>

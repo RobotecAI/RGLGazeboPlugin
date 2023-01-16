@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include "rgl/api/core.h"
 
 #include <ignition/common/MeshManager.hh>
@@ -60,7 +62,9 @@ namespace rgl {
     private:
         ////////////////////////////////////////////// Variables /////////////////////////////////////////////
 
+        std::string ray_tf_file_path;
         bool always_on = false;
+        std::vector<float> layer_angles;
         float range = 1000.0f;
         ignition::math::Angle horizontal_max = ignition::math::Angle::Pi;
         ignition::math::Angle horizontal_min = ignition::math::Angle::Pi * -1;
@@ -89,9 +93,23 @@ namespace rgl {
         std::chrono::steady_clock::duration last_raytrace_time = 0ms;
         std::chrono::steady_clock::duration time_between_raytraces = 100ms;
 
-        std::vector<rgl_vec3f> results;
+        std::vector<rgl_vec3f> results{rgl_vec3f{}};
+
+        std::unordered_map<std::string, std::string> pattern_names = {
+                {"Alpha Prime", "VelodyneVLS128"},
+                {"Puck", "VelodyneVLP16"},
+                {"Ultra Puck", "VelodyneVLP32C"},
+                {"OS1 64", "OusterOS1_64"},
+                {"Pandar64", "HesaiPandarQT64"},
+                {"Pandar40P", "HesaiPandar40P"}
+        };
 
         ////////////////////////////////////////////// Functions /////////////////////////////////////////////
+
+        template<typename T>
+        static std::vector<T> loadVector(const std::filesystem::path& path);
+
+        void SetPatternFromName(const std::string& name);
 
         static void AddToRayTf(std::vector<rgl_mat3x4f>& ray_tf,
                         const ignition::math::Angle& roll,
