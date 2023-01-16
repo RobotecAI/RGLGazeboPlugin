@@ -7,11 +7,11 @@ find_package(ignition-plugin1 REQUIRED)
 
 include_directories(include)
 
-set(RGL_VERSION "0.11.2")
+set(RGL_VERSION "0.11.3")
 set(RGL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rgl")
 set(RGL_SO_PATH "${RGL_PATH}/libRobotecGPULidar.so")
 set(RGL_API_PATH "${RGL_PATH}/api/core.h")
-set(RGL_COMMIT "e113be2206fe27e1434ab6337c932c1d6aaa7afe")
+set(RGL_COMMIT "e5ea8a1a74c253a304f4d1d4652391bca9d448e6")
 set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v${RGL_VERSION}/libRobotecGPULidar.so")
 set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/${RGL_COMMIT}/include/rgl/api/core.h")
 
