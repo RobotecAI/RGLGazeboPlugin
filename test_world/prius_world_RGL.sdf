@@ -70,17 +70,13 @@
                 <real_time_factor>true</real_time_factor>
                 <iterations>true</iterations>
             </plugin>
-            <plugin name='dis' filename='ImageDisplay'>
-                <ignition-gui>
-                    <property key='state' type='string'>docked</property>
-                </ignition-gui>
-                <topic>front_camera</topic>
-            </plugin>
             <plugin name='Teleop' filename='Teleop'>
                 <ignition-gui>
                     <property type='string' key='state'>docked</property>
                 </ignition-gui>
                 <topic>/cmd_vel</topic>
+            </plugin>
+            <plugin name='RGLVisualize' filename='RGLVisualize'>
             </plugin>
         </gui>
         <gravity>0 0 -9.8</gravity>
@@ -139,28 +135,17 @@
                 <collision name='cylinder_collision'>
                     <geometry>
                         <cylinder>
-                            <radius>0.5</radius>
-                            <length>1</length>
+                            <radius>0.1</radius>
+                            <length>0.1</length>
                         </cylinder>
                     </geometry>
                 </collision>
                 <visual name='cylinder_visual'>
                     <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
                         <range>245</range>
-                        <update_rate>10</update_rate>
+                        <update_rate>30</update_rate>
                         <always_on>false</always_on>
-                        <custom_pattern>
-                            <horizontal>
-                                <samples>3600</samples>
-                                <min_angle>-3.14159</min_angle>
-                                <max_angle>3.14159</max_angle>
-                            </horizontal>
-                            <vertical>
-                                <samples>128</samples>
-                                <min_angle>-0.436332</min_angle>
-                                <max_angle>0.261799</max_angle>
-                            </vertical>
-                        </custom_pattern>
+                        <preset>Alpha Prime</preset>
                     </plugin>
                     <geometry>
                         <cylinder>

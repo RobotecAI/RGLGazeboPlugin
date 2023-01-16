@@ -23,15 +23,17 @@
 #define UPDATE_RATE_TEXT "update_rate"
 #define RANGE_TEXT "range"
 #define ALWAYS_ON_TEXT "always_on"
-#define CUSTOM_PATTERN_TEXT "custom_pattern"
+#define UNIFORM_TEXT "uniform"
+#define CUSTOM_TEXT "custom"
+#define LASERS_TEXT "lasers"
 #define HORIZONTAL_TEXT "horizontal"
 #define VERTICAL_TEXT "vertical"
 #define MAX_ANGLE_TEXT "max_angle"
 #define MIN_ANGLE_TEXT "min_angle"
 #define SAMPLES_TEXT "samples"
-#define PATTERN_TEXT "pattern"
-
-#define ALPHA_PRIME_TEXT "Alpha Prime"
+#define PRESET_TEXT "preset"
+#define PRESET_PATH_TEXT "preset_path"
+#define PATTERNS_LOOKUP_LINK "https://github.com/RobotecAI/RobotecGPULidar"
 
 using namespace rgl;
 
@@ -65,13 +67,66 @@ void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
                << "it is NOT active in paused simulation state by default\n";
     }
 
-    if (sdf->FindElement(CUSTOM_PATTERN_TEXT) != nullptr) {
+    if (sdf->FindElement(PRESET_PATH_TEXT) != nullptr) {
+        ray_tf_file_path = sdf->Get<std::string>(PRESET_PATH_TEXT);
+        ignmsg << "pattern from file selected, file path: " << ray_tf_file_path << "\n";
+    } else if (sdf->FindElement(CUSTOM_TEXT) != nullptr) {
         ignmsg << "custom pattern selected\n";
 
-        auto custom_pattern = sdf->FindElement(CUSTOM_PATTERN_TEXT);
+        auto custom_pattern = sdf->FindElement(CUSTOM_TEXT);
+
+        auto angles = custom_pattern->GetAttribute(LASERS_TEXT);
+        std::istringstream iss(angles->GetAsString());
+        std::copy(std::istream_iterator<float>(iss),
+                std::istream_iterator<float>(),
+               std::back_inserter(layer_angles));
 
         if (custom_pattern->FindElement(HORIZONTAL_TEXT) != nullptr) {
             auto horizontal = custom_pattern->FindElement(HORIZONTAL_TEXT);
+            if (horizontal->FindElement(SAMPLES_TEXT) != nullptr) {
+                samples_horizontal = horizontal->Get<int>(SAMPLES_TEXT);
+                ignmsg << "number of horizontal samples specified: " << samples_horizontal << "\n";
+            } else {
+                ignmsg << "number of horizontal samples NOT specified, using default value: " << samples_horizontal << "\n";
+            }
+            if (horizontal->FindElement(MIN_ANGLE_TEXT) != nullptr) {
+                horizontal_min = horizontal->Get<float>(MIN_ANGLE_TEXT);
+                if (horizontal_min < ignition::math::Angle::Pi * -1) {
+                    horizontal_min = ignition::math::Angle::Pi * -1;
+                    ignwarn << "horizontal min angle can NOT have a value lesser than -Pi, using -Pi\n";
+                } else {
+                    ignmsg << "horizontal min angle specified: " << horizontal_min << " radians\n";
+                }
+            } else {
+                ignmsg << "horizontal min angle NOT specified, using default value: " << horizontal_min << " radians\n";
+            }
+            if (horizontal->FindElement(MAX_ANGLE_TEXT) != nullptr) {
+                horizontal_max = horizontal->Get<float>(MAX_ANGLE_TEXT);
+                if (horizontal_max > ignition::math::Angle::Pi) {
+                    horizontal_max = ignition::math::Angle::Pi;
+                    ignwarn << "horizontal max angle can NOT have a value greater than Pi, using Pi\n";
+                } else {
+                    ignmsg << "horizontal max angle specified: " << horizontal_max << " radians\n";
+                }
+            } else {
+                ignmsg << "horizontal max angle NOT specified, using default value: " << horizontal_max << " radians\n";
+            }
+            if (horizontal_min > horizontal_max) {
+                horizontal_min = ignition::math::Angle::Pi * -1;
+                horizontal_max = ignition::math::Angle::Pi;
+                ignwarn << "horizontal min angle greater than horizontal max angle, using defaults for both angles: "
+                        << "horizontal min: " << horizontal_min << " radians, and horizontal max: " << horizontal_max << " radians\n";
+            }
+        } else {
+            ignmsg << "no horizontal fov specified, using default " << horizontal_max - horizontal_min << " radians\n";
+        }
+    } else if (sdf->FindElement(UNIFORM_TEXT) != nullptr) {
+        ignmsg << "uniform pattern selected\n";
+
+        auto uniform_pattern = sdf->FindElement(UNIFORM_TEXT);
+
+        if (uniform_pattern->FindElement(HORIZONTAL_TEXT) != nullptr) {
+            auto horizontal = uniform_pattern->FindElement(HORIZONTAL_TEXT);
             if (horizontal->FindElement(SAMPLES_TEXT) != nullptr) {
                 samples_horizontal = horizontal->Get<int>(SAMPLES_TEXT);
                 ignmsg << "number of horizontal samples specified: " << samples_horizontal << "\n";
@@ -110,8 +165,8 @@ void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
             ignmsg << "no horizontal fov specified, using default " << horizontal_max - horizontal_min << " radians\n";
         }
 
-        if (custom_pattern->FindElement(VERTICAL_TEXT) != nullptr) {
-            auto vertical = custom_pattern->FindElement(VERTICAL_TEXT);
+        if (uniform_pattern->FindElement(VERTICAL_TEXT) != nullptr) {
+            auto vertical = uniform_pattern->FindElement(VERTICAL_TEXT);
             if (vertical->FindElement(SAMPLES_TEXT) != nullptr) {
                 samples_vertical = vertical->Get<int>(SAMPLES_TEXT);
                 ignmsg << "number of vertical samples specified: " << samples_vertical << "\n";
@@ -150,28 +205,59 @@ void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
             ignmsg << "no vertical fov specified, using default " << vertical_max - vertical_min << " radians\n";
         }
 
-    } else if (sdf->FindElement(PATTERN_TEXT) != nullptr) {
-        if (sdf->Get<std::string>(PATTERN_TEXT) == ALPHA_PRIME_TEXT) {
-            samples_horizontal = 3600;
-            horizontal_min.SetDegree(-180.0);
-            horizontal_max.SetDegree(180.0);
-            samples_vertical = 128;
-            vertical_min.SetDegree(-25.0);
-            vertical_max.SetDegree(15.0);
-            ignmsg << "using Alpha Prime pattern\n";
-        } else {
-            //TODO: implement when patterns will be supported in RGL
-            ignmsg << "patterns not implemented yet, using default pattern with " << samples_vertical << " samples_vertical and "
-                   << samples_horizontal << " rays each, " << "vertical fov of " << vertical_max - vertical_min
-                   << " radians and horizontal fov of " << horizontal_max - horizontal_min << " radians. "
-                   << "To see what lidar patterns are supported, visit https://github.com/RobotecAI/RobotecGPULidar\n";
-        }
+    } else if (sdf->FindElement(PRESET_TEXT) != nullptr) {
+        SetPatternFromName(sdf->Get<std::string>(PRESET_TEXT));
     } else {
         ignmsg << "pattern not specified, using default pattern with " << samples_vertical << " samples_vertical and "
-               << samples_horizontal << " rays each, " << "vertical fov of " << vertical_max - vertical_min
+               << samples_horizontal << " samples_horizontal, " << "vertical fov of " << vertical_max - vertical_min
                << " radians and horizontal fov of " << horizontal_max - horizontal_min << " radians. "
-               << "To see what lidar patterns are supported, visit https://github.com/RobotecAI/RobotecGPULidar\n";
+               << "To see what lidar patterns are supported, visit " << PATTERNS_LOOKUP_LINK << "\n";
     }
+}
+
+void RGLServerPluginInstance::SetPatternFromName(const std::string& name) {
+    std::string name_of_file = pattern_names[name];
+    if (name_of_file.empty()) {
+        ignmsg << "pattern not implemented yet, using default pattern with " << samples_vertical << " samples_vertical and "
+               << samples_horizontal << " samples_horizontal, " << "vertical fov of " << vertical_max - vertical_min
+               << " radians and horizontal fov of " << horizontal_max - horizontal_min << " radians. "
+               << "To see what lidar patterns are supported, visit " << PATTERNS_LOOKUP_LINK << "\n";
+        return;
+    }
+    ray_tf_file_path = __FILE__;
+    std::string to_erase_from_path = "/src/Lidar.cc";
+    ray_tf_file_path.erase(ray_tf_file_path.length() - to_erase_from_path.length());
+    ray_tf_file_path.append("/lidar_patterns/");
+    ray_tf_file_path.append(name_of_file);
+    ray_tf_file_path.append(".mat3x4f");
+    ignmsg << name << " pattern selected\n";
+}
+
+template<typename T>
+std::vector<T> RGLServerPluginInstance::loadVector(const std::filesystem::path& path) {
+    // open the file:
+    std::streampos fileSize;
+    std::ifstream file(path, std::ios::binary);
+
+    if (!file.is_open() || file.eof()) {
+       ignerr << "failed to open file or file is empty, data will not be loaded";
+       return std::vector<T>();
+    }
+
+    // get its size:
+    file.seekg(0, std::ios::end);
+    fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    if (fileSize % sizeof(T) != 0) {
+        ignerr << "invalid file size";
+        return std::vector<T>();
+    }
+
+    // read the data:
+    std::vector<T> fileData(fileSize / sizeof(T));
+    file.read((char*) &fileData[0], fileSize);
+    return fileData;
 }
 
 void RGLServerPluginInstance::AddToRayTf(std::vector<rgl_mat3x4f>& ray_tf,
@@ -199,21 +285,33 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
     lidar_id = next_free_id;
     next_free_id++;
 
-    int rays = samples_vertical * samples_horizontal;
     std::vector<rgl_mat3x4f> ray_tf;
 
     ignition::math::Angle vertical_step((vertical_max - vertical_min) / static_cast<double>(samples_vertical));
-    ignition::math::Angle horizontal_step((horizontal_max - horizontal_min) / static_cast<double>(samples_horizontal));
+    ignition::math::Angle horizontal_step(
+            (horizontal_max - horizontal_min) / static_cast<double>(samples_horizontal));
 
-    ignition::math::Angle pitch(ignition::math::Angle::HalfPi - vertical_max);
+    ignition::math::Angle pitch(ignition::math::Angle::HalfPi
+                                -vertical_max);
     ignition::math::Angle jaw(horizontal_min);
 
-    for (int i = 0; i < samples_vertical; ++i, pitch += vertical_step) {
-        for (int j = 0; j < samples_horizontal; ++j, jaw += horizontal_step) {
-            AddToRayTf(ray_tf, ignition::math::Angle::Zero, pitch, jaw);
+    if (!ray_tf_file_path.empty()) {
+        ray_tf = loadVector<rgl_mat3x4f>(ray_tf_file_path);
+    } else if (!layer_angles.empty()) {
+        for (auto angle : layer_angles) {
+            for (int i = 0; i < samples_horizontal; ++i, jaw += horizontal_step) {
+                AddToRayTf(ray_tf, ignition::math::Angle::Zero, angle + ignition::math::Angle::HalfPi.Radian(), jaw);
+            }
+        }
+    } else {
+        for (int i = 0; i < samples_vertical; ++i, pitch += vertical_step) {
+            for (int j = 0; j < samples_horizontal; ++j, jaw += horizontal_step) {
+                AddToRayTf(ray_tf, ignition::math::Angle::Zero, pitch, jaw);
+            }
         }
     }
 
+    auto rays = static_cast<::int32_t>(ray_tf.size());
     auto rgl_pose_matrix = RGLServerPluginManager::GetRglMatrix(gazebo_lidar, ecm);
 
     RGL_CHECK(rgl_node_rays_from_mat3x4f(&node_use_rays, ray_tf.data(), rays));
@@ -280,18 +378,11 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration sim_t
         return;
     }
 
-    if (hitpoint_count == 0) {
-        return;
-    }
     bool should_resize = false;
     auto new_length = results.size();
     while (new_length < hitpoint_count) {
         should_resize = true;
-        if (new_length == 0) {
-            new_length = 1;
-        } else {
-            new_length = new_length << 1;
-        }
+        new_length = new_length << 1;
     }
     if (should_resize) {
         results.resize(new_length);
