@@ -11,7 +11,7 @@ smooth pointcloud result (left image above presents RGL, right shows gpu_lidar),
 
 OS: [Ubuntu 22.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010709.1162335333.1667845331-1529863968.1667845331)
 
-Gazebo: [Fortress 6.12](https://gazebosim.org/docs/fortress/install)
+Gazebo: [Fortress 6.13](https://gazebosim.org/docs/fortress/install)
 
 GPU: [Nvidia Pascal](https://en.wikipedia.org/wiki/Pascal_(microarchitecture)) architecture or newer (preferably with RT cores)
 
