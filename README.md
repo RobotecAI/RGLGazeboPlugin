@@ -9,9 +9,9 @@ smooth pointcloud result (left image above presents RGL, right shows gpu_lidar),
 
 ## Requirements:
 
-OS: [Ubuntu 22.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010709.1162335333.1667845331-1529863968.1667845331)
+OS: [Ubuntu 20.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010709.1162335333.1667845331-1529863968.1667845331)
 
-Gazebo: [Fortress 6.13](https://gazebosim.org/docs/fortress/install)
+Gazebo: [Fortress 6.12](https://gazebosim.org/docs/fortress/install)
 
 GPU: [Nvidia Pascal](https://en.wikipedia.org/wiki/Pascal_(microarchitecture)) architecture or newer (preferably with RT cores)
 
@@ -125,5 +125,5 @@ typedef struct
 <preset_path>/home/some1/Downloads/lidars-for-gazebo/VelodyneVLS128.mat3x4f</preset_path>
 ```
 ## Level of detail
-In [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly, we even take into account the fact that in many lidars the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
+At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly, we even take into account the fact that in many lidars the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
 ![](docs/images/RGL_Ultra_Puck_staggered.png)
