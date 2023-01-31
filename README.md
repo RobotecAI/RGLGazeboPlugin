@@ -1,11 +1,21 @@
-![](docs/images/RGLGazeboPlugin_logo.png)
+# RGL Gazebo Plugin
 
-![](docs/images/RGL_vs_built_in_lidar.png)
+---
 
-# RGL Gazebo Plugin:
+<h1 align="center">
+  <img src="docs/images/RGLGazeboPlugin_logo.png" width="60%" alt="RGL Gazebo Plugin Logo">
+</h1>
 
-Created By [ROBOTEC.AI](https://robotec.ai/) brings [Robotec GPU Lidar](https://github.com/RobotecAI/RobotecGPULidar) to [Gazebo](https://gazebosim.org/home). Get ready for great performance (2 x faster that the gpu_lidar sensor from Gazebo),
-smooth pointcloud result (left image above presents RGL, right shows gpu_lidar), 4 pattern configuration methods, including importing a pattern from binary file and also sweet, extremely realistic presets of most popular lidars. Make sure to visit [our blog post]().
+---
+# About the project
+
+RGL Gazebo Plugin has been created by [Robotec.AI](https://robotec.ai/) to bring [Robotec GPU Lidar](https://github.com/RobotecAI/RobotecGPULidar) to [Gazebo](https://gazebosim.org/home).
+
+Key features:
+- Point cloud computation using hardware-accelerated raytracing (Nvidia OptiX)
+- High performance (2x improvement over `gpu_lidar` sensor from Gazebo)
+- Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file 
+- Realistic presets of the most popular LiDARs
 
 ## Requirements:
 
@@ -14,6 +24,8 @@ OS: [Ubuntu 20.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010
 Gazebo: [Fortress 6.12](https://gazebosim.org/docs/fortress/install)
 
 GPU: [Nvidia Pascal](https://en.wikipedia.org/wiki/Pascal_(microarchitecture)) architecture or newer (preferably with RT cores)
+
+Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar#runtime-requirements)
 
 ## Installation:
 From RGLGazeboPlugin directory:
@@ -127,3 +139,6 @@ typedef struct
 ## Level of detail
 At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly, we even take into account the fact that in many lidars the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
 ![](docs/images/RGL_Ultra_Puck_staggered.png)
+
+## Ray pattern accuracy comparison of RGL (left) and gpu_lidar (right)
+![](docs/images/RGL_vs_built_in_lidar.png)
