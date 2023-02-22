@@ -37,6 +37,100 @@
 
 using namespace rgl;
 
+void LoadHorizontal(
+        sdf::ElementConstPtr& pattern,
+        ignition::math::Angle& horizontal_min,
+        ignition::math::Angle& horizontal_max,
+        int& samples_horizontal) {
+
+    if (pattern->FindElement(HORIZONTAL_TEXT) != nullptr) {
+        auto horizontal = pattern->FindElement(HORIZONTAL_TEXT);
+        if (horizontal->FindElement(SAMPLES_TEXT) != nullptr) {
+            samples_horizontal = horizontal->Get<int>(SAMPLES_TEXT);
+            ignmsg << "number of horizontal samples specified: " << samples_horizontal << "\n";
+        } else {
+            ignmsg << "number of horizontal samples NOT specified, using default value: " << samples_horizontal << "\n";
+        }
+        if (horizontal->FindElement(MIN_ANGLE_TEXT) != nullptr) {
+            horizontal_min = horizontal->Get<float>(MIN_ANGLE_TEXT);
+            if (horizontal_min < ignition::math::Angle::Pi * -1) {
+                horizontal_min = ignition::math::Angle::Pi * -1;
+                ignwarn << "horizontal min angle can NOT have a value lesser than -Pi, using -Pi\n";
+            } else {
+                ignmsg << "horizontal min angle specified: " << horizontal_min << " radians\n";
+            }
+        } else {
+            ignmsg << "horizontal min angle NOT specified, using default value: " << horizontal_min << " radians\n";
+        }
+        if (horizontal->FindElement(MAX_ANGLE_TEXT) != nullptr) {
+            horizontal_max = horizontal->Get<float>(MAX_ANGLE_TEXT);
+            if (horizontal_max > ignition::math::Angle::Pi) {
+                horizontal_max = ignition::math::Angle::Pi;
+                ignwarn << "horizontal max angle can NOT have a value greater than Pi, using Pi\n";
+            } else {
+                ignmsg << "horizontal max angle specified: " << horizontal_max << " radians\n";
+            }
+        } else {
+            ignmsg << "horizontal max angle NOT specified, using default value: " << horizontal_max << " radians\n";
+        }
+        if (horizontal_min > horizontal_max) {
+            horizontal_min = ignition::math::Angle::Pi * -1;
+            horizontal_max = ignition::math::Angle::Pi;
+            ignwarn << "horizontal min angle greater than horizontal max angle, using defaults for both angles: "
+                    << "horizontal min: " << horizontal_min << " radians, and horizontal max: " << horizontal_max << " radians\n";
+        }
+    } else {
+        ignmsg << "no horizontal fov specified, using default " << horizontal_max - horizontal_min << " radians\n";
+    }
+}
+
+void LoadVertical(
+        sdf::ElementConstPtr& pattern,
+        ignition::math::Angle& vertical_min,
+        ignition::math::Angle& vertical_max,
+        int& samples_vertical) {
+
+    if (pattern->FindElement(VERTICAL_TEXT) != nullptr) {
+        auto vertical = pattern->FindElement(VERTICAL_TEXT);
+        if (vertical->FindElement(SAMPLES_TEXT) != nullptr) {
+            samples_vertical = vertical->Get<int>(SAMPLES_TEXT);
+            ignmsg << "number of vertical samples specified: " << samples_vertical << "\n";
+        } else {
+            ignmsg << "number of vertical samples NOT specified, using default value: " << samples_vertical << "\n";
+        }
+        if (vertical->FindElement(MIN_ANGLE_TEXT) != nullptr) {
+            vertical_min = vertical->Get<float>(MIN_ANGLE_TEXT);
+            if (vertical_min < ignition::math::Angle::HalfPi * -1) {
+                vertical_min = ignition::math::Angle::HalfPi * -1;
+                ignwarn << "vertical min angle can NOT have a value lesser than -Pi / 2, using -Pi / 2\n";
+            } else {
+                ignmsg << "vertical min angle specified: " << vertical_min << " radians\n";
+            }
+        } else {
+            ignmsg << "vertical min angle NOT specified, using default value: " << vertical_min << " radians\n";
+        }
+        if (vertical->FindElement(MAX_ANGLE_TEXT) != nullptr) {
+            vertical_max = vertical->Get<float>(MAX_ANGLE_TEXT);
+            if (vertical_max > ignition::math::Angle::HalfPi) {
+                vertical_max = ignition::math::Angle::HalfPi;
+                ignwarn << "vertical max angle can NOT have a value greater than Pi / 2, using Pi / 2\n";
+            } else {
+                ignmsg << "vertical max angle specified: " << vertical_max << " radians\n";
+            }
+        } else {
+            ignmsg << "vertical max angle NOT specified, using default value: " << vertical_max << " radians\n";
+        }
+        if (vertical_min > vertical_max) {
+            vertical_min = ignition::math::Angle::HalfPi * -1;
+            vertical_max = ignition::math::Angle::HalfPi;
+            ignwarn << "vertical min angle greater than vertical max angle, using defaults for both angles: "
+                    << "vertical min: " << vertical_min << " radians, and vertical max: " << vertical_max << " radians\n";
+        }
+    } else {
+        ignmsg << "no vertical fov specified, using default " << vertical_max - vertical_min << " radians\n";
+    }
+}
+
 void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf) {
 
     if (sdf->FindElement(UPDATE_RATE_TEXT) != nullptr) {
@@ -81,130 +175,14 @@ void RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
                 std::istream_iterator<float>(),
                std::back_inserter(layer_angles));
 
-        if (custom_pattern->FindElement(HORIZONTAL_TEXT) != nullptr) {
-            auto horizontal = custom_pattern->FindElement(HORIZONTAL_TEXT);
-            if (horizontal->FindElement(SAMPLES_TEXT) != nullptr) {
-                samples_horizontal = horizontal->Get<int>(SAMPLES_TEXT);
-                ignmsg << "number of horizontal samples specified: " << samples_horizontal << "\n";
-            } else {
-                ignmsg << "number of horizontal samples NOT specified, using default value: " << samples_horizontal << "\n";
-            }
-            if (horizontal->FindElement(MIN_ANGLE_TEXT) != nullptr) {
-                horizontal_min = horizontal->Get<float>(MIN_ANGLE_TEXT);
-                if (horizontal_min < ignition::math::Angle::Pi * -1) {
-                    horizontal_min = ignition::math::Angle::Pi * -1;
-                    ignwarn << "horizontal min angle can NOT have a value lesser than -Pi, using -Pi\n";
-                } else {
-                    ignmsg << "horizontal min angle specified: " << horizontal_min << " radians\n";
-                }
-            } else {
-                ignmsg << "horizontal min angle NOT specified, using default value: " << horizontal_min << " radians\n";
-            }
-            if (horizontal->FindElement(MAX_ANGLE_TEXT) != nullptr) {
-                horizontal_max = horizontal->Get<float>(MAX_ANGLE_TEXT);
-                if (horizontal_max > ignition::math::Angle::Pi) {
-                    horizontal_max = ignition::math::Angle::Pi;
-                    ignwarn << "horizontal max angle can NOT have a value greater than Pi, using Pi\n";
-                } else {
-                    ignmsg << "horizontal max angle specified: " << horizontal_max << " radians\n";
-                }
-            } else {
-                ignmsg << "horizontal max angle NOT specified, using default value: " << horizontal_max << " radians\n";
-            }
-            if (horizontal_min > horizontal_max) {
-                horizontal_min = ignition::math::Angle::Pi * -1;
-                horizontal_max = ignition::math::Angle::Pi;
-                ignwarn << "horizontal min angle greater than horizontal max angle, using defaults for both angles: "
-                        << "horizontal min: " << horizontal_min << " radians, and horizontal max: " << horizontal_max << " radians\n";
-            }
-        } else {
-            ignmsg << "no horizontal fov specified, using default " << horizontal_max - horizontal_min << " radians\n";
-        }
+        LoadHorizontal(custom_pattern, horizontal_min, horizontal_max, samples_horizontal);
     } else if (sdf->FindElement(UNIFORM_TEXT) != nullptr) {
         ignmsg << "uniform pattern selected\n";
 
         auto uniform_pattern = sdf->FindElement(UNIFORM_TEXT);
 
-        if (uniform_pattern->FindElement(HORIZONTAL_TEXT) != nullptr) {
-            auto horizontal = uniform_pattern->FindElement(HORIZONTAL_TEXT);
-            if (horizontal->FindElement(SAMPLES_TEXT) != nullptr) {
-                samples_horizontal = horizontal->Get<int>(SAMPLES_TEXT);
-                ignmsg << "number of horizontal samples specified: " << samples_horizontal << "\n";
-            } else {
-                ignmsg << "number of horizontal samples NOT specified, using default value: " << samples_horizontal << "\n";
-            }
-            if (horizontal->FindElement(MIN_ANGLE_TEXT) != nullptr) {
-                horizontal_min = horizontal->Get<float>(MIN_ANGLE_TEXT);
-                if (horizontal_min < ignition::math::Angle::Pi * -1) {
-                    horizontal_min = ignition::math::Angle::Pi * -1;
-                    ignwarn << "horizontal min angle can NOT have a value lesser than -Pi, using -Pi\n";
-                } else {
-                    ignmsg << "horizontal min angle specified: " << horizontal_min << " radians\n";
-                }
-            } else {
-                ignmsg << "horizontal min angle NOT specified, using default value: " << horizontal_min << " radians\n";
-            }
-            if (horizontal->FindElement(MAX_ANGLE_TEXT) != nullptr) {
-                horizontal_max = horizontal->Get<float>(MAX_ANGLE_TEXT);
-                if (horizontal_max > ignition::math::Angle::Pi) {
-                    horizontal_max = ignition::math::Angle::Pi;
-                    ignwarn << "horizontal max angle can NOT have a value greater than Pi, using Pi\n";
-                } else {
-                    ignmsg << "horizontal max angle specified: " << horizontal_max << " radians\n";
-                }
-            } else {
-                ignmsg << "horizontal max angle NOT specified, using default value: " << horizontal_max << " radians\n";
-            }
-            if (horizontal_min > horizontal_max) {
-                horizontal_min = ignition::math::Angle::Pi * -1;
-                horizontal_max = ignition::math::Angle::Pi;
-                ignwarn << "horizontal min angle greater than horizontal max angle, using defaults for both angles: "
-                << "horizontal min: " << horizontal_min << " radians, and horizontal max: " << horizontal_max << " radians\n";
-            }
-        } else {
-            ignmsg << "no horizontal fov specified, using default " << horizontal_max - horizontal_min << " radians\n";
-        }
-
-        if (uniform_pattern->FindElement(VERTICAL_TEXT) != nullptr) {
-            auto vertical = uniform_pattern->FindElement(VERTICAL_TEXT);
-            if (vertical->FindElement(SAMPLES_TEXT) != nullptr) {
-                samples_vertical = vertical->Get<int>(SAMPLES_TEXT);
-                ignmsg << "number of vertical samples specified: " << samples_vertical << "\n";
-            } else {
-                ignmsg << "number of vertical samples NOT specified, using default value: " << samples_vertical << "\n";
-            }
-            if (vertical->FindElement(MIN_ANGLE_TEXT) != nullptr) {
-                vertical_min = vertical->Get<float>(MIN_ANGLE_TEXT);
-                if (vertical_min < ignition::math::Angle::HalfPi * -1) {
-                    vertical_min = ignition::math::Angle::HalfPi * -1;
-                    ignwarn << "vertical min angle can NOT have a value lesser than -Pi / 2, using -Pi / 2\n";
-                } else {
-                    ignmsg << "vertical min angle specified: " << vertical_min << " radians\n";
-                }
-            } else {
-                ignmsg << "vertical min angle NOT specified, using default value: " << vertical_min << " radians\n";
-            }
-            if (vertical->FindElement(MAX_ANGLE_TEXT) != nullptr) {
-                vertical_max = vertical->Get<float>(MAX_ANGLE_TEXT);
-                if (vertical_max > ignition::math::Angle::HalfPi) {
-                    vertical_max = ignition::math::Angle::HalfPi;
-                    ignwarn << "vertical max angle can NOT have a value greater than Pi / 2, using Pi / 2\n";
-                } else {
-                    ignmsg << "vertical max angle specified: " << vertical_max << " radians\n";
-                }
-            } else {
-                ignmsg << "vertical max angle NOT specified, using default value: " << vertical_max << " radians\n";
-            }
-            if (vertical_min > vertical_max) {
-                vertical_min = ignition::math::Angle::HalfPi * -1;
-                vertical_max = ignition::math::Angle::HalfPi;
-                ignwarn << "vertical min angle greater than vertical max angle, using defaults for both angles: "
-                        << "vertical min: " << vertical_min << " radians, and vertical max: " << vertical_max << " radians\n";
-            }
-        } else {
-            ignmsg << "no vertical fov specified, using default " << vertical_max - vertical_min << " radians\n";
-        }
-
+        LoadHorizontal(uniform_pattern, horizontal_min, horizontal_max, samples_horizontal);
+        LoadVertical(uniform_pattern, vertical_min, vertical_max, samples_vertical);
     } else if (sdf->FindElement(PRESET_TEXT) != nullptr) {
         SetPatternFromName(sdf->Get<std::string>(PRESET_TEXT));
     } else {
