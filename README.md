@@ -48,8 +48,8 @@ cd test_world
 ign gazebo prius_world_RGL.sdf
 ```
 
-1. start the simulation by pressing play
-2. the lidar hits should be visible in the GUI
+1. Start the simulation by pressing play
+2. The lidar hits should be visible in the GUI
 3. You can control the car using the Teleop plugin (preferably changing the steering to keyboard and upping the speed to 15)
 
 ## Using the plugin:
@@ -67,7 +67,7 @@ This is a global plugin and should be included only once per sdf, preferably ins
 ```
 Note that the lidar will be attached to the entity that the instance inclusion is inside and will ignore all children (recursively) of the entity as well as the entity that it is attached to.
 ## RGLServerPluginInstance settings:
-The basic lidar parameters can be set in only one way (shown below), but the pattern can be created using 4 methods: (from basic to advanced) uniform, custom, preset and preset_path.
+The basic lidar parameters can be set as shown below. The LiDAR firing pattern can be created using the following methods (described in the following sections):  `uniform`, `custom`, `preset`, and `preset_path`.
 ```xml
 <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
     <range>245</range>
@@ -111,7 +111,7 @@ An analogue to the gpu_lidar configuration (angles in radians).
 ```
 
 ### Preset
-You can type in the name of a Lidar to use its pattern (all available patterns are shown below).
+You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
 ```xml
 <preset>Alpha Prime</preset>
 <preset>Puck</preset>
