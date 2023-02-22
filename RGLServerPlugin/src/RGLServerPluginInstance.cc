@@ -16,6 +16,23 @@
 
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
 #include <ignition/plugin/Register.hh>
+#include <chrono>
+#include <fstream>
+
+class PerformanceTester {
+    std::ofstream outfile;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+public:
+    explicit PerformanceTester(const std::string& path) {
+        outfile.open(path, std::ios_base::app);
+        start = std::chrono::high_resolution_clock ::now();
+    }
+    ~PerformanceTester() {
+        auto end = std::chrono::high_resolution_clock::now();
+        outfile << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << ",";
+        outfile.close();
+    }
+};
 
 IGNITION_ADD_PLUGIN(
         rgl::RGLServerPluginInstance,
@@ -48,6 +65,7 @@ void RGLServerPluginInstance::PreUpdate(
 
     if (ShouldRayTrace(info.simTime, info.paused)) {
         UpdateLidarPose(ecm);
+        PerformanceTester perf("/home/jakub/benchmarks/RGL.txt");
         RayTrace(info.simTime);
     }
 }
