@@ -122,11 +122,7 @@ namespace rgl {
                 double& scale_y,
                 double& scale_z);
 
-//        MeshInfo LoadCapsule(
-//                const sdf::Geometry& data,
-//                double& scale_x,
-//                double& scale_y,
-//                double& scale_z);
+        MeshInfo LoadCapsule(const sdf::Geometry& data);
 
         MeshInfo LoadCylinder(
                 const sdf::Geometry& data,

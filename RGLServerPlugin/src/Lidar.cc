@@ -269,8 +269,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
     ignition::math::Angle horizontal_step(
             (horizontal_max - horizontal_min) / static_cast<double>(samples_horizontal));
 
-    ignition::math::Angle pitch(ignition::math::Angle::HalfPi
-                                -vertical_max);
+    ignition::math::Angle pitch(ignition::math::Angle::HalfPi - vertical_max);
     ignition::math::Angle jaw(horizontal_min);
 
     if (!ray_tf_file_path.empty()) {

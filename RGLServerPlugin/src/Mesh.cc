@@ -30,10 +30,9 @@
 #define UNIT_CYLINDER_TEXT "unit_cylinder"
 #define UNIT_PLANE_TEXT "unit_plane"
 #define UNIT_SPHERE_TEXT "unit_sphere"
-//#define RGL_UNIT_CAPSULE_TEXT "RGLGazeboPlugin_unit_capsule"
 
-//#define CAPSULE_RINGS 100
-//#define CAPSULE_SEGMENTS 128
+#define CAPSULE_RINGS 32
+#define CAPSULE_SEGMENTS 32
 
 using namespace rgl;
 
@@ -57,31 +56,25 @@ MeshInfo RGLServerPluginManager::LoadBox(
 //The difference between capsule and other primitive geometry types is
 // that "unit_capsule" mesh is not created by the gazebo MeshManager,
 // while other primitive types have their unit meshes created and ready to query by name
-//const ignition::common::Mesh* RGLServerPluginManager::LoadCapsule(
-//        const sdf::Geometry& data,
-//        double& scale_x,
-//        double& scale_y,
-//        double& scale_z) {
-//
-//    static bool unit_capsule_mesh_created = false;
-//    if (!unit_capsule_mesh_created) {
-//        mesh_manager->CreateCapsule(
-//                RGL_UNIT_CAPSULE_TEXT,
-//                0.5f,
-//                1.0f,
-//                CAPSULE_RINGS,
-//                CAPSULE_SEGMENTS);
-//        unit_capsule_mesh_created = true;
-//    }
-//
-//    auto shape = data.CapsuleShape();
-//
-//    scale_x = shape->Radius() * 2;
-//    scale_y = shape->Radius() * 2;
-//    scale_z = shape->Length();
-//
-//    return mesh_manager->MeshByName(RGL_UNIT_CAPSULE_TEXT);
-//}
+MeshInfo RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data) {
+
+    auto shape = data.CapsuleShape();
+
+    std::string capsuleMeshName = "capsule_mesh";
+    capsuleMeshName += "_" + std::to_string(shape->Radius())
+                       + "_" + std::to_string(shape->Length());
+
+    // Create new mesh if needed
+    if (!mesh_manager->HasMesh(capsuleMeshName)) {
+        mesh_manager->CreateCapsule(capsuleMeshName,
+                                    shape->Radius(),
+                                    shape->Length(),
+                                    CAPSULE_RINGS,
+                                    CAPSULE_SEGMENTS);
+    }
+
+    return mesh_manager->MeshByName(capsuleMeshName);
+}
 
 MeshInfo RGLServerPluginManager::LoadCylinder(
         const sdf::Geometry& data,
@@ -181,9 +174,9 @@ MeshInfo RGLServerPluginManager::GetMeshPointer(
         case sdf::GeometryType::BOX:
             mesh_info = LoadBox(data, scale_x, scale_y, scale_z);
             break;
-//        case sdf::GeometryType::CAPSULE:
-//            mesh_info = LoadCapsule(data, scale_x, scale_y, scale_z);
-//            break;
+        case sdf::GeometryType::CAPSULE:
+            mesh_info = LoadCapsule(data);
+            break;
         case sdf::GeometryType::CYLINDER:
             mesh_info = LoadCylinder(data, scale_x, scale_y, scale_z);
             break;
