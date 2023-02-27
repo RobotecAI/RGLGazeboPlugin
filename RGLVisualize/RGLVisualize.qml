@@ -88,21 +88,5 @@ ColumnLayout {
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
       ToolTip.text: qsTr("Gazebo Transport topics publishing PointCloudPacked messages")
     }
-
-    Label {
-      Layout.columnSpan: 1
-      text: "Point size"
-    }
-
-    IgnSpinBox {
-      id: pointSizeSpin
-      value: RGLVisualize.pointSize
-      minimumValue: 1
-      maximumValue: 1000
-      decimals: 0
-      onEditingFinished: {
-        RGLVisualize.SetPointSize(pointSizeSpin.value)
-      }
-    }
   }
 }
