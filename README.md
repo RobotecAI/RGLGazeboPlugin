@@ -67,12 +67,13 @@ This is a global plugin and should be included only once per sdf, preferably ins
 ```
 Note that the lidar will be attached to the entity that the instance inclusion is inside and will ignore all children (recursively) of the entity as well as the entity that it is attached to.
 ## RGLServerPluginInstance settings:
-The basic lidar parameters can be set as shown below. The LiDAR firing pattern can be created using the following methods (described in the following sections):  `uniform`, `custom`, `preset`, and `preset_path`.
+The basic lidar parameters can be set as shown below. The LiDAR firing pattern can be created using the following methods (described in the following sections):  `pattern_uniform`, `pattern_custom`, `pattern_preset`, and `pattern_preset_path`.
 ```xml
 <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
     <range>245</range>
     <update_rate>10</update_rate>
     <topic>lidar_topic</topic>
+    <frame>lidar_frame</frame>
     <update_on_paused_sim>false</update_on_paused_sim>
 </plugin>
 ```
@@ -81,6 +82,8 @@ The basic lidar parameters can be set as shown below. The LiDAR firing pattern c
 **update_rate** - the frequency at which the lidar will perform raycasting (in Hz)
 
 **topic** - topic on which pointcloud message (ignition::msgs::PointCloudPacked) will be published
+
+**frame** - frame_id for pointcloud message header
 
 **update_on_paused_sim** - determines whether the lidar is active when the simulation is paused (optional, default: false)
 

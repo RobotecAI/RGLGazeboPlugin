@@ -71,9 +71,12 @@ private:
                         bool paused);
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
+    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::string frame, int hitpointCount);
+
     bool CheckLidarExists(ignition::gazebo::Entity entity);
 
     std::string topicName;
+    std::string frameId;
     float lidarRange;
     std::vector<rgl_mat3x4f> lidarPattern;
     std::vector<rgl_vec3f> resultPointCloud;
@@ -82,12 +85,14 @@ private:
 
     ignition::gazebo::Entity lidarGazeboEntity;
     ignition::transport::Node::Publisher pointcloudPublisher;
+    ignition::transport::Node::Publisher pointcloudWorldPublisher;
     ignition::transport::Node gazeboNode;
 
     rgl_node_t rglNodeUseRays = nullptr;
     rgl_node_t rglNodeLidarPose = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
     rgl_node_t rglNodeCompact = nullptr;
+    rgl_node_t rglNodeToLidarFrame = nullptr;
 
     std::chrono::steady_clock::duration raytraceIntervalTime;
     std::chrono::steady_clock::duration lastRaytraceTime;
@@ -96,6 +101,9 @@ private:
 
     int onPausedSimUpdateCounter = 0;
     const int onPausedSimRaytraceInterval = 100;
+
+    const std::string worldFrameId = "world";
+    const std::string worldTopicPostfix = "/world";
 };
 
 }

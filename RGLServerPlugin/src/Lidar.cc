@@ -20,6 +20,7 @@
 #define PARAM_UPDATE_RATE_ID "update_rate"
 #define PARAM_RANGE_ID "range"
 #define PARAM_TOPIC_ID "topic"
+#define PARAM_FRAME_ID "frame"
 #define PARAM_UPDATE_ON_PAUSED_SIM_ID "update_on_paused_sim"
 
 namespace rgl
@@ -28,24 +29,29 @@ namespace rgl
 bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf) {
     // Required parameters
     if (!sdf->HasElement(PARAM_UPDATE_RATE_ID)) {
-        ignerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the lidar '" << sdf->GetName() << "'. Disabling plugin.";
+        ignerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_RANGE_ID)) {
-        ignerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the lidar '" << sdf->GetName() << "'. Disabling plugin.";
+        ignerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_TOPIC_ID)) {
-        ignerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the lidar '" << sdf->GetName() << "'. Disabling plugin.";
+        ignerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        return false;
+    }
+
+    if (!sdf->HasElement(PARAM_FRAME_ID)) {
+        ignerr << "No '" << PARAM_FRAME_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     // Optional parameters
     if (!sdf->HasElement(PARAM_UPDATE_ON_PAUSED_SIM_ID)) {
-        ignwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the lidar '" << sdf->GetName() << "'. "
-                << "Using default value: " << updateOnPausedSim;
+        ignwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the RGL lidar. "
+                << "Using default value: " << updateOnPausedSim << "\n";
     } else {
         updateOnPausedSim = sdf->Get<bool>(PARAM_UPDATE_ON_PAUSED_SIM_ID);
     }
@@ -55,6 +61,7 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     raytraceIntervalTime = std::chrono::microseconds(static_cast<int64_t>(1e6 / updateRateHz));
     lidarRange = sdf->Get<float>(PARAM_RANGE_ID);
     topicName = sdf->Get<std::string>(PARAM_TOPIC_ID);
+    frameId = sdf->Get<std::string>(PARAM_FRAME_ID);
 
     if (!LidarPatternLoader::Load(sdf, lidarPattern)) {
         return false;
@@ -69,26 +76,38 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
                                           ignition::gazebo::EntityComponentManager& ecm) {
 
     lidarGazeboEntity = entity;
-    auto rglLidarTf = RGLServerPluginManager::GetRglMatrix(lidarGazeboEntity, ecm);
+
+    rgl_mat3x4f identity = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0
+	};
 
     RGL_CHECK(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size()));
-    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarTf));
+    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &identity));
     RGL_CHECK(rgl_node_raytrace(&rglNodeRaytrace, nullptr, lidarRange));
     RGL_CHECK(rgl_node_points_compact(&rglNodeCompact));
+    RGL_CHECK(rgl_node_points_transform(&rglNodeToLidarFrame, &identity));
 
     RGL_CHECK(rgl_graph_node_add_child(rglNodeUseRays, rglNodeLidarPose));
     RGL_CHECK(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace));
     RGL_CHECK(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact));
+    RGL_CHECK(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame));
 
     pointcloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
+    pointcloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
 
     isLidarExists = true;
 }
 
 void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
 
-    auto rglLidarTf = RGLServerPluginManager::GetRglMatrix(lidarGazeboEntity, ecm);
-    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarTf));
+    auto gzLidarToWorld = RGLServerPluginManager::FindWorldPose(lidarGazeboEntity, ecm);
+    auto gzWorldToLidar = gzLidarToWorld.Inverse();
+    auto rglLidarToWorld = RGLServerPluginManager::Pose3dToRglMatrix(gzLidarToWorld);
+    auto rglWorldToLidar = RGLServerPluginManager::Pose3dToRglMatrix(gzWorldToLidar);
+    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
+    RGL_CHECK(rgl_node_points_transform(&rglNodeToLidarFrame, &rglWorldToLidar));
 }
 
 bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration simTime,
@@ -118,37 +137,43 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
 
     lastRaytraceTime = simTime;
 
-    RGL_CHECK(rgl_graph_run(rglNodeCompact));
+    RGL_CHECK(rgl_graph_run(rglNodeRaytrace));
 
     int32_t hitpointCount = 0;
-    int32_t pointSize;
-    RGL_CHECK(rgl_graph_get_result_size(rglNodeCompact, RGL_FIELD_XYZ_F32, &hitpointCount, &pointSize));
+    RGL_CHECK(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr));
+    RGL_CHECK(rgl_graph_get_result_data(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, resultPointCloud.data()));
 
-    if (pointSize != sizeof(rgl_vec3f)) {
-        ignerr << "invalid raytrace size of element: " << pointSize << "\n";
-        return;
+    auto msg = CreatePointCloudMsg(frameId, hitpointCount);
+    pointcloudPublisher.Publish(msg);
+
+    if (pointcloudWorldPublisher.HasConnections()) {
+        RGL_CHECK(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr));
+        RGL_CHECK(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()));
+        auto worldMsg = CreatePointCloudMsg(worldFrameId, hitpointCount);
+        pointcloudWorldPublisher.Publish(worldMsg);
     }
+}
 
-    RGL_CHECK(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()));
-
-    ignition::msgs::PointCloudPacked pointcloudMsg;
-    ignition::msgs::InitPointCloudPacked(pointcloudMsg, "RGL", false,
+ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount) {
+    ignition::msgs::PointCloudPacked outMsg;
+    ignition::msgs::InitPointCloudPacked(outMsg, frame, false,
                                          {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
-    pointcloudMsg.mutable_data()->resize(hitpointCount * pointcloudMsg.point_step());
-    pointcloudMsg.set_height(1);
-    pointcloudMsg.set_width(hitpointCount);
+    outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
+    outMsg.set_height(1);
+    outMsg.set_width(hitpointCount);
 
-    ignition::msgs::PointCloudPackedIterator<float> xIter(pointcloudMsg, "x");
-    memcpy(&(*xIter), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
-
-    pointcloudPublisher.Publish(pointcloudMsg);
+    ignition::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
+    memcpy(&(*xIterWorld), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
+    return outMsg;
 }
 
 bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) {
     if (entity == lidarGazeboEntity) {
         isLidarExists = false;
-        RGL_CHECK(rgl_graph_destroy(rglNodeCompact));
+        RGL_CHECK(rgl_graph_destroy(rglNodeRaytrace));
+        // Reset publishers
         pointcloudPublisher = ignition::transport::Node::Publisher();
+        pointcloudWorldPublisher = ignition::transport::Node::Publisher();
     }
     return true;
 }

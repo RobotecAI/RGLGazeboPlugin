@@ -146,6 +146,7 @@
                         <update_rate>20</update_rate>
                         <always_on>false</always_on>
                         <topic>rgl_lidar</topic>
+                        <frame>RGLLidar</frame>
                         <pattern_uniform>
                             <horizontal>
                                 <samples>1800</samples>
