@@ -49,16 +49,20 @@ rgl_mat3x4f RGLServerPluginManager::GetRglMatrix(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
-    auto gazebo_matrix = ignition::math::Matrix4<double>(FindWorldPose(entity, ecm));
+    return Pose3dToRglMatrix(FindWorldPose(entity, ecm));
+}
 
-    rgl_mat3x4f rgl_matrix;
+rgl_mat3x4f RGLServerPluginManager::Pose3dToRglMatrix(
+        const ignition::math::Pose3<double>& pose) {
+
+    auto gazeboMatrix = ignition::math::Matrix4<double>(pose);
+    rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 4; ++j) {
-            rgl_matrix.value[i][j] = static_cast<float>(gazebo_matrix(i, j));
+            rglMatrix.value[i][j] = static_cast<float>(gazeboMatrix(i, j));
         }
     }
-
-    return rgl_matrix;
+    return rglMatrix;
 }
 
 void RGLServerPluginManager::checkSameRGLVersion() {

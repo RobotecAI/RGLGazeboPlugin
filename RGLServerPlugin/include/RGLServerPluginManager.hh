@@ -73,6 +73,8 @@ namespace rgl {
         static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
                                         const ignition::gazebo::EntityComponentManager& ecm);
 
+        static rgl_mat3x4f Pose3dToRglMatrix(const ignition::math::Pose3<double>& pose);
+
         static void checkSameRGLVersion();
 
     private:
