@@ -72,19 +72,22 @@ The basic lidar parameters can be set as shown below. The LiDAR firing pattern c
 <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
     <range>245</range>
     <update_rate>10</update_rate>
-    <always_on>false</always_on>
+    <topic>lidar_topic</topic>
+    <update_on_paused_sim>false</update_on_paused_sim>
 </plugin>
 ```
-**range** - the maximum range that the hits will be registered
+**range** - the maximum range that the hits will be registered (in meters)
 
 **update_rate** - the frequency at which the lidar will perform raycasting (in Hz)
 
-**always_on** - determines whether the lidar is active when the simulation is paused
+**topic** - topic on which pointcloud message (ignition::msgs::PointCloudPacked) will be published
+
+**update_on_paused_sim** - determines whether the lidar is active when the simulation is paused (optional, default: false)
 
 ### Uniform Pattern
 An analogue to the gpu_lidar configuration (angles in radians).
 ```xml
-<uniform_pattern>
+<pattern_uniform>
     <horizontal>
         <samples>1800</samples>
         <min_angle>-3.14159</min_angle>
@@ -95,33 +98,33 @@ An analogue to the gpu_lidar configuration (angles in radians).
         <min_angle>-0.436332</min_angle>
         <max_angle>0.261799</max_angle>
     </vertical>
-</uniform_pattern>
+</pattern_uniform>
 ```
 
 ### Custom Pattern
 **lasers** argument defines the vertical angles of each layer (angles in radians), horizontal samples are uniformly distributed
 ```xml
-<custom lasers="0.698132 -0.698132 0.261799687000294 -0.261799687000294">
+<pattern_custom channels="0.698132 -0.698132 0.261799687000294 -0.261799687000294">
     <horizontal>
         <samples>3600</samples>
         <min_angle>-3.14159</min_angle>
         <max_angle>3.14159</max_angle>
     </horizontal>
-</custom>
+</pattern_custom>
 ```
 
-### Preset
+### Preset Pattern
 You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
 ```xml
-<preset>Alpha Prime</preset>
-<preset>Puck</preset>
-<preset>Ultra Puck</preset>
-<preset>OS1 64</preset>
-<preset>Pandar64</preset>
-<preset>Pandar40P</preset>
+<pattern_preset>Alpha Prime</pattern_preset>
+<pattern_preset>Puck</pattern_preset>
+<pattern_preset>Ultra Puck</pattern_preset>
+<pattern_preset>OS1 64</pattern_preset>
+<pattern_preset>Pandar64</pattern_preset>
+<pattern_preset>Pandar40P</pattern_preset>
 ```
 
-### Preset Path
+### Preset Path Pattern
 If you wish so, You can create your own preset by providing a binary file with the structure below repeated as many times as you fancy. Please note that an absolute path is required.
 ```c
 /**
@@ -134,7 +137,7 @@ typedef struct
 ```
 ![](docs/images/Mat3x4f.png)
 ```xml
-<preset_path>/home/some1/Downloads/lidars-for-gazebo/VelodyneVLS128.mat3x4f</preset_path>
+<pattern_preset_path>/home/some1/your-preset.mat3x4f</pattern_preset_path>
 ```
 ## Level of detail
 At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly, we even take into account the fact that in many lidars the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).

@@ -17,6 +17,7 @@
 #include <filesystem>
 
 #include "rgl/api/core.h"
+#include "LidarPatternLoader.hh"
 
 #include <ignition/common/MeshManager.hh>
 
@@ -28,106 +29,73 @@
 
 #define WORLD_ENTITY_ID 1
 
-using namespace std::literals::chrono_literals;
+namespace rgl
+{
 
-namespace rgl {
-    class RGLServerPluginInstance :
-            public ignition::gazebo::System,
-            public ignition::gazebo::ISystemConfigure,
-            public ignition::gazebo::ISystemPreUpdate,
-            public ignition::gazebo::ISystemPostUpdate {
+class RGLServerPluginInstance :
+    public ignition::gazebo::System,
+    public ignition::gazebo::ISystemConfigure,
+    public ignition::gazebo::ISystemPreUpdate,
+    public ignition::gazebo::ISystemPostUpdate {
 
-    public:
-        RGLServerPluginInstance();
+public:
+    RGLServerPluginInstance();
 
-        ~RGLServerPluginInstance() override;
+    ~RGLServerPluginInstance() override;
 
-        // only called once, when plugin is being loaded
-        void Configure(
-                const ignition::gazebo::Entity& entity,
-                const std::shared_ptr<const sdf::Element>& sdf,
-                ignition::gazebo::EntityComponentManager& ecm,
-                ignition::gazebo::EventManager& eventMgr) override;
+    // only called once, when plugin is being loaded
+    void Configure(
+        const ignition::gazebo::Entity& entity,
+        const std::shared_ptr<const sdf::Element>& sdf,
+        ignition::gazebo::EntityComponentManager& ecm,
+        ignition::gazebo::EventManager& eventMgr) override;
 
-        // called every time before physics update runs (can change entities)
-        void PreUpdate(
-                const ignition::gazebo::UpdateInfo& info,
-                ignition::gazebo::EntityComponentManager& ecm) override;
+    // called every time before physics update runs (can change entities)
+    void PreUpdate(
+            const ignition::gazebo::UpdateInfo& info,
+            ignition::gazebo::EntityComponentManager& ecm) override;
 
-        // called every time after physics runs (can't change entities)
-        void PostUpdate(
-                const ignition::gazebo::UpdateInfo& info,
-                const ignition::gazebo::EntityComponentManager& ecm) override;
+    // called every time after physics runs (can't change entities)
+    void PostUpdate(
+            const ignition::gazebo::UpdateInfo& info,
+            const ignition::gazebo::EntityComponentManager& ecm) override;
 
-    private:
-        ////////////////////////////////////////////// Variables /////////////////////////////////////////////
+private:
+    bool LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf);
+    void CreateLidar(ignition::gazebo::Entity entity,
+                     ignition::gazebo::EntityComponentManager& ecm);
 
-        std::string ray_tf_file_path;
-        bool always_on = false;
-        std::vector<float> layer_angles;
-        float range = 1000.0f;
-        ignition::math::Angle horizontal_max = ignition::math::Angle::Pi;
-        ignition::math::Angle horizontal_min = ignition::math::Angle::Pi * -1;
-        ignition::math::Angle vertical_max = ignition::math::Angle::HalfPi;
-        ignition::math::Angle vertical_min = ignition::math::Angle::HalfPi * -1;
-        int samples_vertical = 100;
-        int samples_horizontal = 2500;
+    void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm);
 
-        int64_t current_update = 0;
-        int updates_between_raytraces = 100;
-        bool before_first_raytrace = true;
-        int64_t last_raytrace_update = 0;
+    bool ShouldRayTrace(std::chrono::steady_clock::duration sim_time,
+                        bool paused);
+    void RayTrace(std::chrono::steady_clock::duration sim_time);
 
-        ignition::transport::Node::Publisher pointcloud_publisher;
-        ignition::transport::Node node;
+    bool CheckLidarExists(ignition::gazebo::Entity entity);
 
-        ignition::gazebo::Entity gazebo_lidar;
-        int lidar_id;
-        bool lidar_exists = false;
+    std::string topicName;
+    float lidarRange;
+    std::vector<rgl_mat3x4f> lidarPattern;
+    std::vector<rgl_vec3f> resultPointCloud;
 
-        rgl_node_t node_use_rays = nullptr;
-        rgl_node_t node_lidar_pose = nullptr;
-        rgl_node_t node_raytrace = nullptr;
-        rgl_node_t node_compact = nullptr;
+    bool updateOnPausedSim = false;
 
-        std::chrono::steady_clock::duration last_raytrace_time = 0ms;
-        std::chrono::steady_clock::duration time_between_raytraces = 100ms;
+    ignition::gazebo::Entity lidarGazeboEntity;
+    ignition::transport::Node::Publisher pointcloudPublisher;
+    ignition::transport::Node gazeboNode;
 
-        std::vector<rgl_vec3f> results{rgl_vec3f{}};
+    rgl_node_t rglNodeUseRays = nullptr;
+    rgl_node_t rglNodeLidarPose = nullptr;
+    rgl_node_t rglNodeRaytrace = nullptr;
+    rgl_node_t rglNodeCompact = nullptr;
 
-        std::unordered_map<std::string, std::string> pattern_names = {
-                {"Alpha Prime", "VelodyneVLS128"},
-                {"Puck", "VelodyneVLP16"},
-                {"Ultra Puck", "VelodyneVLP32C"},
-                {"OS1 64", "OusterOS1_64"},
-                {"Pandar64", "HesaiPandarQT64"},
-                {"Pandar40P", "HesaiPandar40P"}
-        };
+    std::chrono::steady_clock::duration raytraceIntervalTime;
+    std::chrono::steady_clock::duration lastRaytraceTime;
 
-        ////////////////////////////////////////////// Functions /////////////////////////////////////////////
+    bool isLidarExists = false;
 
-        template<typename T>
-        static std::vector<T> loadVector(const std::filesystem::path& path);
+    int onPausedSimUpdateCounter = 0;
+    const int onPausedSimRaytraceInterval = 100;
+};
 
-        void SetPatternFromName(const std::string& name);
-
-        static void AddToRayTf(std::vector<rgl_mat3x4f>& ray_tf,
-                        const ignition::math::Angle& roll,
-                        const ignition::math::Angle& pitch,
-                        const ignition::math::Angle& jaw);
-
-        void LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf);
-
-        void CreateLidar(ignition::gazebo::Entity entity,
-                         ignition::gazebo::EntityComponentManager& ecm);
-
-        void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm);
-
-        bool ShouldRayTrace(std::chrono::steady_clock::duration sim_time,
-                                                     bool paused);
-
-        void RayTrace(std::chrono::steady_clock::duration sim_time);
-
-        bool CheckLidarExists(ignition::gazebo::Entity entity);
-    };
 }

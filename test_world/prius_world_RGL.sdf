@@ -145,7 +145,8 @@
                         <range>245</range>
                         <update_rate>20</update_rate>
                         <always_on>false</always_on>
-                        <uniform>
+                        <topic>rgl_lidar</topic>
+                        <pattern_uniform>
                             <horizontal>
                                 <samples>1800</samples>
                                 <min_angle>-3.14159</min_angle>
@@ -156,7 +157,7 @@
                                 <min_angle>-0.436332</min_angle>
                                 <max_angle>0.261799</max_angle>
                             </vertical>
-                        </uniform>
+                        </pattern_uniform>
                     </plugin>
                     <geometry>
                         <cylinder>

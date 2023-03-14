@@ -38,8 +38,9 @@ void RGLServerPluginInstance::Configure(
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager&) {
 
-    LoadConfiguration(sdf);
-    CreateLidar(entity, ecm);
+    if (LoadConfiguration(sdf)) {
+        CreateLidar(entity, ecm);
+    };
 }
 
 void RGLServerPluginInstance::PreUpdate(
