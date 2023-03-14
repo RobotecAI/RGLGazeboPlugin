@@ -34,7 +34,7 @@ target_link_libraries(RGLServerPluginManager
     ${RobotecGPULidar}
 )
 
-add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc)
+add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc src/LidarPatternLoader.cc)
 target_link_libraries(RGLServerPluginInstance
     ignition-gazebo6::ignition-gazebo6
     ignition-plugin1::ignition-plugin1

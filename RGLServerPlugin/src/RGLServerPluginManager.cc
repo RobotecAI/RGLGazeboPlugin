@@ -38,7 +38,7 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EventManager& evm) {
 
     checkSameRGLVersion();
-    RGL_CHECK(rgl_configure_logging(RGL_LOG_LEVEL_CRITICAL, nullptr, true));
+    RGL_CHECK(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true));
 }
 
 void RGLServerPluginManager::PostUpdate(
