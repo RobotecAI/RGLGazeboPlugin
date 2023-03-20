@@ -30,9 +30,9 @@
 do {                                     \
     rgl_status_t status = call;          \
     if (status != RGL_SUCCESS) {         \
-        const char* msg;                 \
-        rgl_get_last_error_string(&msg); \
-        ignerr << msg << "\n";           \
+    const char* msg;                 \
+    rgl_get_last_error_string(&msg); \
+    ignerr << msg << "\n";           \
     }                                    \
 } while(0)
 
@@ -41,127 +41,127 @@ using MeshInfo = std::variant<const ignition::common::Mesh*, ignition::common::S
 
 namespace rgl {
 
-    class RGLServerPluginManager :
-            public ignition::gazebo::System,
-            public ignition::gazebo::ISystemConfigure,
-            public ignition::gazebo::ISystemPostUpdate {
+class RGLServerPluginManager :
+    public ignition::gazebo::System,
+    public ignition::gazebo::ISystemConfigure,
+    public ignition::gazebo::ISystemPostUpdate {
 
-    public:
-        RGLServerPluginManager();
+public:
+    RGLServerPluginManager();
 
-        ~RGLServerPluginManager() override;
+    ~RGLServerPluginManager() override;
 
-        // only called once, when plugin is being loaded
-        void Configure(
-                const ignition::gazebo::Entity& entity,
-                const std::shared_ptr<const sdf::Element>& sdf,
-                ignition::gazebo::EntityComponentManager& ecm,
-                ignition::gazebo::EventManager& eventMgr) override;
+    // only called once, when plugin is being loaded
+    void Configure(
+        const ignition::gazebo::Entity& entity,
+        const std::shared_ptr<const sdf::Element>& sdf,
+        ignition::gazebo::EntityComponentManager& ecm,
+        ignition::gazebo::EventManager& eventMgr) override;
 
-        // called every time after physics runs (can't change entities)
-        void PostUpdate(
-                const ignition::gazebo::UpdateInfo& info,
-                const ignition::gazebo::EntityComponentManager& ecm) override;
+    // called every time after physics runs (can't change entities)
+    void PostUpdate(
+        const ignition::gazebo::UpdateInfo& info,
+        const ignition::gazebo::EntityComponentManager& ecm) override;
 
-        ////////////////////////////// Utils /////////////////////////////////
+    ////////////////////////////// Utils /////////////////////////////////
 
-        static ignition::math::Pose3<double> FindWorldPose(
-                const ignition::gazebo::Entity& entity,
-                const ignition::gazebo::EntityComponentManager& ecm);
+    static ignition::math::Pose3<double> FindWorldPose(
+        const ignition::gazebo::Entity& entity,
+        const ignition::gazebo::EntityComponentManager& ecm);
 
-        // get the local to global transform matrix
-        static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
-                                        const ignition::gazebo::EntityComponentManager& ecm);
+    // get the local to global transform matrix
+    static rgl_mat3x4f GetRglMatrix(ignition::gazebo::Entity entity,
+                    const ignition::gazebo::EntityComponentManager& ecm);
 
-        static rgl_mat3x4f Pose3dToRglMatrix(const ignition::math::Pose3<double>& pose);
+    static rgl_mat3x4f Pose3dToRglMatrix(const ignition::math::Pose3<double>& pose);
 
-        static void checkSameRGLVersion();
+    static void checkSameRGLVersion();
 
-    private:
-        ////////////////////////////////////////////// Variables /////////////////////////////////////////////
-        ////////////////////////////// Lidar ////////////////////////////////
-        // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
-        std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entities_in_rgl;
+private:
+    ////////////////////////////////////////////// Variables /////////////////////////////////////////////
+    ////////////////////////////// Lidar ////////////////////////////////
+    // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
+    std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entities_in_rgl;
 
-        // the entity ids, that the lidars are attached to
-        std::unordered_set<ignition::gazebo::Entity> gazebo_lidars;
+    // the entity ids, that the lidars are attached to
+    std::unordered_set<ignition::gazebo::Entity> gazebo_lidars;
 
-        // all entities, that the lidar should ignore
-        std::unordered_set<ignition::gazebo::Entity> lidar_ignore;
+    // all entities, that the lidar should ignore
+    std::unordered_set<ignition::gazebo::Entity> lidar_ignore;
 
-        ////////////////////////////// Mesh /////////////////////////////////
+    ////////////////////////////// Mesh /////////////////////////////////
 
-        ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
+    ignition::common::MeshManager* mesh_manager{ignition::common::MeshManager::Instance()};
 
-        ////////////////////////////////////////////// Functions /////////////////////////////////////////////
-        ////////////////////////////// Scene ////////////////////////////////
+    ////////////////////////////////////////////// Functions /////////////////////////////////////////////
+    ////////////////////////////// Scene ////////////////////////////////
 
-        bool RegisterNewLidarsCb(
-                ignition::gazebo::Entity entity,
-                const ignition::gazebo::EntityComponentManager& ecm);
+    bool RegisterNewLidarsCb(
+        ignition::gazebo::Entity entity,
+        const ignition::gazebo::EntityComponentManager& ecm);
 
-        bool CheckRemovedLidarsCb(
-                ignition::gazebo::Entity entity,
-                const ignition::gazebo::EntityComponentManager& ecm);
+    bool CheckRemovedLidarsCb(
+        ignition::gazebo::Entity entity,
+        const ignition::gazebo::EntityComponentManager& ecm);
 
-        bool LoadEntityToRGLCb(
-                const ignition::gazebo::Entity& entity,
-                const ignition::gazebo::components::Visual*,
-                const ignition::gazebo::components::Geometry* geometry);
+    bool LoadEntityToRGLCb(
+        const ignition::gazebo::Entity& entity,
+        const ignition::gazebo::components::Visual*,
+        const ignition::gazebo::components::Geometry* geometry);
 
-        bool RemoveEntityFromRGLCb(
-                const ignition::gazebo::Entity& entity,
-                const ignition::gazebo::components::Visual*,
-                const ignition::gazebo::components::Geometry*);
+    bool RemoveEntityFromRGLCb(
+        const ignition::gazebo::Entity& entity,
+        const ignition::gazebo::components::Visual*,
+        const ignition::gazebo::components::Geometry*);
 
-        void UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm);
+    void UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm);
 
-        ////////////////////////////// Mesh /////////////////////////////////
+    ////////////////////////////// Mesh /////////////////////////////////
 
-        MeshInfo LoadBox(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    MeshInfo LoadBox(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        MeshInfo LoadCapsule(const sdf::Geometry& data);
+    MeshInfo LoadCapsule(const sdf::Geometry& data);
 
-        MeshInfo LoadCylinder(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    MeshInfo LoadCylinder(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        MeshInfo LoadEllipsoid(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    MeshInfo LoadEllipsoid(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        MeshInfo LoadMesh(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    MeshInfo LoadMesh(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        MeshInfo LoadPlane(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y);
+    MeshInfo LoadPlane(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y);
 
-        MeshInfo LoadSphere(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    MeshInfo LoadSphere(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        // also gets the scale of the mesh
-        MeshInfo GetMeshPointer(
-                const sdf::Geometry& data,
-                double& scale_x,
-                double& scale_y,
-                double& scale_z);
+    // also gets the scale of the mesh
+    MeshInfo GetMeshPointer(
+        const sdf::Geometry& data,
+        double& scale_x,
+        double& scale_y,
+        double& scale_z);
 
-        bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const sdf::Geometry& data);
+    bool LoadMeshToRGL(rgl_mesh_t* new_mesh, const sdf::Geometry& data);
     };
 }
