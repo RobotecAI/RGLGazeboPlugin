@@ -1,9 +1,6 @@
 <sdf version='1.9'>
     <world name='sonoma'>
-        <plugin
-                filename="RGLServerPluginManager"
-                name="rgl::RGLServerPluginManager">
-        </plugin>
+        <plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"/>
         <scene>
             <grid>false</grid>
             <ambient>0.4 0.4 0.4 1</ambient>
@@ -77,6 +74,7 @@
                 <topic>/cmd_vel</topic>
             </plugin>
             <plugin name='RGLVisualize' filename='RGLVisualize'>
+                <point_cloud_topic>rgl_lidar/world</point_cloud_topic>
             </plugin>
         </gui>
         <gravity>0 0 -9.8</gravity>
@@ -131,8 +129,8 @@
         <model name='prius_hybrid'>
             <pose>278.08 -134.22 2.86 0.02 -0 0.97</pose>
             <link name="lidar">
-                <pose>0 0.5 2.1 0 -0 0</pose>
-                <collision name='cylinder_collision'>
+                <pose>0 0.55 1.66 0 -0 0</pose>
+                <collision name='lidar_collision'>
                     <geometry>
                         <cylinder>
                             <radius>0.1</radius>
@@ -140,11 +138,11 @@
                         </cylinder>
                     </geometry>
                 </collision>
-                <visual name='cylinder_visual'>
+                <visual name='lidar_visual'>
                     <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
                         <range>245</range>
                         <update_rate>20</update_rate>
-                        <always_on>false</always_on>
+                        <update_on_paused_sim>false</update_on_paused_sim>
                         <topic>rgl_lidar</topic>
                         <frame>RGLLidar</frame>
                         <pattern_uniform>

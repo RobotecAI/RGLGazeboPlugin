@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2022 Open Source Robotics Foundation
- * Copyright (C) 2022 Robotec.AI
+ * Modifications copyright (C) 2022 Robotec.AI
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ ColumnLayout {
       }
       ToolTip.visible: hovered
       ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-      ToolTip.text: qsTr("Refresh list of topics publishing point clouds and float vectors")
+      ToolTip.text: qsTr("Refresh list of topics publishing point clouds")
     }
   }
 
