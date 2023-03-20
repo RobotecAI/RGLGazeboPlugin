@@ -1,15 +1,15 @@
 <sdf version='1.9'>
-  <world name='gpu_lidar_sensor'>
-  <plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"/>
+  <world name='garden_rgl'>
+
+    <!-- Global RGL scene manager required to upload meshes to GPU -->
+    <plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"/>
+
     <physics name='1ms' type='ignored'>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>1000</real_time_update_rate>
     </physics>
     <plugin name='ignition::gazebo::systems::Physics' filename='ignition-gazebo-physics-system'/>
-    <plugin name='ignition::gazebo::systems::Sensors' filename='ignition-gazebo-sensors-system'>
-      <render_engine>ogre2</render_engine>
-    </plugin>
     <plugin name='ignition::gazebo::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
@@ -19,6 +19,7 @@
       <background>0.7 0.7 0.7 1</background>
       <shadows>true</shadows>
     </scene>
+
     <model name='ground_plane'>
       <static>true</static>
       <link name='link'>
@@ -114,28 +115,32 @@
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
+
     <model name='model_with_lidar'>
-      <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-        <range>245</range>
-        <update_rate>1</update_rate>
-        <update_on_paused_sim>false</update_on_paused_sim>
-        <topic>rgl_lidar</topic>
-        <frame>RGLLidar</frame>
-        <pattern_uniform>
-            <horizontal>
-              <samples>640</samples>
-              <min_angle>-1.3962600000000001</min_angle>
-              <max_angle>1.3962600000000001</max_angle>
-            </horizontal>
-            <vertical>
-              <samples>16</samples>
-              <min_angle>-0.261799</min_angle>
-              <max_angle>0.261799</max_angle>
-            </vertical>
-        </pattern_uniform>
-      </plugin>
       <pose>4 0 0.5 0 -0 3.14</pose>
       <link name='link'>
+        <!-- Custom sensor with RGL plugin that simulates lidar -->
+        <sensor name="RGLsensor" type="custom">
+          <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+            <range>245</range>
+            <update_rate>1</update_rate>
+            <update_on_paused_sim>false</update_on_paused_sim>
+            <topic>rgl_lidar</topic>
+            <frame>RGLLidar</frame>
+            <pattern_uniform>
+              <horizontal>
+                <samples>640</samples>
+                <min_angle>-1.3962600000000001</min_angle>
+                <max_angle>1.3962600000000001</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>16</samples>
+                <min_angle>-0.261799</min_angle>
+                <max_angle>0.261799</max_angle>
+              </vertical>
+            </pattern_uniform>
+          </plugin>
+        </sensor>
         <pose>0.05 0.05 0.05 0 -0 0</pose>
         <inertial>
           <mass>0.10000000000000001</mass>
@@ -175,11 +180,13 @@
       <static>true</static>
       <self_collide>false</self_collide>
     </model>
+
     <include>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Playground</uri>
       <name>playground</name>
       <pose>0 0 0 0 -0 1.57</pose>
     </include>
+  
     <light name='sun' type='directional'>
       <pose>0 0 10 0 -0 0</pose>
       <cast_shadows>true</cast_shadows>

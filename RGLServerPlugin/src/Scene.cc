@@ -14,6 +14,8 @@
 
 #include "RGLServerPluginManager.hh"
 
+#include <ignition/gazebo/components/CustomSensor.hh>
+#include <ignition/gazebo/components/Link.hh>
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
 
 #define RGL_INSTANCE "rgl::RGLServerPluginInstance"
@@ -27,11 +29,19 @@ using namespace rgl;
 bool RGLServerPluginManager::RegisterNewLidarsCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
-    auto data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
-    if (data == std::nullopt) {
+
+    if (!ecm.EntityHasComponentType(entity, ignition::gazebo::components::CustomSensor::typeId))
+    {
         return true;
     }
-    auto plugins = data->plugins();
+
+    auto plugin_data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
+
+    if (plugin_data == std::nullopt) {
+        return true;
+    }
+
+    auto plugins = plugin_data->plugins();
     for (const auto& plugin : plugins) {
         if (plugin.name() == RGL_INSTANCE) {
             gazebo_lidars.insert(entity);
@@ -40,6 +50,20 @@ bool RGLServerPluginManager::RegisterNewLidarsCb(
             }
         }
     }
+
+    auto parent_entity = ecm.ParentEntity(entity);
+    if (!gazebo_lidars.contains(entity) ||
+        parent_entity == ignition::gazebo::kNullEntity ||
+        !ecm.EntityHasComponentType(parent_entity, ignition::gazebo::components::Link::typeId)) {
+        return true;
+    }
+
+    // ignore all entities in link associated with RGL lidar sensor
+    // this link could contain visual representation of the lidar
+    for (auto descendant: ecm.Descendants(parent_entity)) {
+        lidar_ignore.insert(descendant);
+    }
+
     return true;
 }
 
