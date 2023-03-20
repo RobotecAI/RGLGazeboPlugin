@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2022 Open Source Robotics Foundation
- * Copyright (C) 2022 Robotec.AI
+ * Modifications copyright (C) 2022 Robotec.AI
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,18 @@
  *
  */
 
-#include "ignition/msgs/pointcloud_packed.pb.h"
-
 #include <algorithm>
-#include <limits>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include <ignition/common/Console.hh>
 #include <ignition/common/Profiler.hh>
-#include <ignition/math/Color.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
 #include <ignition/msgs/PointCloudPackedUtils.hh>
 #include <ignition/msgs/Utility.hh>
 #include <ignition/plugin/Register.hh>
 #include <ignition/transport/Node.hh>
 
 #include <ignition/gui/Application.hh>
-#include <ignition/gui/Conversions.hh>
-#include <ignition/gui/GuiEvents.hh>
 #include <ignition/gui/MainWindow.hh>
 
 #include "RGLVisualize.hh"
@@ -48,68 +39,28 @@ namespace rgl
 class RGLVisualizePrivate
 {
   /// \brief Makes a request to populate the scene with markers
-public:
-  void PublishMarkers();
+  public: void PublishMarkers();
 
   /// \brief Makes a request to delete all markers related to the point cloud.
-public:
-  void ClearMarkers();
+  public: void ClearMarkers();
 
   /// \brief Transport node
-public:
-  ignition::transport::Node node;
+  public: ignition::transport::Node node;
 
   /// \brief Name of topic for PointCloudPacked
-public:
-  std::string pointCloudTopic{""};
-
-  /// \brief Name of topic for FloatV
-public:
-  std::string floatVTopic{""};
+  public: std::string pointCloudTopic;
 
   /// \brief List of topics publishing PointCloudPacked.
-public:
-  QStringList pointCloudTopicList;
-
-  /// \brief List of topics publishing FloatV.
-public:
-  QStringList floatVTopicList;
+  public: QStringList pointCloudTopicList;
 
   /// \brief Protect variables changed from transport and the user
-public:
-  std::recursive_mutex mutex;
+  public: std::recursive_mutex mutex;
 
   /// \brief Point cloud message containing XYZ positions
-public:
-  ignition::msgs::PointCloudPacked pointCloudMsg;
-
-  /// \brief Message holding a float vector.
-public:
-  ignition::msgs::Float_V floatVMsg;
-
-  /// \brief Minimum value in latest float vector
-public:
-  float minFloatV{std::numeric_limits<float>::max()};
-
-  /// \brief Maximum value in latest float vector
-public:
-  float maxFloatV{-std::numeric_limits<float>::max()};
-
-  /// \brief Color for minimum value, changeable at runtime
-public:
-  ignition::math::Color minColor{1.0f, 0.0f, 0.0f, 1.0f};
-
-  /// \brief Color for maximum value, changeable at runtime
-public:
-  ignition::math::Color maxColor{0.0f, 1.0f, 0.0f, 1.0f};
-
-  /// \brief Size of each point, changeable at runtime
-public:
-  float pointSize{1};
+  public: ignition::msgs::PointCloudPacked pointCloudMsg;
 
   /// \brief True if showing, changeable at runtime
-public:
-  bool showing{true};
+  public: bool showing{true};
 };
 
 /////////////////////////////////////////////////
@@ -157,7 +108,7 @@ void RGLVisualize::OnPointCloudTopic(const QString &_pointCloudTopic)
       !this->dataPtr->node.Unsubscribe(this->dataPtr->pointCloudTopic))
   {
     ignerr << "Unable to unsubscribe from topic ["
-            << this->dataPtr->pointCloudTopic << "]" << std::endl;
+           << this->dataPtr->pointCloudTopic << "]" << std::endl;
   }
 
   // Clear visualization
@@ -171,7 +122,7 @@ void RGLVisualize::OnPointCloudTopic(const QString &_pointCloudTopic)
 
   // Create new subscription
   if (!this->dataPtr->node.Subscribe(this->dataPtr->pointCloudTopic,
-                                      &RGLVisualize::OnPointCloud, this))
+                                     &RGLVisualize::OnPointCloud, this))
   {
     ignerr << "Unable to subscribe to topic ["
             << this->dataPtr->pointCloudTopic << "]\n";
@@ -206,20 +157,27 @@ void RGLVisualize::OnRefresh()
   // Get updated list
   std::vector<std::string> allTopics;
   this->dataPtr->node.TopicList(allTopics);
-  for (auto topic : allTopics)
+  for (const auto& topic : allTopics)
   {
     std::vector<ignition::transport::MessagePublisher> publishers;
     this->dataPtr->node.TopicInfo(topic, publishers);
-    for (auto pub : publishers)
+    for (const auto& pub : publishers)
     {
       if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
       {
+        if (std::find(this->dataPtr->pointCloudTopicList.begin(),
+                      this->dataPtr->pointCloudTopicList.end(),
+                      QString::fromStdString(topic)) != this->dataPtr->pointCloudTopicList.end())
+        {
+          // already added
+          continue;
+        }
         this->dataPtr->pointCloudTopicList.push_back(
             QString::fromStdString(topic));
       }
     }
   }
-  if (this->dataPtr->pointCloudTopicList.size() > 0)
+  if (!this->dataPtr->pointCloudTopicList.empty())
   {
     this->OnPointCloudTopic(this->dataPtr->pointCloudTopicList.at(0));
   }
@@ -285,9 +243,6 @@ void RGLVisualizePrivate::PublishMarkers()
   marker.set_type(ignition::msgs::Marker::POINTS);
   marker.set_visibility(ignition::msgs::Marker::GUI);
 
-  ignition::msgs::Set(marker.mutable_scale(),
-                      ignition::math::Vector3d::One * this->pointSize);
-
   ignition::msgs::PointCloudPackedIterator<float>
       iterX(this->pointCloudMsg, "x");
   ignition::msgs::PointCloudPackedIterator<float>
@@ -301,16 +256,16 @@ void RGLVisualizePrivate::PublishMarkers()
       this->pointCloudMsg.data().size() / this->pointCloudMsg.point_step();
   if (this->pointCloudMsg.data().size() % this->pointCloudMsg.point_step() != 0)
   {
-    ignwarn << "Mal-formatted pointcloud" << std::endl;
+    ignwarn << "Mal-formatted point cloud" << std::endl;
   }
 
   for (; ptIdx < std::min<int>((int)this->pointCloudMsg.data().size(), (int)num_points);
         ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
-    ignition::msgs::Set(marker.add_point(), ignition::math::Vector3d(
-                                                *iterX,
-                                                *iterY,
-                                                *iterZ));
+    ignition::msgs::Set(marker.add_point(),
+                        ignition::math::Vector3d(*iterX,
+                                                 *iterY,
+                                                 *iterZ));
   }
 
   this->node.Request("/marker", marker);
@@ -324,7 +279,7 @@ void RGLVisualizePrivate::ClearMarkers()
 
   std::lock_guard<std::recursive_mutex> lock(this->mutex);
   ignition::msgs::Marker msg;
-  msg.set_ns(this->pointCloudTopic + this->floatVTopic);
+  msg.set_ns(this->pointCloudTopic);
   msg.set_id(0);
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
@@ -333,20 +288,6 @@ void RGLVisualizePrivate::ClearMarkers()
           << std::endl;
 
   this->node.Request("/marker", msg);
-}
-
-/////////////////////////////////////////////////
-float RGLVisualize::PointSize() const
-{
-  return this->dataPtr->pointSize;
-}
-
-/////////////////////////////////////////////////
-void RGLVisualize::SetPointSize(float _pointSize)
-{
-  this->dataPtr->pointSize = _pointSize;
-  this->PointSizeChanged();
-  this->dataPtr->PublishMarkers();
 }
 
 // Register this plugin

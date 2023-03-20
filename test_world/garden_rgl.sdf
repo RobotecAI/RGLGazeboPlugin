@@ -1,9 +1,6 @@
 <sdf version='1.9'>
   <world name='gpu_lidar_sensor'>
-  <plugin
-                filename="RGLServerPluginManager"
-                name="rgl::RGLServerPluginManager">
-        </plugin>
+  <plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"/>
     <physics name='1ms' type='ignored'>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
@@ -119,23 +116,23 @@
     </model>
     <model name='model_with_lidar'>
       <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-          <range>245</range>
-          <update_rate>1</update_rate>
-          <always_on>true</always_on>
-          <topic>rgl_lidar</topic>
-          <frame>RGLLidar</frame>
-          <pattern_uniform>
-              <horizontal>
-                <samples>640</samples>
-                <min_angle>-1.3962600000000001</min_angle>
-                <max_angle>1.3962600000000001</max_angle>
-              </horizontal>
-              <vertical>
-                <samples>16</samples>
-                <min_angle>-0.261799</min_angle>
-                <max_angle>0.261799</max_angle>
-              </vertical>
-          </pattern_uniform>
+        <range>245</range>
+        <update_rate>1</update_rate>
+        <update_on_paused_sim>false</update_on_paused_sim>
+        <topic>rgl_lidar</topic>
+        <frame>RGLLidar</frame>
+        <pattern_uniform>
+            <horizontal>
+              <samples>640</samples>
+              <min_angle>-1.3962600000000001</min_angle>
+              <max_angle>1.3962600000000001</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>16</samples>
+              <min_angle>-0.261799</min_angle>
+              <max_angle>0.261799</max_angle>
+            </vertical>
+        </pattern_uniform>
       </plugin>
       <pose>4 0 0.5 0 -0 3.14</pose>
       <link name='link'>
