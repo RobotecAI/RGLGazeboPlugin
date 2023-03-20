@@ -121,15 +121,17 @@ bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration
         if (!updateOnPausedSim) {
             return false;
         }
-        if (onPausedSimUpdateCounter > onPausedSimRaytraceInterval) {
-            onPausedSimUpdateCounter = 0;
-            return true;
+        if (onPausedSimUpdateCounter < onPausedSimRaytraceInterval) {
+            return false;
         }
-        return false;
-    } else if (simTime < lastRaytraceTime + raytraceIntervalTime) {
-        return false;
+        onPausedSimUpdateCounter = 0;
+        return true;
     }
 
+    // Simulation running
+    if (simTime < lastRaytraceTime + raytraceIntervalTime) {
+        return false;
+    }
     return true;
 }
 

@@ -27,8 +27,6 @@
 
 #include <ignition/transport/Node.hh>
 
-#define WORLD_ENTITY_ID 1
-
 namespace rgl
 {
 
@@ -95,7 +93,7 @@ private:
     rgl_node_t rglNodeToLidarFrame = nullptr;
 
     std::chrono::steady_clock::duration raytraceIntervalTime;
-    std::chrono::steady_clock::duration lastRaytraceTime;
+    std::chrono::steady_clock::duration lastRaytraceTime{0};
 
     bool isLidarExists = false;
 
