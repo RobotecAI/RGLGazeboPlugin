@@ -20,64 +20,64 @@
 
 #define RGL_INSTANCE "rgl::RGLServerPluginInstance"
 
-using namespace rgl;
+namespace rgl
+{
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "ConstantFunctionResult"
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::RegisterNewLidarsCb(
+bool RGLServerPluginManager::RegisterNewLidarCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
+    // Plugin must be inside CustomSensor
     if (!ecm.EntityHasComponentType(entity, ignition::gazebo::components::CustomSensor::typeId))
     {
         return true;
     }
 
-    auto plugin_data = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
-
-    if (plugin_data == std::nullopt) {
+    // Looking for plugin
+    auto pluginData = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
+    if (pluginData == std::nullopt) {
         return true;
     }
-
-    auto plugins = plugin_data->plugins();
+    auto plugins = pluginData->plugins();
     for (const auto& plugin : plugins) {
         if (plugin.name() == RGL_INSTANCE) {
-            gazebo_lidars.insert(entity);
+            lidarEntities.insert(entity);
             for (auto descendant: ecm.Descendants(entity)) {
-                lidar_ignore.insert(descendant);
+                entitiesToIgnore.insert(descendant);
             }
         }
     }
 
-    auto parent_entity = ecm.ParentEntity(entity);
-    if (!gazebo_lidars.contains(entity) ||
-        parent_entity == ignition::gazebo::kNullEntity ||
-        !ecm.EntityHasComponentType(parent_entity, ignition::gazebo::components::Link::typeId)) {
+    // RGL lidar plugin not found
+    if (!lidarEntities.contains(entity)) {
         return true;
     }
 
-    // ignore all entities in link associated with RGL lidar sensor
-    // this link could contain visual representation of the lidar
-    for (auto descendant: ecm.Descendants(parent_entity)) {
-        lidar_ignore.insert(descendant);
+    // Ignore all entities in link associated with RGL lidar
+    // Link could contain visual representation of the lidar
+    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
+        entitiesToIgnore.insert(entityInParentLink);
     }
 
     return true;
 }
 
 // always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::CheckRemovedLidarsCb(
+bool RGLServerPluginManager::UnregisterLidarCb(
         ignition::gazebo::Entity entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
-    if (!gazebo_lidars.contains(entity)) {
+
+    if (!lidarEntities.contains(entity)) {
         return true;
     }
-    for (auto descendant: ecm.Descendants(entity)) {
-        lidar_ignore.erase(descendant);
+    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
+        entitiesToIgnore.erase(entityInParentLink);
     }
-    gazebo_lidars.erase(entity);
+    lidarEntities.erase(entity);
     return true;
 }
 
@@ -86,20 +86,25 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry* geometry) {
-    if (lidar_ignore.contains(entity)) {
+
+    if (entitiesToIgnore.contains(entity)) {
         return true;
     }
-    if (entities_in_rgl.contains(entity)) {
-        ignwarn << "trying to add same entity to rgl multiple times!\n";
+    if (entitiesInRgl.contains(entity)) {
+        ignwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
         return true;
     }
-    rgl_mesh_t new_mesh;
-    if (!LoadMeshToRGL(&new_mesh, geometry->Data())) {
+    rgl_mesh_t rglMesh;
+    if (!LoadMeshToRGL(&rglMesh, geometry->Data())) {
+        ignerr << "Failed to load mesh to RGL from entity (" << entity << "). Skipping...\n";
         return true;
     }
-    rgl_entity_t new_rgl_entity;
-    RGL_CHECK(rgl_entity_create(&new_rgl_entity, nullptr, new_mesh));
-    entities_in_rgl.insert(std::make_pair(entity, std::make_pair(new_rgl_entity, new_mesh)));
+    rgl_entity_t rglEntity;
+    if (!CheckRGL(rgl_entity_create(&rglEntity, nullptr, rglMesh))) {
+        ignerr << "Failed to load entity (" << entity << ") to RGL. Skipping...\n";
+        return true;
+    }
+    entitiesInRgl.insert({entity, {rglEntity, rglMesh}});
     return true;
 }
 
@@ -108,23 +113,45 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry*) {
-    if (lidar_ignore.contains(entity)) {
-        lidar_ignore.erase(entity);
+
+    if (entitiesToIgnore.contains(entity)) {
+        entitiesToIgnore.erase(entity);
         return true;
     }
-    if (!entities_in_rgl.contains(entity)) {
+    if (!entitiesInRgl.contains(entity)) {
         return true;
     }
-    RGL_CHECK(rgl_entity_destroy(entities_in_rgl.at(entity).first));
-    RGL_CHECK(rgl_mesh_destroy(entities_in_rgl.at(entity).second));
-    entities_in_rgl.erase(entity);
+    if (!CheckRGL(rgl_entity_destroy(entitiesInRgl.at(entity).first))) {
+        ignerr << "Failed to remove entity (" << entity << ") from RGL.\n";
+    }
+    if (!CheckRGL(rgl_mesh_destroy(entitiesInRgl.at(entity).second))) {
+        ignerr << "Failed to remove mesh from entity (" << entity << ") in RGL.\n";
+    }
+    entitiesInRgl.erase(entity);
     return true;
 }
 #pragma clang diagnostic pop
 
-void RGLServerPluginManager::UpdateRGLEntityPose(const ignition::gazebo::EntityComponentManager& ecm) {
-    for (auto entity: entities_in_rgl) {
-        auto rgl_matrix = GetRglMatrix(entity.first, ecm);
-        RGL_CHECK(rgl_entity_set_pose(entity.second.first, &rgl_matrix));
+void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm) {
+
+    for (auto entity: entitiesInRgl) {
+        rgl_mat3x4f rglMatrix = FindWorldPoseInRglMatrix(entity.first, ecm);
+        if (!CheckRGL(rgl_entity_set_pose(entity.second.first, &rglMatrix))) {
+            ignerr << "Failed to update pose for entity (" << entity.first << ").\n";
+        }
     }
 }
+
+std::unordered_set<ignition::gazebo::Entity> RGLServerPluginManager::GetEntitiesInParentLink(
+        ignition::gazebo::Entity entity,
+        const ignition::gazebo::EntityComponentManager& ecm) {
+
+    auto parentEntity = ecm.ParentEntity(entity);
+    if (parentEntity == ignition::gazebo::kNullEntity ||
+        !ecm.EntityHasComponentType(parentEntity, ignition::gazebo::components::Link::typeId)) {
+        return {};
+    }
+    return ecm.Descendants(parentEntity);
+}
+
+}  // namespace rgl

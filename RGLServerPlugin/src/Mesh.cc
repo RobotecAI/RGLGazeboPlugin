@@ -26,239 +26,234 @@
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 
-#define UNIT_BOX_TEXT "unit_box"
-#define UNIT_CYLINDER_TEXT "unit_cylinder"
-#define UNIT_PLANE_TEXT "unit_plane"
-#define UNIT_SPHERE_TEXT "unit_sphere"
+#define UNIT_BOX_ID "unit_box"
+#define UNIT_CYLINDER_ID "unit_cylinder"
+#define UNIT_PLANE_ID "unit_plane"
+#define UNIT_SPHERE_ID "unit_sphere"
 
 #define CAPSULE_RINGS 32
 #define CAPSULE_SEGMENTS 32
 
-using namespace rgl;
+namespace rgl
+{
 
-MeshInfo RGLServerPluginManager::LoadBox(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadBox(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     auto size = data.BoxShape()->Size();
 
-    scale_x = size.X();
-    scale_y = size.Y();
-    scale_z = size.Z();
+    scaleX = size.X();
+    scaleY = size.Y();
+    scaleZ = size.Z();
 
-    return mesh_manager->MeshByName(UNIT_BOX_TEXT);
+    return meshManager->MeshByName(UNIT_BOX_ID);
 }
 
-// Currently disabled due to being untrue with the sim gui, find out default values and reimplement
-
-//The difference between capsule and other primitive geometry types is
-// that "unit_capsule" mesh is not created by the gazebo MeshManager,
-// while other primitive types have their unit meshes created and ready to query by name
-MeshInfo RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data) {
-
-    auto shape = data.CapsuleShape();
-
-    std::string capsuleMeshName = "capsule_mesh";
-    capsuleMeshName += "_" + std::to_string(shape->Radius())
-                       + "_" + std::to_string(shape->Length());
-
-    // Create new mesh if needed
-    if (!mesh_manager->HasMesh(capsuleMeshName)) {
-        mesh_manager->CreateCapsule(capsuleMeshName,
-                                    shape->Radius(),
-                                    shape->Length(),
-                                    CAPSULE_RINGS,
-                                    CAPSULE_SEGMENTS);
-    }
-
-    return mesh_manager->MeshByName(capsuleMeshName);
-}
-
-MeshInfo RGLServerPluginManager::LoadCylinder(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadCylinder(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     auto shape = data.CylinderShape();
 
-    scale_x = shape->Radius() * 2;
-    scale_y = shape->Radius() * 2;
-    scale_z = shape->Length();
+    scaleX = shape->Radius() * 2;
+    scaleY = shape->Radius() * 2;
+    scaleZ = shape->Length();
 
-    return mesh_manager->MeshByName(UNIT_CYLINDER_TEXT);
+    return meshManager->MeshByName(UNIT_CYLINDER_ID);
 }
 
-MeshInfo RGLServerPluginManager::LoadEllipsoid(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadEllipsoid(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     auto shape = data.EllipsoidShape()->Radii();
 
-    scale_x = shape.X() * 2;
-    scale_y = shape.Y() * 2;
-    scale_z = shape.Z() * 2;
+    scaleX = shape.X() * 2;
+    scaleY = shape.Y() * 2;
+    scaleZ = shape.Z() * 2;
 
-    return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
+    return meshManager->MeshByName(UNIT_SPHERE_ID);
 }
 
-MeshInfo RGLServerPluginManager::LoadMesh(
+// Need to handle in different way than other primitive geometry types.
+// The difference is that "unit_capsule" mesh is not created by the gazebo MeshManager,
+// while other primitive types have their unit meshes created and ready to query by name.
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data) {
+
+    auto shape = data.CapsuleShape();
+
+    // Unique capsule mesh name with radius and length
+    std::string capsuleMeshName = "capsule_mesh";
+    capsuleMeshName += "_" + std::to_string(shape->Radius())
+                    + "_" + std::to_string(shape->Length());
+
+    // Create new mesh if needed
+    if (!meshManager->HasMesh(capsuleMeshName)) {
+        meshManager->CreateCapsule(capsuleMeshName,
+                                   shape->Radius(),
+                                   shape->Length(),
+                                   CAPSULE_RINGS,
+                                   CAPSULE_SEGMENTS);
+    }
+
+    return meshManager->MeshByName(capsuleMeshName);
+}
+
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     auto scale = data.MeshShape()->Scale();
 
-    scale_x = scale.X();
-    scale_y = scale.Y();
-    scale_z = scale.Z();
+    scaleX = scale.X();
+    scaleY = scale.Y();
+    scaleZ = scale.Z();
 
-    auto mesh = mesh_manager->Load(ignition::gazebo::asFullPath(
+    std::string meshPath = ignition::gazebo::asFullPath(
             data.MeshShape()->Uri(),
-            data.MeshShape()->FilePath()));
+            data.MeshShape()->FilePath());
 
-    auto submesh_name = data.MeshShape()->Submesh();
-    if (!submesh_name.empty()) {
-        ignition::common::SubMesh submesh_copy(*(mesh->SubMeshByName(submesh_name).lock()));
-        if (data.MeshShape()->CenterSubmesh()) {
-            submesh_copy.Center();
-        }
-        return submesh_copy;
-    } else {
+    const ignition::common::Mesh* mesh = meshManager->Load(meshPath);
+
+    if (mesh == nullptr) {
+        ignerr << "Failed to import mesh to RGL: " << meshPath << ".\n";
+        return nullptr;
+    }
+
+    std::string subMeshName = data.MeshShape()->Submesh();
+
+    if (subMeshName.empty()) {
         return mesh;
     }
+
+    if (auto subMesh = mesh->SubMeshByName(subMeshName).lock()) {
+        // subMesh must not be null
+        if (subMesh.get()) {
+            ignition::common::SubMesh subMeshCopy(*subMesh);
+            if (data.MeshShape()->CenterSubmesh()) {
+                subMeshCopy.Center();
+            }
+            return subMeshCopy;
+        }
+    }
+    ignerr << "Failed to import subMesh to RGL: " << subMeshName << ".\n";
+    return nullptr;
 }
 
-MeshInfo RGLServerPluginManager::LoadPlane(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadPlane(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y) {
+        double& scaleX,
+        double& scaleY) {
 
     auto size = data.PlaneShape()->Size();
 
-    scale_x = size.X() * 2;
-    scale_y = size.Y() * 2;
+    scaleX = size.X() * 2;
+    scaleY = size.Y() * 2;
 
-    return mesh_manager->MeshByName(UNIT_PLANE_TEXT);
+    return meshManager->MeshByName(UNIT_PLANE_ID);
 }
 
-MeshInfo RGLServerPluginManager::LoadSphere(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadSphere(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     auto radius = data.SphereShape()->Radius();
 
-    scale_x = radius * 2;
-    scale_y = radius * 2;
-    scale_z = radius * 2;
+    scaleX = radius * 2;
+    scaleY = radius * 2;
+    scaleZ = radius * 2;
 
-    return mesh_manager->MeshByName(UNIT_SPHERE_TEXT);
+    return meshManager->MeshByName(UNIT_SPHERE_ID);
 }
 
-MeshInfo RGLServerPluginManager::GetMeshPointer(
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::GetMeshPointer(
         const sdf::Geometry& data,
-        double& scale_x,
-        double& scale_y,
-        double& scale_z) {
-
-    MeshInfo mesh_info;
+        double& scaleX,
+        double& scaleY,
+        double& scaleZ) {
 
     switch (data.Type()) {
         case sdf::GeometryType::BOX:
-            mesh_info = LoadBox(data, scale_x, scale_y, scale_z);
-            break;
+            return LoadBox(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::CAPSULE:
-            mesh_info = LoadCapsule(data);
-            break;
+            return LoadCapsule(data);
         case sdf::GeometryType::CYLINDER:
-            mesh_info = LoadCylinder(data, scale_x, scale_y, scale_z);
-            break;
+            return LoadCylinder(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::ELLIPSOID:
-            mesh_info = LoadEllipsoid(data, scale_x, scale_y, scale_z);
-            break;
+            return LoadEllipsoid(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::EMPTY:
-            ignerr << "EMPTY geometry" << std::endl;
-            return {};
+            return nullptr;
         case sdf::GeometryType::MESH:
-            mesh_info = LoadMesh(data, scale_x, scale_y, scale_z);
-            break;
+            return LoadMesh(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::PLANE:
-            mesh_info = LoadPlane(data, scale_x, scale_y);
-            break;
+            return LoadPlane(data, scaleX, scaleY);
         case sdf::GeometryType::SPHERE:
-            mesh_info = LoadSphere(data, scale_x, scale_y, scale_z);
-            break;
+            return LoadSphere(data, scaleX, scaleY, scaleZ);
         default:
-            ignerr << "geometry type: " << static_cast<int>(data.Type()) << " not supported yet" << std::endl;
-            return {};
+            return nullptr;
     }
-    if (std::get_if<const ignition::common::Mesh*>(&mesh_info) == nullptr &&
-        std::get_if<ignition::common::SubMesh>(&mesh_info) == nullptr) {
-        if (data.Type() == sdf::GeometryType::MESH) {
-            ignerr << "Error in importing mesh: " <<
-            ignition::gazebo::asFullPath(
-                    data.MeshShape()->Uri(),
-                    data.MeshShape()->FilePath())
-            << " - it will not be loaded to RGL\n";
-        } else {
-            ignerr << "Error in importing mesh - it will not be loaded to RGL\n";
-        }
-    }
-    return mesh_info;
 }
 
 bool RGLServerPluginManager::LoadMeshToRGL(
-        rgl_mesh_t* new_mesh,
+        rgl_mesh_t* mesh,
         const sdf::Geometry& data) {
 
-    double scale_x = 1;
-    double scale_y = 1;
-    double scale_z = 1;
+    double scaleX = 1;
+    double scaleY = 1;
+    double scaleZ = 1;
 
-    auto mesh_info = GetMeshPointer(data, scale_x, scale_y, scale_z);
-    if (std::get_if<const ignition::common::Mesh*>(&mesh_info) == nullptr &&
-        std::get_if<ignition::common::SubMesh>(&mesh_info) == nullptr) {
+    auto meshInfo = GetMeshPointer(data, scaleX, scaleY, scaleZ);
+    if (std::get_if<const ignition::common::Mesh*>(&meshInfo) == nullptr &&
+        std::get_if<ignition::common::SubMesh>(&meshInfo) == nullptr) {
+        ignerr << "Failed to load mesh of geometry type '" << static_cast<int>(data.Type())
+               << "' to RGL. Skipping...\n";
         return false;
     }
 
-    int vertex_count;
-    int triangle_count;
-    std::vector<rgl_vec3f> vertices;
-    double* vertices_double_arr = nullptr;
+    int vertexCount;
+    int triangleCount;
+    double* ignVertices = nullptr;
+    std::vector<rgl_vec3f> rglVertices;  // separated array because ign operates on doubles, and rgl on floats
     rgl_vec3i* triangles = nullptr;
 
-    if (std::holds_alternative<ignition::common::SubMesh>(mesh_info)) {
-        auto submesh = get<ignition::common::SubMesh>(mesh_info);
-        vertex_count = static_cast<int>(submesh.VertexCount());
-        triangle_count = static_cast<int>(submesh.IndexCount() / 3);
-        vertices.reserve(vertex_count);
-        submesh.FillArrays(&vertices_double_arr, reinterpret_cast<int**>(&triangles));
+    if (std::holds_alternative<ignition::common::SubMesh>(meshInfo)) {
+        auto ignSubMesh = get<ignition::common::SubMesh>(meshInfo);
+        vertexCount = static_cast<int>(ignSubMesh.VertexCount());
+        triangleCount = static_cast<int>(ignSubMesh.IndexCount() / 3);
+        rglVertices.reserve(vertexCount);
+        ignSubMesh.FillArrays(&ignVertices, reinterpret_cast<int**>(&triangles));
     } else {
-        auto mesh = get<const ignition::common::Mesh*>(mesh_info);
-        vertex_count = static_cast<int>(mesh->VertexCount());
-        triangle_count = static_cast<int>(mesh->IndexCount() / 3);
-        vertices.reserve(vertex_count);
-        mesh->FillArrays(&vertices_double_arr, reinterpret_cast<int**>(&triangles));
+        auto ignMesh = get<const ignition::common::Mesh*>(meshInfo);
+        vertexCount = static_cast<int>(ignMesh->VertexCount());
+        triangleCount = static_cast<int>(ignMesh->IndexCount() / 3);
+        rglVertices.reserve(vertexCount);
+        ignMesh->FillArrays(&ignVertices, reinterpret_cast<int**>(&triangles));
     }
 
-    for (int i = 0; i < vertex_count; ++i) {
-        vertices.emplace_back(rgl_vec3f{
-                static_cast<float>(scale_x * vertices_double_arr[3 * i + 0]),
-                static_cast<float>(scale_y * vertices_double_arr[3 * i + 1]),
-                static_cast<float>(scale_z * vertices_double_arr[3 * i + 2])});
+    for (int i = 0; i < vertexCount; ++i) {
+        rglVertices.emplace_back(rgl_vec3f{
+                static_cast<float>(scaleX * ignVertices[3 * i + 0]),
+                static_cast<float>(scaleY * ignVertices[3 * i + 1]),
+                static_cast<float>(scaleZ * ignVertices[3 * i + 2])});
     }
 
-    RGL_CHECK(rgl_mesh_create(new_mesh, vertices.data(), vertex_count, triangles, triangle_count));
+    bool success = CheckRGL(rgl_mesh_create(mesh, rglVertices.data(), vertexCount, triangles, triangleCount));
 
-    free(vertices_double_arr);
+    free(ignVertices);
     free(triangles);
 
-    return true;
+    return success;
 }
+
+}  // namespace rgl

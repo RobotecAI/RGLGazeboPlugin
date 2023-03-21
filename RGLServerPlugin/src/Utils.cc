@@ -12,65 +12,86 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "RGLServerPluginManager.hh"
+#include <exception>
 
-#include <ignition/gazebo/components/Pose.hh>
+#include "Utils.hh"
 
-using namespace rgl;
+#define WORLD_ENTITY_ID 1
 
-ignition::math::Pose3<double> RGLServerPluginManager::FindWorldPose(
+namespace rgl
+{
+
+bool CheckRGL(rgl_status_t status) {
+    if (status == RGL_SUCCESS) {
+        return true;
+    }
+
+    const char* msg;
+    rgl_get_last_error_string(&msg);
+    ignerr << msg << "\n";
+    return false;
+}
+
+ignition::math::Pose3<double> FindWorldPose(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
-    auto local_pose = ecm.Component<ignition::gazebo::components::Pose>(entity);
-    if (nullptr == local_pose) {
+    auto localPose = ecm.Component<ignition::gazebo::components::Pose>(entity);
+    if (nullptr == localPose) {
         ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
         return ignition::math::Pose3d::Zero;
     }
-    auto world_pose = local_pose->Data();
+    auto worldPose = localPose->Data();
 
-    ignition::gazebo::Entity this_entity = entity;
+    ignition::gazebo::Entity thisEntity = entity;
     ignition::gazebo::Entity parent;
 
-    while ((parent = ecm.ParentEntity(this_entity)) != WORLD_ENTITY_ID) {
-        auto parent_pose = ecm.Component<ignition::gazebo::components::Pose>(parent);
-        if (nullptr == parent_pose) {
+    while ((parent = ecm.ParentEntity(thisEntity)) != WORLD_ENTITY_ID) {
+        auto parentPose = ecm.Component<ignition::gazebo::components::Pose>(parent);
+        if (nullptr == parentPose) {
             ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
             return ignition::math::Pose3d::Zero;
         }
-        world_pose += parent_pose->Data();
-        this_entity = parent;
+        worldPose += parentPose->Data();
+        thisEntity = parent;
     }
 
-    return world_pose;
+    return worldPose;
 }
 
-rgl_mat3x4f RGLServerPluginManager::GetRglMatrix(
-        ignition::gazebo::Entity entity,
+rgl_mat3x4f FindWorldPoseInRglMatrix(
+        const ignition::gazebo::Entity& entity,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
-    return Pose3dToRglMatrix(FindWorldPose(entity, ecm));
+    return IgnPose3dToRglMatrix(FindWorldPose(entity, ecm));
 }
 
-rgl_mat3x4f RGLServerPluginManager::Pose3dToRglMatrix(
+rgl_mat3x4f IgnPose3dToRglMatrix(
         const ignition::math::Pose3<double>& pose) {
 
-    auto gazeboMatrix = ignition::math::Matrix4<double>(pose);
+    auto ignMatrix = ignition::math::Matrix4<double>(pose);
     rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 4; ++j) {
-            rglMatrix.value[i][j] = static_cast<float>(gazeboMatrix(i, j));
+            rglMatrix.value[i][j] = static_cast<float>(ignMatrix(i, j));
         }
     }
     return rglMatrix;
 }
 
-void RGLServerPluginManager::checkSameRGLVersion() {
-    int32_t out_major, out_minor, out_patch;
-    rgl_get_version_info(&out_major, &out_minor, &out_patch);
-    if (out_major != RGL_VERSION_MAJOR || out_minor != RGL_VERSION_MINOR || out_patch != RGL_VERSION_PATCH) {
-        ignerr << "RGL library version: " << out_major << "." << out_minor << "." << out_patch
-        << " does not match RGL core.h version: " << RGL_VERSION_MAJOR << "." << RGL_VERSION_MINOR
-        << "." << RGL_VERSION_PATCH << "\n";
+void ValidateRGLVersion() {
+    int32_t outMajor, outMinor, outPatch;
+    if (!CheckRGL(rgl_get_version_info(&outMajor, &outMinor, &outPatch))) {
+        throw std::runtime_error("Failed to get RGL library version.");
     }
+
+    if (outMajor != RGL_VERSION_MAJOR || outMinor != RGL_VERSION_MINOR || outPatch != RGL_VERSION_PATCH) {
+        std::ostringstream oss;
+        oss << "RGL library version: " << outMajor << "." << outMinor << "." << outPatch
+            << " does not match RGL core.h version: " << RGL_VERSION_MAJOR << "." << RGL_VERSION_MINOR
+            << "." << RGL_VERSION_PATCH << ".\n";
+        throw std::runtime_error(oss.str());
+    }
+}
+
 }

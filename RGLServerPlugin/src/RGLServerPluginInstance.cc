@@ -57,5 +57,10 @@ void RGLServerPluginInstance::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm) {
 
-    ecm.EachRemoved<>(std::bind(&RGLServerPluginInstance::CheckLidarExists, this, _1));
+    ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
+        if (entity == thisLidarEntity) {
+            DestroyLidar();
+        }
+        return true;
+    });
 }
