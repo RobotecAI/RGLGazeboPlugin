@@ -15,7 +15,7 @@
 #include <cstdio>
 
 #include "RGLServerPluginInstance.hh"
-#include "RGLServerPluginManager.hh"
+#include "Utils.hh"
 
 #define PARAM_UPDATE_RATE_ID "update_rate"
 #define PARAM_RANGE_ID "range"
@@ -75,7 +75,7 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
                                           ignition::gazebo::EntityComponentManager& ecm) {
 
-    lidarGazeboEntity = entity;
+    thisLidarEntity = entity;
 
     rgl_mat3x4f identity = {
 		1, 0, 0, 0,
@@ -83,36 +83,44 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
 		0, 0, 1, 0
 	};
 
-    RGL_CHECK(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size()));
-    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &identity));
-    RGL_CHECK(rgl_node_raytrace(&rglNodeRaytrace, nullptr, lidarRange));
-    RGL_CHECK(rgl_node_points_compact(&rglNodeCompact));
-    RGL_CHECK(rgl_node_points_transform(&rglNodeToLidarFrame, &identity));
+    if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size())) ||
+        !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
+        !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr, lidarRange)) ||
+        !CheckRGL(rgl_node_points_compact(&rglNodeCompact)) ||
+        !CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &identity))) {
 
-    RGL_CHECK(rgl_graph_node_add_child(rglNodeUseRays, rglNodeLidarPose));
-    RGL_CHECK(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace));
-    RGL_CHECK(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact));
-    RGL_CHECK(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame));
+        ignerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
+        return;
+    }
 
-    pointcloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
-    pointcloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
+    if (!CheckRGL(rgl_graph_node_add_child(rglNodeUseRays, rglNodeLidarPose)) ||
+        !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
+        !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
+        !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
+        
+        ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+        return;
+    }
 
-    isLidarExists = true;
+    pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
+    pointCloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
+
+    isLidarInitialized = true;
 }
 
 void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
 
-    auto gzLidarToWorld = RGLServerPluginManager::FindWorldPose(lidarGazeboEntity, ecm);
-    auto gzWorldToLidar = gzLidarToWorld.Inverse();
-    auto rglLidarToWorld = RGLServerPluginManager::Pose3dToRglMatrix(gzLidarToWorld);
-    auto rglWorldToLidar = RGLServerPluginManager::Pose3dToRglMatrix(gzWorldToLidar);
-    RGL_CHECK(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
-    RGL_CHECK(rgl_node_points_transform(&rglNodeToLidarFrame, &rglWorldToLidar));
+    ignition::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
+    ignition::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
+    rgl_mat3x4f rglLidarToWorld = IgnPose3dToRglMatrix(ignLidarToWorld);
+    rgl_mat3x4f rglWorldToLidar = IgnPose3dToRglMatrix(ignWorldToLidar);
+    CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
+    CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &rglWorldToLidar));
 }
 
 bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration simTime,
                                              bool paused) {
-    if (!isLidarExists) {
+    if (!isLidarInitialized) {
         return false;
     }
 
@@ -139,20 +147,31 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
 
     lastRaytraceTime = simTime;
 
-    RGL_CHECK(rgl_graph_run(rglNodeRaytrace));
+    if (!CheckRGL(rgl_graph_run(rglNodeRaytrace))) {
+        ignerr << "Failed to perform raytrace.\n";
+        return;
+    }
 
     int32_t hitpointCount = 0;
-    RGL_CHECK(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr));
-    RGL_CHECK(rgl_graph_get_result_data(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, resultPointCloud.data()));
+    if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
+        !CheckRGL(rgl_graph_get_result_data(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
+
+        ignerr << "Failed to get result data from RGL lidar.\n";
+        return;
+    }
 
     auto msg = CreatePointCloudMsg(frameId, hitpointCount);
-    pointcloudPublisher.Publish(msg);
+    pointCloudPublisher.Publish(msg);
 
-    if (pointcloudWorldPublisher.HasConnections()) {
-        RGL_CHECK(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr));
-        RGL_CHECK(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()));
+    if (pointCloudWorldPublisher.HasConnections()) {
+        if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
+            !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
+
+            ignerr << "Failed to get visualization data from RGL lidar.\n";
+            return;
+        }
         auto worldMsg = CreatePointCloudMsg(worldFrameId, hitpointCount);
-        pointcloudWorldPublisher.Publish(worldMsg);
+        pointCloudWorldPublisher.Publish(worldMsg);
     }
 }
 
@@ -169,15 +188,18 @@ ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(st
     return outMsg;
 }
 
-bool RGLServerPluginInstance::CheckLidarExists(ignition::gazebo::Entity entity) {
-    if (entity == lidarGazeboEntity) {
-        isLidarExists = false;
-        RGL_CHECK(rgl_graph_destroy(rglNodeRaytrace));
-        // Reset publishers
-        pointcloudPublisher = ignition::transport::Node::Publisher();
-        pointcloudWorldPublisher = ignition::transport::Node::Publisher();
+void RGLServerPluginInstance::DestroyLidar() {
+    if (!isLidarInitialized) {
+        return;
     }
-    return true;
+
+    if (!CheckRGL(rgl_graph_destroy(rglNodeRaytrace))) {
+        ignerr << "Failed to destroy RGL lidar.\n";
+    }
+    // Reset publishers
+    pointCloudPublisher = ignition::transport::Node::Publisher();
+    pointCloudWorldPublisher = ignition::transport::Node::Publisher();
+    isLidarInitialized = false;
 }
 
 }

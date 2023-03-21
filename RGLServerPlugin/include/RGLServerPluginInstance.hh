@@ -71,7 +71,7 @@ private:
 
     ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::string frame, int hitpointCount);
 
-    bool CheckLidarExists(ignition::gazebo::Entity entity);
+    void DestroyLidar();
 
     std::string topicName;
     std::string frameId;
@@ -81,9 +81,9 @@ private:
 
     bool updateOnPausedSim = false;
 
-    ignition::gazebo::Entity lidarGazeboEntity;
-    ignition::transport::Node::Publisher pointcloudPublisher;
-    ignition::transport::Node::Publisher pointcloudWorldPublisher;
+    ignition::gazebo::Entity thisLidarEntity;
+    ignition::transport::Node::Publisher pointCloudPublisher;
+    ignition::transport::Node::Publisher pointCloudWorldPublisher;
     ignition::transport::Node gazeboNode;
 
     rgl_node_t rglNodeUseRays = nullptr;
@@ -95,7 +95,7 @@ private:
     std::chrono::steady_clock::duration raytraceIntervalTime;
     std::chrono::steady_clock::duration lastRaytraceTime{0};
 
-    bool isLidarExists = false;
+    bool isLidarInitialized = false;
 
     int onPausedSimUpdateCounter = 0;
     const int onPausedSimRaytraceInterval = 100;

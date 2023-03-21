@@ -18,18 +18,16 @@
 #include <ignition/plugin/Register.hh>
 
 IGNITION_ADD_PLUGIN(
-        rgl::RGLServerPluginManager,
-        ignition::gazebo::System,
-        rgl::RGLServerPluginManager::ISystemConfigure,
-        rgl::RGLServerPluginManager::ISystemPostUpdate
+    rgl::RGLServerPluginManager,
+    ignition::gazebo::System,
+    rgl::RGLServerPluginManager::ISystemConfigure,
+    rgl::RGLServerPluginManager::ISystemPostUpdate
 )
 
-using namespace rgl;
 using namespace std::placeholders;
 
-RGLServerPluginManager::RGLServerPluginManager() = default;
-
-RGLServerPluginManager::~RGLServerPluginManager() = default;
+namespace rgl
+{
 
 void RGLServerPluginManager::Configure(
         const ignition::gazebo::Entity& entity,
@@ -37,8 +35,10 @@ void RGLServerPluginManager::Configure(
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager& evm) {
 
-    checkSameRGLVersion();
-    RGL_CHECK(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true));
+    ValidateRGLVersion();
+    if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
+        ignerr << "Failed to configure RGL logging.\n";
+    }
 }
 
 void RGLServerPluginManager::PostUpdate(
@@ -46,16 +46,18 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::EntityComponentManager& ecm) {
 
     ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return RegisterNewLidarsCb(entity, ecm);});
+        return RegisterNewLidarCb(entity, ecm);});
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
 
     ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return CheckRemovedLidarsCb(entity, ecm);});
+        return UnregisterLidarCb(entity, ecm);});
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
 
-    UpdateRGLEntityPose(ecm);
+    UpdateRGLEntityPoses(ecm);
 }
+
+}  // namespace rgl
