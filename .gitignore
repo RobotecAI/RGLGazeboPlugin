@@ -35,4 +35,3 @@
 build
 cmake-build-debug
 RGLServerPlugin/include/rgl
-test_world/build.sh
