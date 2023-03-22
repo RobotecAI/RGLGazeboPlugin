@@ -125,7 +125,8 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
         for (int j = 0; j < hSamples; ++j) {
             outPattern.push_back(
                 AnglesToRglMat3x4f(ignition::math::Angle::Zero,
-                                   vAngle + ignition::math::Angle::HalfPi,
+                                   // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
+                                   vAngle * -1 + ignition::math::Angle::HalfPi,
                                    hAngle));
             hAngle += hStep;
         }
@@ -159,7 +160,8 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
         for (int j = 0; j < hSamples; ++j) {
             outPattern.push_back(
                 AnglesToRglMat3x4f(ignition::math::Angle::Zero,
-                                   channel + ignition::math::Angle::HalfPi,
+                                   // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
+                                   channel * -1 + ignition::math::Angle::HalfPi,
                                    hAngle));
             hAngle += hStep;
         }
