@@ -137,6 +137,11 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
 
 bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
 {
+    if (!sdf->HasAttribute("channels")) {
+        ignerr << "Failed to load custom pattern. A channels attribute is required, but it is not set.\n";
+        return false;
+    }
+
     auto channelAngles = sdf->GetAttribute("channels");
 
     std::vector<ignition::math::Angle> channels;
@@ -144,6 +149,11 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
     std::copy(std::istream_iterator<ignition::math::Angle>(iss),
               std::istream_iterator<ignition::math::Angle>(),
               std::back_inserter(channels));
+
+    if (channels.empty()) {
+        ignerr << "Failed to load custom pattern. No channels provided.\n";
+        return false;
+    }
 
     ignition::math::Angle hMin, hMax;
     int hSamples;
@@ -192,7 +202,7 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
     ignmsg << "Loading preset from path '" << presetPath << "'...\n";
     outPattern = loadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
-        ignerr << "Failed to load preset.\n";
+        ignerr << "Failed to load preset from path.\n";
         return false;
     }
     return true;
