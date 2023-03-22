@@ -177,7 +177,7 @@ After starting the simulation:
 2. Select topic with `/world` postfix.
 
 ## Level of detail
-At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly. We even take into account the fact that in many lidars, the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
+At [Robotec.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly. We take into account the fact that in many lidars, the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
 
 | **Ultra Puck one horizontal step pattern** | **RGL digital twin** |
 |---|---|
