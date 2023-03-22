@@ -19,17 +19,33 @@ Key features:
 
 ## Requirements:
 
-OS: [Ubuntu 20.04 Focal Fossa](https://releases.ubuntu.com/20.04.5/?_ga=2.210010709.1162335333.1667845331-1529863968.1667845331)
+- OS: Linux
 
-Gazebo: [Fortress 6.12](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
 
-GPU: [Nvidia Pascal](https://en.wikipedia.org/wiki/Pascal_(microarchitecture)) architecture or newer (preferably with RT cores)
+- GPU: CUDA-enabled
 
-Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar#runtime-requirements)
+ - Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
 
 ## Installation:
-From RGLGazeboPlugin directory:
 
+### Using pre-built libraries
+1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
+2. Make RGL plugins visible from Gazebo:
+    - Move libraries to the plugin's directories.
+    ```shell
+    # If Gazebo installed from apt:
+    cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
+    cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
+    cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
+    ```
+    - Or set environment variables:
+    ```shell
+    # Assuming that libRGLServerPluginInstance.so and libRGLServerPluginManager.so are located in RGLServerPlugins directory and libRGLVisualize.so in RGLGuiPlugins.
+    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugins:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugins:$IGN_GUI_PLUGIN_PATH
+    ```
+### Building from source
 ```shell
 mkdir build
 cd build
@@ -42,109 +58,130 @@ export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize
 
 ![](docs/videos/prius.gif)
 
-From RGLGazeboPlugin directory:
+Launch the prepared simulation from `test_world` directory:
 ```shell
-cd test_world
-ign gazebo prius_world_RGL.sdf
+ign gazebo sonoma_with_rgl.sdf
 ```
 
 1. Start the simulation by pressing play
 2. The lidar hits should be visible in the GUI
-3. You can control the car using the Teleop plugin (preferably changing the steering to keyboard and upping the speed to 15)
+3. You can control the car using the Teleop plugin (preferably changing the steering to the keyboard and upping the speed to 15)
 
 ## Using the plugin:
 
-For the plugin to work properly, we need to include both RGLServerPluginManager and RGLServerPluginInstance(s):
+RGLServerPlugin contains two plugins: `RGLServerPluginManager` and `RGLServerPluginInstance`. For the plugin to work properly, we need to include both.
 
 ## How to include RGLServerPluginManager in your sdf:
 ```xml
 <plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"></plugin>
 ```
-This is a global plugin and should be included only once per sdf, preferably inside the world entity. 
+This is a global plugin and should be included only once per sdf, preferably inside the world entity. RGLServerPluginManager is responsible for synchronizing the scene between Gazebo and GPU (CUDA). At the moment manager handles all primitive geometry types (Box, Capsule, Cylinder, Ellipsoid, Sphere), planes, meshes and submeshes.
+
+![](docs/images/RGLServerPluginManager.png)
+
 ## How to include RGLServerPluginInstance in your sdf:
+Inside the link entity in your model, add a custom sensor:
 ```xml
-<plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance"></plugin>
-```
-Note that the lidar will be attached to the entity that the instance inclusion is inside and will ignore all children (recursively) of the entity as well as the entity that it is attached to.
-## RGLServerPluginInstance settings:
-The basic lidar parameters can be set as shown below. The LiDAR firing pattern can be created using the following methods (described in the following sections):  `pattern_uniform`, `pattern_custom`, `pattern_preset`, and `pattern_preset_path`.
-```xml
-<plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-    <range>245</range>
+<sensor name="UniqueSensorName" type="custom">
+  <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+    <range>100</range>
     <update_rate>10</update_rate>
-    <topic>lidar_topic</topic>
-    <frame>lidar_frame</frame>
     <update_on_paused_sim>false</update_on_paused_sim>
-</plugin>
+    <topic>rgl_lidar</topic>
+    <frame>RGLLidar</frame>
+    <pattern_preset>Alpha Prime</pattern_preset>
+  </plugin>
+</sensor>
 ```
-**range** - the maximum range that the hits will be registered (in meters)
+*Note: All entities attached to the same \<link\> as lidar will be ignored from raycasting. This enables an adding visual representation of the sensor.*
 
-**update_rate** - the frequency at which the lidar will perform raycasting (in Hz)
+### Parameters description:
+- **range** - the maximum range that the hits will be registered (in meters).
 
-**topic** - topic on which pointcloud message (ignition::msgs::PointCloudPacked) will be published
+- **update_rate** - the frequency at which the lidar will perform raycasting (in Hz).
 
-**frame** - frame_id for pointcloud message header
+-  **topic** - topic on which pointcloud message (ignition::msgs::PointCloudPacked) will be published. A second topic with the `/world` postfix will also be created for visualization purposes.
 
-**update_on_paused_sim** - determines whether the lidar is active when the simulation is paused (optional, default: false)
+- **frame** - frame_id for point cloud message header.
 
-### Uniform Pattern
-An analogue to the gpu_lidar configuration (angles in radians).
-```xml
-<pattern_uniform>
-    <horizontal>
-        <samples>1800</samples>
-        <min_angle>-3.14159</min_angle>
-        <max_angle>3.14159</max_angle>
-    </horizontal>
-    <vertical>
-        <samples>128</samples>
-        <min_angle>-0.436332</min_angle>
-        <max_angle>0.261799</max_angle>
-    </vertical>
-</pattern_uniform>
-```
+- **update_on_paused_sim** - determines whether the lidar is active when the simulation is paused (optional, default: false).
 
-### Custom Pattern
-**lasers** argument defines the vertical angles of each layer (angles in radians), horizontal samples are uniformly distributed
-```xml
-<pattern_custom channels="0.698132 -0.698132 0.261799687000294 -0.261799687000294">
-    <horizontal>
-        <samples>3600</samples>
-        <min_angle>-3.14159</min_angle>
-        <max_angle>3.14159</max_angle>
-    </horizontal>
-</pattern_custom>
-```
+- **pattern_\<type\>** - definition of the lidar firing pattern. Each type has different parameters described below.
 
-### Preset Pattern
-You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
-```xml
-<pattern_preset>Alpha Prime</pattern_preset>
-<pattern_preset>Puck</pattern_preset>
-<pattern_preset>Ultra Puck</pattern_preset>
-<pattern_preset>OS1 64</pattern_preset>
-<pattern_preset>Pandar64</pattern_preset>
-<pattern_preset>Pandar40P</pattern_preset>
-```
+### Pattern types:
 
-### Preset Path Pattern
-If you wish so, You can create your own preset by providing a binary file with the structure below repeated as many times as you fancy. Please note that an absolute path is required.
-```c
-/**
- * Row-major matrix with 3 rows and 4 columns of 32-bit floats.
- */
-typedef struct
-{
-	float value[3][4];
-} rgl_mat3x4f;
-```
-![](docs/images/Mat3x4f.png)
-```xml
-<pattern_preset_path>/home/some1/your-preset.mat3x4f</pattern_preset_path>
-```
+- **pattern_uniform**\
+  An analog to the gpu_lidar configuration (angles in radians).
+  ```xml
+  <pattern_uniform>
+      <horizontal>
+          <samples>1800</samples>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+      </horizontal>
+      <vertical>
+          <samples>128</samples>
+          <min_angle>-0.436332</min_angle>
+          <max_angle>0.261799</max_angle>
+      </vertical>
+  </pattern_uniform>
+  ```
+
+- **pattern_custom**\
+  **channels** attribute defines the angular position of lidar channels (angles in radians). Horizontal samples are uniformly distributed.
+  ```xml
+  <pattern_custom channels="0.69 -0.69 0.26 -0.26">
+      <horizontal>
+          <samples>3600</samples>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+      </horizontal>
+  </pattern_custom>
+  ```
+
+- **pattern_preset**\
+  You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
+  ```xml
+  <pattern_preset>Alpha Prime</pattern_preset>
+  <pattern_preset>Puck</pattern_preset>
+  <pattern_preset>Ultra Puck</pattern_preset>
+  <pattern_preset>OS1 64</pattern_preset>
+  <pattern_preset>Pandar64</pattern_preset>
+  <pattern_preset>Pandar40P</pattern_preset>
+  ```
+
+- **pattern_preset_path**\
+  If you wish so, You can create your own preset by providing a binary file with the structure below repeated as many times as you fancy. Please note that an absolute path is required.
+  ```c
+  /**
+   * Row-major matrix with 3 rows and 4 columns of 32-bit floats.
+   */
+  typedef struct
+  {
+  	float value[3][4];
+  } rgl_mat3x4f;
+  ```
+  <div style="text-align:center"><img src=docs/images/Mat3x4f.png width=200/></div>
+
+  ```xml
+  <pattern_preset_path>/home/some1/your-preset.mat3x4f</pattern_preset_path>
+  ```
+
+## How to visualize in Gazebo
+To enable non-uniform point clouds visualization in Gazebo Fortress that are produced by `RGLServerPlugin`, we port [PointCloud gui plugin](https://github.com/gazebosim/gz-gui/tree/gz-gui7/src/plugins/point_cloud) from Gazebo Garden and create `RGLVisualize`. It reimplements the minimal functionality of receiving PointCloudPacked messages (in a world coordinate frame) and rendering them in the scene.
+
+After starting the simulation:
+1. Add `RGLVisualize` gui plugin.
+2. Select topic with `/world` postfix.
+
 ## Level of detail
-At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly, we even take into account the fact that in many lidars the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
-![](docs/images/RGL_Ultra_Puck_staggered.png)
+At [ROBOTEC.AI](https://robotec.ai/) we care about every little detail of our product, so our presets mimic the patterns exactly. We even take into account the fact that in many lidars, the lasers are staggered (not positioned exactly one above another), like in the Ultra Puck according to the [manual, page 118](https://icave2.cse.buffalo.edu/resources/sensor-modeling/VLP32CManual.pdf).
 
-## Ray pattern accuracy comparison of RGL (left) and gpu_lidar (right)
-![](docs/images/RGL_vs_built_in_lidar.png)
+| **Ultra Puck one horizontal step pattern** | **RGL digital twin** |
+|---|---|
+| ![](docs/images/UltraPuck_pattern.png) | ![](docs/images/UltraPuck_rgl_pattern.png) |
+
+## Ray pattern comparison
+| **RGL uniform pattern** | **gpu_lidar uniform pattern** |
+|---|---|
+| ![](docs/images/RGL_uniform.png) | ![](docs/images/GPU_lidar_uniform.png) |
