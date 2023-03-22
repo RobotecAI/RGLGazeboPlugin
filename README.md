@@ -41,7 +41,9 @@ Key features:
     ```
     - Or set environment variables:
     ```shell
-    # Assuming that libRGLServerPluginInstance.so and libRGLServerPluginManager.so are located in RGLServerPlugins directory and libRGLVisualize.so in RGLGuiPlugins.
+    # Assuming that libRGLServerPluginInstance.so and libRGLServerPluginManager.so
+    # are located in RGLServerPlugins directory,
+    # and libRGLVisualize.so in RGLGuiPlugins.
     export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugins:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
     export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugins:$IGN_GUI_PLUGIN_PATH
     ```
