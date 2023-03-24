@@ -26,7 +26,8 @@
 namespace rgl
 {
 
-bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf) {
+bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf)
+{
     // Required parameters
     if (!sdf->HasElement(PARAM_UPDATE_RATE_ID)) {
         ignerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
@@ -73,15 +74,15 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 }
 
 void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
-                                          ignition::gazebo::EntityComponentManager& ecm) {
-
+                                          ignition::gazebo::EntityComponentManager& ecm)
+{
     thisLidarEntity = entity;
 
     rgl_mat3x4f identity = {
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0
-	};
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0
+    };
 
     if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size())) ||
         !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
@@ -108,8 +109,8 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
     isLidarInitialized = true;
 }
 
-void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm) {
-
+void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm)
+{
     ignition::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
     ignition::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
     rgl_mat3x4f rglLidarToWorld = IgnPose3dToRglMatrix(ignLidarToWorld);
@@ -119,7 +120,8 @@ void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComp
 }
 
 bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration simTime,
-                                             bool paused) {
+                                             bool paused)
+{
     if (!isLidarInitialized) {
         return false;
     }
@@ -143,8 +145,8 @@ bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration
     return true;
 }
 
-void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTime) {
-
+void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTime)
+{
     lastRaytraceTime = simTime;
 
     if (!CheckRGL(rgl_graph_run(rglNodeRaytrace))) {
@@ -175,7 +177,8 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     }
 }
 
-ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount) {
+ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount)
+{
     ignition::msgs::PointCloudPacked outMsg;
     ignition::msgs::InitPointCloudPacked(outMsg, frame, false,
                                          {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
@@ -188,7 +191,8 @@ ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(st
     return outMsg;
 }
 
-void RGLServerPluginInstance::DestroyLidar() {
+void RGLServerPluginInstance::DestroyLidar()
+{
     if (!isLidarInitialized) {
         return;
     }
@@ -202,4 +206,4 @@ void RGLServerPluginInstance::DestroyLidar() {
     isLidarInitialized = false;
 }
 
-}
+}  // namespace rgl

@@ -188,7 +188,7 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
     }
     fs::path presetPath = PRESETS_DIR / presetNameToFilename[presetName];
     ignmsg << "Loading pattern_preset '" << presetName << "'...\n";
-    outPattern = loadVector<rgl_mat3x4f>(presetPath);
+    outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
         ignerr << "Failed to load preset.\n";
         return false;
@@ -200,7 +200,7 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
 {
     fs::path presetPath = fs::path(sdf->Get<std::string>());
     ignmsg << "Loading preset from path '" << presetPath << "'...\n";
-    outPattern = loadVector<rgl_mat3x4f>(presetPath);
+    outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
         ignerr << "Failed to load preset from path.\n";
         return false;
@@ -209,7 +209,8 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
 }
 
 template<typename T>
-std::vector<T> LidarPatternLoader::loadVector(const fs::path& path) {
+std::vector<T> LidarPatternLoader::LoadVector(const fs::path& path)
+{
     // open the file:
     std::streampos fileSize;
     std::ifstream file(path, std::ios::binary);
@@ -251,4 +252,4 @@ rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const ignition::math::Angle& 
     return rglMatrix;
 }
 
-}
+}  // namespace rgl

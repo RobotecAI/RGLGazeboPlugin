@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "RGLServerPluginManager.hh"
-
 #include <ignition/common/Mesh.hh>
 #include <ignition/common/SubMesh.hh>
 #include <ignition/gazebo/Util.hh>
@@ -25,6 +23,8 @@
 #include <sdf/Mesh.hh>
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
+
+#include "RGLServerPluginManager.hh"
 
 #define UNIT_BOX_ID "unit_box"
 #define UNIT_CYLINDER_ID "unit_cylinder"
@@ -41,8 +41,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadBox(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     auto size = data.BoxShape()->Size();
 
     scaleX = size.X();
@@ -56,8 +56,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadCylinder(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     auto shape = data.CylinderShape();
 
     scaleX = shape->Radius() * 2;
@@ -71,8 +71,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadEllipsoid(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     auto shape = data.EllipsoidShape()->Radii();
 
     scaleX = shape.X() * 2;
@@ -85,8 +85,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadEllipsoid(
 // Need to handle in different way than other primitive geometry types.
 // The difference is that "unit_capsule" mesh is not created by the gazebo MeshManager,
 // while other primitive types have their unit meshes created and ready to query by name.
-RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data) {
-
+RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadCapsule(const sdf::Geometry& data)
+{
     auto shape = data.CapsuleShape();
 
     // Unique capsule mesh name with radius and length
@@ -110,8 +110,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     auto scale = data.MeshShape()->Scale();
 
     scaleX = scale.X();
@@ -152,8 +152,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
 RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadPlane(
         const sdf::Geometry& data,
         double& scaleX,
-        double& scaleY) {
-
+        double& scaleY)
+{
     auto size = data.PlaneShape()->Size();
 
     scaleX = size.X() * 2;
@@ -166,8 +166,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadSphere(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     auto radius = data.SphereShape()->Radius();
 
     scaleX = radius * 2;
@@ -181,8 +181,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::GetMeshPointer(
         const sdf::Geometry& data,
         double& scaleX,
         double& scaleY,
-        double& scaleZ) {
-
+        double& scaleZ)
+{
     switch (data.Type()) {
         case sdf::GeometryType::BOX:
             return LoadBox(data, scaleX, scaleY, scaleZ);
@@ -207,8 +207,8 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::GetMeshPointer(
 
 bool RGLServerPluginManager::LoadMeshToRGL(
         rgl_mesh_t* mesh,
-        const sdf::Geometry& data) {
-
+        const sdf::Geometry& data)
+{
     double scaleX = 1;
     double scaleY = 1;
     double scaleZ = 1;

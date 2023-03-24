@@ -22,8 +22,7 @@
 #include <memory>
 
 #include <ignition/msgs/pointcloud_packed.pb.h>
-
-#include "ignition/gui/Plugin.hh"
+#include <ignition/gui/Plugin.hh>
 
 namespace rgl
 {

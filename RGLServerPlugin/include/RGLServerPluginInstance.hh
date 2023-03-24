@@ -34,12 +34,12 @@ class RGLServerPluginInstance :
     public ignition::gazebo::System,
     public ignition::gazebo::ISystemConfigure,
     public ignition::gazebo::ISystemPreUpdate,
-    public ignition::gazebo::ISystemPostUpdate {
-
+    public ignition::gazebo::ISystemPostUpdate
+{
 public:
-    RGLServerPluginInstance();
+    RGLServerPluginInstance() = default;
 
-    ~RGLServerPluginInstance() override;
+    ~RGLServerPluginInstance() override = default;
 
     // only called once, when plugin is being loaded
     void Configure(
@@ -104,4 +104,4 @@ private:
     const std::string worldTopicPostfix = "/world";
 };
 
-}
+}  // namespace rgl

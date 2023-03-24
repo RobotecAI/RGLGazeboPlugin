@@ -81,7 +81,9 @@ RGLVisualize::~RGLVisualize()
 void RGLVisualize::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
 {
   if (this->title.empty())
+  {
     this->title = "RGL Visualize";
+  }
 
   // Parameters from XML
   if (_pluginElem)
@@ -226,7 +228,9 @@ void RGLVisualizePrivate::PublishMarkers()
   IGN_PROFILE("RGLVisualize::PublishMarkers");
 
   if (!this->showing)
+  {
     return;
+  }
 
   // If point cloud empty, do nothing.
   if (this->pointCloudMsg.height() == 0 &&
@@ -275,7 +279,9 @@ void RGLVisualizePrivate::PublishMarkers()
 void RGLVisualizePrivate::ClearMarkers()
 {
   if (this->pointCloudTopic.empty())
+  {
     return;
+  }
 
   std::lock_guard<std::recursive_mutex> lock(this->mutex);
   ignition::msgs::Marker msg;
@@ -284,8 +290,8 @@ void RGLVisualizePrivate::ClearMarkers()
   msg.set_action(ignition::msgs::Marker::DELETE_ALL);
 
   igndbg << "Clearing markers on "
-          << this->pointCloudTopic
-          << std::endl;
+         << this->pointCloudTopic
+         << std::endl;
 
   this->node.Request("/marker", msg);
 }
@@ -293,4 +299,4 @@ void RGLVisualizePrivate::ClearMarkers()
 // Register this plugin
 IGNITION_ADD_PLUGIN(RGLVisualize, ::ignition::gui::Plugin)
 
-} // namespace rgl
+}  // namespace rgl

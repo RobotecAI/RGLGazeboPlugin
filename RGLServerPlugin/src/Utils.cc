@@ -21,7 +21,8 @@
 namespace rgl
 {
 
-bool CheckRGL(rgl_status_t status) {
+bool CheckRGL(rgl_status_t status)
+{
     if (status == RGL_SUCCESS) {
         return true;
     }
@@ -34,8 +35,8 @@ bool CheckRGL(rgl_status_t status) {
 
 ignition::math::Pose3<double> FindWorldPose(
         const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     auto localPose = ecm.Component<ignition::gazebo::components::Pose>(entity);
     if (nullptr == localPose) {
         ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
@@ -61,13 +62,14 @@ ignition::math::Pose3<double> FindWorldPose(
 
 rgl_mat3x4f FindWorldPoseInRglMatrix(
         const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     return IgnPose3dToRglMatrix(FindWorldPose(entity, ecm));
 }
 
 rgl_mat3x4f IgnPose3dToRglMatrix(
-        const ignition::math::Pose3<double>& pose) {
+        const ignition::math::Pose3<double>& pose)
+{
 
     auto ignMatrix = ignition::math::Matrix4<double>(pose);
     rgl_mat3x4f rglMatrix;
@@ -79,7 +81,8 @@ rgl_mat3x4f IgnPose3dToRglMatrix(
     return rglMatrix;
 }
 
-void ValidateRGLVersion() {
+void ValidateRGLVersion()
+{
     int32_t outMajor, outMinor, outPatch;
     if (!CheckRGL(rgl_get_version_info(&outMajor, &outMinor, &outPatch))) {
         throw std::runtime_error("Failed to get RGL library version.");
@@ -94,4 +97,4 @@ void ValidateRGLVersion() {
     }
 }
 
-}
+}  // namespace rgl
