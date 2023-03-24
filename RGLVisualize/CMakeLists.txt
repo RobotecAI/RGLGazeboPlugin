@@ -17,12 +17,13 @@ find_package(ignition-msgs8 REQUIRED)
 QT5_ADD_RESOURCES(resources_RCC RGLVisualize.qrc)
 
 add_library(RGLVisualize SHARED
-        RGLVisualize.cc
-        ${resources_RCC}
-        )
+    RGLVisualize.cc
+    ${resources_RCC}
+    )
+
 target_link_libraries(RGLVisualize
-        PRIVATE
-        ignition-gui6::ignition-gui6
-        ignition-rendering6::ignition-rendering6
-        ignition-msgs8::ignition-msgs8
-        )
+    PRIVATE
+    ignition-gui6::ignition-gui6
+    ignition-rendering6::ignition-rendering6
+    ignition-msgs8::ignition-msgs8
+    )

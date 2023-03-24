@@ -32,7 +32,6 @@ public:
     static bool Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
 
 private:
-
     LidarPatternLoader() {};
 
     static bool LoadAnglesAndSamplesElement(const sdf::ElementConstPtr& sdf,
@@ -49,11 +48,12 @@ private:
                                           const ignition::math::Angle& yaw);
     
     template<typename T>
-    static std::vector<T> loadVector(const std::filesystem::path& path);
+    static std::vector<T> LoadVector(const std::filesystem::path& path);
 
     static std::map<std::string, std::string> presetNameToFilename;
     static std::map<std::string, LoadFuncType> patternLoadFunctions;
 
     static const std::filesystem::path PRESETS_DIR;
 };
-}
+
+}  // namespace rgl

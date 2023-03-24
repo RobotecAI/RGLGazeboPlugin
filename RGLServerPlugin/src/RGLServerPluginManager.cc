@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "RGLServerPluginManager.hh"
-
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
 #include <ignition/plugin/Register.hh>
+
+#include "RGLServerPluginManager.hh"
 
 IGNITION_ADD_PLUGIN(
     rgl::RGLServerPluginManager,
@@ -33,8 +33,8 @@ void RGLServerPluginManager::Configure(
         const ignition::gazebo::Entity& entity,
         const std::shared_ptr<const sdf::Element>&,
         ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager& evm) {
-
+        ignition::gazebo::EventManager& evm)
+{
     ValidateRGLVersion();
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
         ignerr << "Failed to configure RGL logging.\n";
@@ -43,8 +43,8 @@ void RGLServerPluginManager::Configure(
 
 void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
         return RegisterNewLidarCb(entity, ecm);});
 

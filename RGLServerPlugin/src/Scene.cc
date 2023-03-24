@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "RGLServerPluginManager.hh"
-
 #include <ignition/gazebo/components/CustomSensor.hh>
 #include <ignition/gazebo/components/Link.hh>
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
+
+#include "RGLServerPluginManager.hh"
 
 #define RGL_INSTANCE "rgl::RGLServerPluginInstance"
 
@@ -29,8 +29,8 @@ namespace rgl
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::RegisterNewLidarCb(
         ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     // Plugin must be inside CustomSensor
     if (!ecm.EntityHasComponentType(entity, ignition::gazebo::components::CustomSensor::typeId))
     {
@@ -69,8 +69,8 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::UnregisterLidarCb(
         ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     if (!lidarEntities.contains(entity)) {
         return true;
     }
@@ -85,8 +85,8 @@ bool RGLServerPluginManager::UnregisterLidarCb(
 bool RGLServerPluginManager::LoadEntityToRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry* geometry) {
-
+        const ignition::gazebo::components::Geometry* geometry)
+{
     if (entitiesToIgnore.contains(entity)) {
         return true;
     }
@@ -112,8 +112,8 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
 bool RGLServerPluginManager::RemoveEntityFromRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry*) {
-
+        const ignition::gazebo::components::Geometry*)
+{
     if (entitiesToIgnore.contains(entity)) {
         entitiesToIgnore.erase(entity);
         return true;
@@ -132,8 +132,8 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
 }
 #pragma clang diagnostic pop
 
-void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm) {
-
+void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm)
+{
     for (auto entity: entitiesInRgl) {
         rgl_mat3x4f rglMatrix = FindWorldPoseInRglMatrix(entity.first, ecm);
         if (!CheckRGL(rgl_entity_set_pose(entity.second.first, &rglMatrix))) {
@@ -144,8 +144,8 @@ void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::Entity
 
 std::unordered_set<ignition::gazebo::Entity> RGLServerPluginManager::GetEntitiesInParentLink(
         ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     auto parentEntity = ecm.ParentEntity(entity);
     if (parentEntity == ignition::gazebo::kNullEntity ||
         !ecm.EntityHasComponentType(parentEntity, ignition::gazebo::components::Link::typeId)) {

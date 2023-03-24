@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "RGLServerPluginInstance.hh"
-
 #include <ignition/gazebo/components/SystemPluginInfo.hh>
 #include <ignition/plugin/Register.hh>
+
+#include "RGLServerPluginInstance.hh"
 
 IGNITION_ADD_PLUGIN(
         rgl::RGLServerPluginInstance,
@@ -25,19 +25,17 @@ IGNITION_ADD_PLUGIN(
         rgl::RGLServerPluginInstance::ISystemPostUpdate
 )
 
-using namespace rgl;
 using namespace std::placeholders;
 
-RGLServerPluginInstance::RGLServerPluginInstance() = default;
-
-RGLServerPluginInstance::~RGLServerPluginInstance() = default;
+namespace rgl
+{
 
 void RGLServerPluginInstance::Configure(
         const ignition::gazebo::Entity& entity,
         const std::shared_ptr<const sdf::Element>& sdf,
         ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager&) {
-
+        ignition::gazebo::EventManager&)
+{
     if (LoadConfiguration(sdf)) {
         CreateLidar(entity, ecm);
     };
@@ -45,8 +43,8 @@ void RGLServerPluginInstance::Configure(
 
 void RGLServerPluginInstance::PreUpdate(
         const ignition::gazebo::UpdateInfo& info,
-        ignition::gazebo::EntityComponentManager& ecm) {
-
+        ignition::gazebo::EntityComponentManager& ecm)
+{
     if (ShouldRayTrace(info.simTime, info.paused)) {
         UpdateLidarPose(ecm);
         RayTrace(info.simTime);
@@ -55,8 +53,8 @@ void RGLServerPluginInstance::PreUpdate(
 
 void RGLServerPluginInstance::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
-        const ignition::gazebo::EntityComponentManager& ecm) {
-
+        const ignition::gazebo::EntityComponentManager& ecm)
+{
     ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
         if (entity == thisLidarEntity) {
             DestroyLidar();
@@ -64,3 +62,5 @@ void RGLServerPluginInstance::PostUpdate(
         return true;
     });
 }
+
+}  // namespace rgl

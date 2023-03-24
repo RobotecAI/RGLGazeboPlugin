@@ -31,7 +31,7 @@ Key features:
 
 ### Using pre-built libraries
 1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
-2. Make RGL plugins visible from Gazebo:
+2. Make RGL plugins visible to Gazebo:
     - Move libraries to the plugin's directories.
     ```shell
     # If Gazebo installed from apt:
@@ -53,8 +53,8 @@ mkdir build
 cd build
 cmake ..
 make -j
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin
-export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize
+export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 ```
 ## Demo:
 
