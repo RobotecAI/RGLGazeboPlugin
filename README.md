@@ -13,7 +13,7 @@ RGL Gazebo Plugin has been created by [Robotec.AI](https://robotec.ai/) to bring
 
 Key features:
 - Point cloud computation using hardware-accelerated raytracing (Nvidia OptiX)
-- High performance (2x improvement over `gpu_lidar` sensor from Gazebo)
+- High performance (~4x improvement over `gpu_lidar` sensor from Gazebo)
 - Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file 
 - Realistic presets of the most popular LiDARs
 
