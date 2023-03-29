@@ -126,7 +126,7 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
 
     if (mesh == nullptr) {
         ignerr << "Failed to import mesh to RGL: " << meshPath << ".\n";
-        return nullptr;
+        return std::monostate{};
     }
 
     std::string subMeshName = data.MeshShape()->Submesh();
@@ -146,7 +146,7 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
         }
     }
     ignerr << "Failed to import subMesh to RGL: " << subMeshName << ".\n";
-    return nullptr;
+    return std::monostate{};
 }
 
 RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadPlane(
@@ -193,7 +193,7 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::GetMeshPointer(
         case sdf::GeometryType::ELLIPSOID:
             return LoadEllipsoid(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::EMPTY:
-            return nullptr;
+            return std::monostate{};
         case sdf::GeometryType::MESH:
             return LoadMesh(data, scaleX, scaleY, scaleZ);
         case sdf::GeometryType::PLANE:
@@ -201,7 +201,7 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::GetMeshPointer(
         case sdf::GeometryType::SPHERE:
             return LoadSphere(data, scaleX, scaleY, scaleZ);
         default:
-            return nullptr;
+            return std::monostate{};
     }
 }
 
@@ -214,8 +214,7 @@ bool RGLServerPluginManager::LoadMeshToRGL(
     double scaleZ = 1;
 
     auto meshInfo = GetMeshPointer(data, scaleX, scaleY, scaleZ);
-    if (std::get_if<const ignition::common::Mesh*>(&meshInfo) == nullptr &&
-        std::get_if<ignition::common::SubMesh>(&meshInfo) == nullptr) {
+    if (std::holds_alternative<std::monostate>(meshInfo)) {
         ignerr << "Failed to load mesh of geometry type '" << static_cast<int>(data.Type())
                << "' to RGL. Skipping...\n";
         return false;

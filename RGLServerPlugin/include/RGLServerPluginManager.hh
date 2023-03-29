@@ -35,7 +35,7 @@ class RGLServerPluginManager :
     public ignition::gazebo::ISystemPostUpdate
 {
 public:
-    using MeshInfo = std::variant<const ignition::common::Mesh*, ignition::common::SubMesh>;
+    using MeshInfo = std::variant<std::monostate, const ignition::common::Mesh*, ignition::common::SubMesh>;
 
     RGLServerPluginManager() = default;
     ~RGLServerPluginManager() override = default;
