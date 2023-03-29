@@ -214,7 +214,7 @@ bool RGLServerPluginManager::LoadMeshToRGL(
     double scaleZ = 1;
 
     auto meshInfo = GetMeshPointer(data, scaleX, scaleY, scaleZ);
-    if (std::get_if<std::monostate>(&meshInfo)) {
+    if (std::holds_alternative<std::monostate>(meshInfo)) {
         ignerr << "Failed to load mesh of geometry type '" << static_cast<int>(data.Type())
                << "' to RGL. Skipping...\n";
         return false;
