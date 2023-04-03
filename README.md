@@ -35,26 +35,36 @@ Key features:
     - Move libraries to the plugin's directories.
     ```shell
     # If Gazebo installed from apt:
+    cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
     cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
     cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
     cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
     ```
     - Or set environment variables:
     ```shell
-    # Assuming that libRGLServerPluginInstance.so and libRGLServerPluginManager.so
-    # are located in RGLServerPlugins directory,
-    # and libRGLVisualize.so in RGLGuiPlugins.
-    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugins:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugins:$IGN_GUI_PLUGIN_PATH
+    # Assuming that libraries:
+    # libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
+    # are located in RGLServerPlugin directory,
+    # and libRGLVisualize.so in RGLGuiPlugin.
+    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
     ```
 ### Building from source
+#### Prerequisites
+- `patchelf` is required to link RobotecGPULidar library properly:
+  ```shell
+  apt install patchelf
+  ```
+#### Steps for building
 ```shell
 mkdir build
 cd build
 cmake ..
 make -j
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$IGN_GUI_PLUGIN_PATH
+make install
+cd ..
+export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 ```
 ## Demo:
 
