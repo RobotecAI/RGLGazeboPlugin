@@ -33,6 +33,7 @@ target_link_libraries(RGLServerPluginManager
     ignition-plugin1::ignition-plugin1
     ${RobotecGPULidar}
 )
+set_target_properties(RGLServerPluginManager PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc src/LidarPatternLoader.cc)
 target_link_libraries(RGLServerPluginInstance
@@ -40,23 +41,13 @@ target_link_libraries(RGLServerPluginInstance
     ignition-plugin1::ignition-plugin1
     ${RobotecGPULidar}
 )
+set_target_properties(RGLServerPluginInstance PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 ## Install libraries
-
-find_program(PATCHELF "patchelf")
-if(NOT PATCHELF)
-    message(FATAL_ERROR "'patchelf' executable not found. patchelf is required for patching 'runpath' of RGLServerPlugin libraries.\n"
-            "You can install it via 'sudo apt install patchelf'")
-endif()
 
 install(TARGETS RGLServerPluginInstance RGLServerPluginManager
     DESTINATION RGLServerPlugin
 )
 install(FILES ${RobotecGPULidar}
     DESTINATION RGLServerPlugin
-)
-
-# rpath for each RGLServerPlugin lib must be updated to link RobotecGPULidar properly
-install(CODE
-    "execute_process(COMMAND find ${CMAKE_INSTALL_PREFIX}/RGLServerPlugin -name *.so -exec patchelf --set-rpath $ORIGIN:. {} \;)"
 )

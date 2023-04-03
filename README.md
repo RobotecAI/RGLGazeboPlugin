@@ -50,12 +50,6 @@ Key features:
     export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
     ```
 ### Building from source
-#### Prerequisites
-- `patchelf` is required to link RobotecGPULidar library properly:
-  ```shell
-  apt install patchelf
-  ```
-#### Steps for building
 ```shell
 mkdir build
 cd build
