@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 project(RGLServerPlugin)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -33,10 +33,21 @@ target_link_libraries(RGLServerPluginManager
     ignition-plugin1::ignition-plugin1
     ${RobotecGPULidar}
 )
+set_target_properties(RGLServerPluginManager PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc src/LidarPatternLoader.cc)
 target_link_libraries(RGLServerPluginInstance
     ignition-gazebo6::ignition-gazebo6
     ignition-plugin1::ignition-plugin1
     ${RobotecGPULidar}
+)
+set_target_properties(RGLServerPluginInstance PROPERTIES INSTALL_RPATH "$ORIGIN")
+
+## Install libraries
+
+install(TARGETS RGLServerPluginInstance RGLServerPluginManager
+    DESTINATION RGLServerPlugin
+)
+install(FILES ${RobotecGPULidar}
+    DESTINATION RGLServerPlugin
 )
