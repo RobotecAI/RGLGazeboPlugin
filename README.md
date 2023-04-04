@@ -73,10 +73,10 @@ ign gazebo sonoma_with_rgl.sdf
 2. The lidar hits should be visible in the GUI
 3. You can control the car using the Teleop plugin (preferably changing the steering to the keyboard and upping the speed to 15)
 
-The second sample world (rgl_playground.sdf) contains all supported object types with this plugin. Since the pattern_type is configured as `pattern_preset`, it is required to set `RGL_PRESETS_DIR` environment variable before running the simulation:
+The second sample world (rgl_playground.sdf) contains all supported object types with this plugin. Since the pattern_type is configured as `pattern_preset`, it is required to set `RGL_PATTERNS_DIR` environment variable before running the simulation:
 ```shell
 # From the top-level directory of this repository
-export RGL_PRESETS_DIR=`pwd`/lidar_presets
+export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
 ign gazebo test_world/rgl_playground.sdf
 ```
 
@@ -162,10 +162,10 @@ Inside the link entity in your model, add a custom sensor:
   <pattern_preset>Pandar64</pattern_preset>
   <pattern_preset>Pandar40P</pattern_preset>
   ```
-  **Note:** Before launching the simulation it is required to set `RGL_PRESETS_DIR` environment variable with the path to presets directory (`lidar_presets` from repository).
+  **Note:** Before launching the simulation it is required to set `RGL_PATTERNS_DIR` environment variable with the path to pattern presets directory (`lidar_patterns` from repository).
   ```shell
   # For example
-  export RGL_PRESETS_DIR=`pwd`/lidar_presets
+  export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
   ```
 
 - **pattern_preset_path**\
