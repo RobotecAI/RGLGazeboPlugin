@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdlib>
+
 #include "LidarPatternLoader.hh"
+
+#define PATTERNS_DIR_ENV "RGL_PATTERNS_DIR"
 
 using namespace std::placeholders;
 namespace fs = std::filesystem;
 
 namespace rgl
 {
-
-const fs::path LidarPatternLoader::PRESETS_DIR = fs::path(__FILE__).parent_path().parent_path() / "lidar_patterns";
 
 std::map<std::string, std::string> LidarPatternLoader::presetNameToFilename = {
     {"Alpha Prime", "VelodyneVLS128.mat3x4f"},
@@ -186,11 +188,14 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
         ignerr << "Failed to load preset pattern. Preset '" << presetName << "' is not available.\n";
         return false;
     }
-    fs::path presetPath = PRESETS_DIR / presetNameToFilename[presetName];
+    fs::path presetPath = presetNameToFilename[presetName];
+    if (const char* presetDir = std::getenv(PATTERNS_DIR_ENV)) {
+        presetPath = fs::path(presetDir) / presetNameToFilename[presetName];
+    }
     ignmsg << "Loading pattern_preset '" << presetName << "'...\n";
     outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
-        ignerr << "Failed to load preset.\n";
+        ignerr << "Failed to load preset. Make sure the environment variable '" << PATTERNS_DIR_ENV << "' is set correctly.\n";
         return false;
     }
     return true;

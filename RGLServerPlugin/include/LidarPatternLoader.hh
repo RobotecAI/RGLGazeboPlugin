@@ -52,8 +52,6 @@ private:
 
     static std::map<std::string, std::string> presetNameToFilename;
     static std::map<std::string, LoadFuncType> patternLoadFunctions;
-
-    static const std::filesystem::path PRESETS_DIR;
 };
 
 }  // namespace rgl
