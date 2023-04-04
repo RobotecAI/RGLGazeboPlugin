@@ -75,7 +75,7 @@ ign gazebo sonoma_with_rgl.sdf
 
 The second sample world (rgl_playground.sdf) contains all supported object types with this plugin. Since the pattern_type is configured as `pattern_preset`, it is required to set `RGL_PRESETS_DIR` environment variable before running the simulation:
 ```shell
-# From the top-level directory of a this repository
+# From the top-level directory of this repository
 export RGL_PRESETS_DIR=`pwd`/lidar_presets
 ign gazebo test_world/rgl_playground.sdf
 ```
