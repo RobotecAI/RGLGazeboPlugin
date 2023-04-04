@@ -19,7 +19,7 @@ Key features:
 
 ## Requirements:
 
-- OS: Linux
+- OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
 - Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
 
@@ -72,6 +72,13 @@ ign gazebo sonoma_with_rgl.sdf
 1. Start the simulation by pressing play
 2. The lidar hits should be visible in the GUI
 3. You can control the car using the Teleop plugin (preferably changing the steering to the keyboard and upping the speed to 15)
+
+The second sample world (rgl_playground.sdf) contains all supported object types with this plugin. Since the pattern_type is configured as `pattern_preset`, it is required to set `RGL_PRESETS_DIR` environment variable before running the simulation:
+```shell
+# From the top-level directory of a this repository
+export RGL_PRESETS_DIR=`pwd`/lidar_presets
+ign gazebo test_world/rgl_playground.sdf
+```
 
 ## Using the plugin:
 
@@ -146,7 +153,7 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below). 
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
@@ -154,6 +161,11 @@ Inside the link entity in your model, add a custom sensor:
   <pattern_preset>OS1 64</pattern_preset>
   <pattern_preset>Pandar64</pattern_preset>
   <pattern_preset>Pandar40P</pattern_preset>
+  ```
+  **Note:** Before launching the simulation it is required to set `RGL_PRESETS_DIR` environment variable with the path to presets directory (`lidar_presets` from repository).
+  ```shell
+  # For example
+  export RGL_PRESETS_DIR=`pwd`/lidar_presets
   ```
 
 - **pattern_preset_path**\
