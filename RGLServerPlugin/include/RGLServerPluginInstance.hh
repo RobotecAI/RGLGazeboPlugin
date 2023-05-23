@@ -69,7 +69,7 @@ private:
                         bool paused);
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
-    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::string frame, int hitpointCount);
+    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
 
     void DestroyLidar();
 
