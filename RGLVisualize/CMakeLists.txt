@@ -7,12 +7,12 @@ endif()
 
 project(RGLVisualize)
 
-find_package(ignition-rendering6 REQUIRED)
+find_package(gz-rendering7 REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(ignition-gui6 REQUIRED)
-find_package(ignition-msgs8 REQUIRED)
+find_package(gz-gui7 REQUIRED)
+find_package(gz-msgs9 REQUIRED)
 
 QT5_ADD_RESOURCES(resources_RCC RGLVisualize.qrc)
 
@@ -23,7 +23,7 @@ add_library(RGLVisualize SHARED
 
 target_link_libraries(RGLVisualize
     PRIVATE
-    ignition-gui6::ignition-gui6
-    ignition-rendering6::ignition-rendering6
-    ignition-msgs8::ignition-msgs8
+    gz-gui7::gz-gui7
+    gz-rendering7::gz-rendering7
+    gz-msgs9::gz-msgs9
     )

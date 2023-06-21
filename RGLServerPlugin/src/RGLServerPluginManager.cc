@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ignition/gazebo/components/SystemPluginInfo.hh>
-#include <ignition/plugin/Register.hh>
+#include <gz/sim/components/SystemPluginInfo.hh>
+#include <gz/plugin/Register.hh>
 
 #include "RGLServerPluginManager.hh"
 
-IGNITION_ADD_PLUGIN(
+GZ_ADD_PLUGIN(
     rgl::RGLServerPluginManager,
-    ignition::gazebo::System,
+    gz::sim::System,
     rgl::RGLServerPluginManager::ISystemConfigure,
     rgl::RGLServerPluginManager::ISystemPostUpdate
 )
@@ -30,10 +30,10 @@ namespace rgl
 {
 
 void RGLServerPluginManager::Configure(
-        const ignition::gazebo::Entity& entity,
+        const gz::sim::Entity& entity,
         const std::shared_ptr<const sdf::Element>&,
-        ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager& evm)
+        gz::sim::EntityComponentManager& ecm,
+        gz::sim::EventManager& evm)
 {
     ValidateRGLVersion();
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
@@ -42,19 +42,19 @@ void RGLServerPluginManager::Configure(
 }
 
 void RGLServerPluginManager::PostUpdate(
-        const ignition::gazebo::UpdateInfo& info,
-        const ignition::gazebo::EntityComponentManager& ecm)
+        const gz::sim::UpdateInfo& info,
+        const gz::sim::EntityComponentManager& ecm)
 {
-    ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
+    ecm.EachNew<>([&](const gz::sim::Entity& entity)-> bool {
         return RegisterNewLidarCb(entity, ecm);});
 
-    ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
+    ecm.EachNew<gz::sim::components::Visual, gz::sim::components::Geometry>
             (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
 
-    ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
+    ecm.EachRemoved<>([&](const gz::sim::Entity& entity)-> bool {
         return UnregisterLidarCb(entity, ecm);});
 
-    ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
+    ecm.EachRemoved<gz::sim::components::Visual, gz::sim::components::Geometry>
             (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
 
     UpdateRGLEntityPoses(ecm);

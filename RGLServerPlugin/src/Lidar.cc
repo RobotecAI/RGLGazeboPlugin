@@ -73,8 +73,8 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     return true;
 }
 
-void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
-                                          ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
+                                          gz::sim::EntityComponentManager& ecm)
 {
     thisLidarEntity = entity;
 
@@ -103,16 +103,16 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         return;
     }
 
-    pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
-    pointCloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
+    pointCloudPublisher = gazeboNode.Advertise<gz::msgs::PointCloudPacked>(topicName);
+    pointCloudWorldPublisher = gazeboNode.Advertise<gz::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
 
     isLidarInitialized = true;
 }
 
-void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginInstance::UpdateLidarPose(const gz::sim::EntityComponentManager& ecm)
 {
-    ignition::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
-    ignition::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
+    gz::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
+    gz::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
     rgl_mat3x4f rglLidarToWorld = IgnPose3dToRglMatrix(ignLidarToWorld);
     rgl_mat3x4f rglWorldToLidar = IgnPose3dToRglMatrix(ignWorldToLidar);
     CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
@@ -177,16 +177,16 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     }
 }
 
-ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount)
+gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount)
 {
-    ignition::msgs::PointCloudPacked outMsg;
-    ignition::msgs::InitPointCloudPacked(outMsg, frame, false,
-                                         {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
+    gz::msgs::PointCloudPacked outMsg;
+    gz::msgs::InitPointCloudPacked(outMsg, frame, false,
+                                         {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32}});
     outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
     outMsg.set_height(1);
     outMsg.set_width(hitpointCount);
 
-    ignition::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
+    gz::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
     memcpy(&(*xIterWorld), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
     return outMsg;
 }
@@ -201,8 +201,8 @@ void RGLServerPluginInstance::DestroyLidar()
         ignerr << "Failed to destroy RGL lidar.\n";
     }
     // Reset publishers
-    pointCloudPublisher = ignition::transport::Node::Publisher();
-    pointCloudWorldPublisher = ignition::transport::Node::Publisher();
+    pointCloudPublisher = gz::transport::Node::Publisher();
+    pointCloudWorldPublisher = gz::transport::Node::Publisher();
     isLidarInitialized = false;
 }
 

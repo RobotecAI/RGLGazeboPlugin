@@ -16,8 +16,8 @@
 
 #include "rgl/api/core.h"
 
-#include <ignition/gazebo/System.hh>
-#include <ignition/gazebo/components/Pose.hh>
+#include <gz/sim/System.hh>
+#include <gz/sim/components/Pose.hh>
 
 namespace rgl
 {
@@ -27,15 +27,15 @@ namespace rgl
 // When API call returns error status, it prints error string and returns false.
 bool CheckRGL(rgl_status_t status);
 
-ignition::math::Pose3<double> FindWorldPose(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
+gz::math::Pose3<double> FindWorldPose(
+        const gz::sim::Entity& entity,
+        const gz::sim::EntityComponentManager& ecm);
 
 rgl_mat3x4f FindWorldPoseInRglMatrix(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
+        const gz::sim::Entity& entity,
+        const gz::sim::EntityComponentManager& ecm);
 
-rgl_mat3x4f IgnPose3dToRglMatrix(const ignition::math::Pose3<double>& pose);
+rgl_mat3x4f IgnPose3dToRglMatrix(const gz::math::Pose3<double>& pose);
 
 
 // Throws exception when version of RGL library mismatch

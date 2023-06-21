@@ -19,22 +19,22 @@
 #include "rgl/api/core.h"
 #include "LidarPatternLoader.hh"
 
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/MeshManager.hh>
 
-#include <ignition/gazebo/components/Geometry.hh>
-#include <ignition/gazebo/components/Visual.hh>
-#include <ignition/gazebo/System.hh>
+#include <gz/sim/components/Geometry.hh>
+#include <gz/sim/components/Visual.hh>
+#include <gz/sim/System.hh>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace rgl
 {
 
 class RGLServerPluginInstance :
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPreUpdate,
-    public ignition::gazebo::ISystemPostUpdate
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPreUpdate,
+    public gz::sim::ISystemPostUpdate
 {
 public:
     RGLServerPluginInstance() = default;
@@ -43,33 +43,33 @@ public:
 
     // only called once, when plugin is being loaded
     void Configure(
-        const ignition::gazebo::Entity& entity,
+        const gz::sim::Entity& entity,
         const std::shared_ptr<const sdf::Element>& sdf,
-        ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager& eventMgr) override;
+        gz::sim::EntityComponentManager& ecm,
+        gz::sim::EventManager& eventMgr) override;
 
     // called every time before physics update runs (can change entities)
     void PreUpdate(
-            const ignition::gazebo::UpdateInfo& info,
-            ignition::gazebo::EntityComponentManager& ecm) override;
+            const gz::sim::UpdateInfo& info,
+            gz::sim::EntityComponentManager& ecm) override;
 
     // called every time after physics runs (can't change entities)
     void PostUpdate(
-            const ignition::gazebo::UpdateInfo& info,
-            const ignition::gazebo::EntityComponentManager& ecm) override;
+            const gz::sim::UpdateInfo& info,
+            const gz::sim::EntityComponentManager& ecm) override;
 
 private:
     bool LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf);
-    void CreateLidar(ignition::gazebo::Entity entity,
-                     ignition::gazebo::EntityComponentManager& ecm);
+    void CreateLidar(gz::sim::Entity entity,
+                     gz::sim::EntityComponentManager& ecm);
 
-    void UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm);
+    void UpdateLidarPose(const gz::sim::EntityComponentManager& ecm);
 
     bool ShouldRayTrace(std::chrono::steady_clock::duration sim_time,
                         bool paused);
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
-    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::string frame, int hitpointCount);
+    gz::msgs::PointCloudPacked CreatePointCloudMsg(std::string frame, int hitpointCount);
 
     void DestroyLidar();
 
@@ -81,10 +81,10 @@ private:
 
     bool updateOnPausedSim = false;
 
-    ignition::gazebo::Entity thisLidarEntity;
-    ignition::transport::Node::Publisher pointCloudPublisher;
-    ignition::transport::Node::Publisher pointCloudWorldPublisher;
-    ignition::transport::Node gazeboNode;
+    gz::sim::Entity thisLidarEntity;
+    gz::transport::Node::Publisher pointCloudPublisher;
+    gz::transport::Node::Publisher pointCloudWorldPublisher;
+    gz::transport::Node gazeboNode;
 
     rgl_node_t rglNodeUseRays = nullptr;
     rgl_node_t rglNodeLidarPose = nullptr;

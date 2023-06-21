@@ -33,25 +33,25 @@ bool CheckRGL(rgl_status_t status)
     return false;
 }
 
-ignition::math::Pose3<double> FindWorldPose(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
+gz::math::Pose3<double> FindWorldPose(
+        const gz::sim::Entity& entity,
+        const gz::sim::EntityComponentManager& ecm)
 {
-    auto localPose = ecm.Component<ignition::gazebo::components::Pose>(entity);
+    auto localPose = ecm.Component<gz::sim::components::Pose>(entity);
     if (nullptr == localPose) {
         ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
-        return ignition::math::Pose3d::Zero;
+        return gz::math::Pose3d::Zero;
     }
     auto worldPose = localPose->Data();
 
-    ignition::gazebo::Entity thisEntity = entity;
-    ignition::gazebo::Entity parent;
+    gz::sim::Entity thisEntity = entity;
+    gz::sim::Entity parent;
 
     while ((parent = ecm.ParentEntity(thisEntity)) != WORLD_ENTITY_ID) {
-        auto parentPose = ecm.Component<ignition::gazebo::components::Pose>(parent);
+        auto parentPose = ecm.Component<gz::sim::components::Pose>(parent);
         if (nullptr == parentPose) {
             ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
-            return ignition::math::Pose3d::Zero;
+            return gz::math::Pose3d::Zero;
         }
         worldPose += parentPose->Data();
         thisEntity = parent;
@@ -61,17 +61,17 @@ ignition::math::Pose3<double> FindWorldPose(
 }
 
 rgl_mat3x4f FindWorldPoseInRglMatrix(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
+        const gz::sim::Entity& entity,
+        const gz::sim::EntityComponentManager& ecm)
 {
     return IgnPose3dToRglMatrix(FindWorldPose(entity, ecm));
 }
 
 rgl_mat3x4f IgnPose3dToRglMatrix(
-        const ignition::math::Pose3<double>& pose)
+        const gz::math::Pose3<double>& pose)
 {
 
-    auto ignMatrix = ignition::math::Matrix4<double>(pose);
+    auto ignMatrix = gz::math::Matrix4<double>(pose);
     rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 4; ++j) {
