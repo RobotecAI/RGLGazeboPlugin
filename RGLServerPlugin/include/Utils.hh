@@ -35,7 +35,7 @@ rgl_mat3x4f FindWorldPoseInRglMatrix(
         const gz::sim::Entity& entity,
         const gz::sim::EntityComponentManager& ecm);
 
-rgl_mat3x4f IgnPose3dToRglMatrix(const gz::math::Pose3<double>& pose);
+rgl_mat3x4f GzPose3dToRglMatrix(const gz::math::Pose3<double>& pose);
 
 
 // Throws exception when version of RGL library mismatch

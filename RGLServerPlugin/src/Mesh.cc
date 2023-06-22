@@ -222,34 +222,34 @@ bool RGLServerPluginManager::LoadMeshToRGL(
 
     int vertexCount;
     int triangleCount;
-    double* ignVertices = nullptr;
-    std::vector<rgl_vec3f> rglVertices;  // separated array because ign operates on doubles, and rgl on floats
+    double* gzVertices = nullptr;
+    std::vector<rgl_vec3f> rglVertices;  // separated array because gz operates on doubles, and rgl on floats
     rgl_vec3i* triangles = nullptr;
 
     if (std::holds_alternative<gz::common::SubMesh>(meshInfo)) {
-        auto ignSubMesh = get<gz::common::SubMesh>(meshInfo);
-        vertexCount = static_cast<int>(ignSubMesh.VertexCount());
-        triangleCount = static_cast<int>(ignSubMesh.IndexCount() / 3);
+        auto gzSubMesh = get<gz::common::SubMesh>(meshInfo);
+        vertexCount = static_cast<int>(gzSubMesh.VertexCount());
+        triangleCount = static_cast<int>(gzSubMesh.IndexCount() / 3);
         rglVertices.reserve(vertexCount);
-        ignSubMesh.FillArrays(&ignVertices, reinterpret_cast<int**>(&triangles));
+        gzSubMesh.FillArrays(&gzVertices, reinterpret_cast<int**>(&triangles));
     } else {
-        auto ignMesh = get<const gz::common::Mesh*>(meshInfo);
-        vertexCount = static_cast<int>(ignMesh->VertexCount());
-        triangleCount = static_cast<int>(ignMesh->IndexCount() / 3);
+        auto gzMesh = get<const gz::common::Mesh*>(meshInfo);
+        vertexCount = static_cast<int>(gzMesh->VertexCount());
+        triangleCount = static_cast<int>(gzMesh->IndexCount() / 3);
         rglVertices.reserve(vertexCount);
-        ignMesh->FillArrays(&ignVertices, reinterpret_cast<int**>(&triangles));
+        gzMesh->FillArrays(&gzVertices, reinterpret_cast<int**>(&triangles));
     }
 
     for (int i = 0; i < vertexCount; ++i) {
         rglVertices.emplace_back(rgl_vec3f{
-                static_cast<float>(scaleX * ignVertices[3 * i + 0]),
-                static_cast<float>(scaleY * ignVertices[3 * i + 1]),
-                static_cast<float>(scaleZ * ignVertices[3 * i + 2])});
+                static_cast<float>(scaleX * gzVertices[3 * i + 0]),
+                static_cast<float>(scaleY * gzVertices[3 * i + 1]),
+                static_cast<float>(scaleZ * gzVertices[3 * i + 2])});
     }
 
     bool success = CheckRGL(rgl_mesh_create(mesh, rglVertices.data(), vertexCount, triangles, triangleCount));
 
-    free(ignVertices);
+    free(gzVertices);
     free(triangles);
 
     return success;

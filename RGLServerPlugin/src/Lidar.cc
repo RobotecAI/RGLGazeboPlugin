@@ -51,7 +51,7 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 
     // Optional parameters
     if (!sdf->HasElement(PARAM_UPDATE_ON_PAUSED_SIM_ID)) {
-        ignwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the RGL lidar. "
+        gzwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the RGL lidar. "
                 << "Using default value: " << updateOnPausedSim << "\n";
     } else {
         updateOnPausedSim = sdf->Get<bool>(PARAM_UPDATE_ON_PAUSED_SIM_ID);
@@ -111,10 +111,10 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
 
 void RGLServerPluginInstance::UpdateLidarPose(const gz::sim::EntityComponentManager& ecm)
 {
-    gz::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
-    gz::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
-    rgl_mat3x4f rglLidarToWorld = IgnPose3dToRglMatrix(ignLidarToWorld);
-    rgl_mat3x4f rglWorldToLidar = IgnPose3dToRglMatrix(ignWorldToLidar);
+    gz::math::Pose3<double> gzLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
+    gz::math::Pose3<double> gzWorldToLidar = gzLidarToWorld.Inverse();
+    rgl_mat3x4f rglLidarToWorld = GzPose3dToRglMatrix(gzLidarToWorld);
+    rgl_mat3x4f rglWorldToLidar = GzPose3dToRglMatrix(gzWorldToLidar);
     CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
     CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &rglWorldToLidar));
 }

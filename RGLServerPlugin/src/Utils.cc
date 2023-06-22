@@ -39,7 +39,7 @@ gz::math::Pose3<double> FindWorldPose(
 {
     auto localPose = ecm.Component<gz::sim::components::Pose>(entity);
     if (nullptr == localPose) {
-        ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+        gzmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
         return gz::math::Pose3d::Zero;
     }
     auto worldPose = localPose->Data();
@@ -50,7 +50,7 @@ gz::math::Pose3<double> FindWorldPose(
     while ((parent = ecm.ParentEntity(thisEntity)) != WORLD_ENTITY_ID) {
         auto parentPose = ecm.Component<gz::sim::components::Pose>(parent);
         if (nullptr == parentPose) {
-            ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+            gzmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
             return gz::math::Pose3d::Zero;
         }
         worldPose += parentPose->Data();
@@ -64,10 +64,10 @@ rgl_mat3x4f FindWorldPoseInRglMatrix(
         const gz::sim::Entity& entity,
         const gz::sim::EntityComponentManager& ecm)
 {
-    return IgnPose3dToRglMatrix(FindWorldPose(entity, ecm));
+    return GzPose3dToRglMatrix(FindWorldPose(entity, ecm));
 }
 
-rgl_mat3x4f IgnPose3dToRglMatrix(
+rgl_mat3x4f GzPose3dToRglMatrix(
         const gz::math::Pose3<double>& pose)
 {
 

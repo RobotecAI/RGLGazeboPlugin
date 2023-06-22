@@ -91,7 +91,7 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
         return true;
     }
     if (entitiesInRgl.contains(entity)) {
-        ignwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
+        gzwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
         return true;
     }
     rgl_mesh_t rglMesh;
