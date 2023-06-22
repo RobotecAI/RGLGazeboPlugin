@@ -225,7 +225,7 @@ void RGLVisualize::OnPointCloudService(
 //////////////////////////////////////////////////
 void RGLVisualizePrivate::PublishMarkers()
 {
-  IGN_PROFILE("RGLVisualize::PublishMarkers");
+  GZ_PROFILE("RGLVisualize::PublishMarkers");
 
   if (!this->showing)
   {

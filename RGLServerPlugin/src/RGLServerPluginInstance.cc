@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gz/sim/SystemPluginInfo.hh>
+#include <gz/sim/components/SystemPluginInfo.hh>
 #include <gz/plugin/Register.hh>
 
 #include "RGLServerPluginInstance.hh"

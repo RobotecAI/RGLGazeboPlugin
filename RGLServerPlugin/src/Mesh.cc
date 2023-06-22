@@ -122,10 +122,10 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
             data.MeshShape()->Uri(),
             data.MeshShape()->FilePath());
 
-    const ignition::common::Mesh* mesh = meshManager->Load(meshPath);
+    const gz::common::Mesh* mesh = meshManager->Load(meshPath);
 
     if (mesh == nullptr) {
-        ignerr << "Failed to import mesh to RGL: " << meshPath << ".\n";
+        gzerr << "Failed to import mesh to RGL: " << meshPath << ".\n";
         return std::monostate{};
     }
 
@@ -145,7 +145,7 @@ RGLServerPluginManager::MeshInfo RGLServerPluginManager::LoadMesh(
             return subMeshCopy;
         }
     }
-    ignerr << "Failed to import subMesh to RGL: " << subMeshName << ".\n";
+    gzerr << "Failed to import subMesh to RGL: " << subMeshName << ".\n";
     return std::monostate{};
 }
 
@@ -215,7 +215,7 @@ bool RGLServerPluginManager::LoadMeshToRGL(
 
     auto meshInfo = GetMeshPointer(data, scaleX, scaleY, scaleZ);
     if (std::holds_alternative<std::monostate>(meshInfo)) {
-        ignerr << "Failed to load mesh of geometry type '" << static_cast<int>(data.Type())
+        gzerr << "Failed to load mesh of geometry type '" << static_cast<int>(data.Type())
                << "' to RGL. Skipping...\n";
         return false;
     }

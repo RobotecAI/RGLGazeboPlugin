@@ -29,7 +29,7 @@ bool CheckRGL(rgl_status_t status)
 
     const char* msg;
     rgl_get_last_error_string(&msg);
-    ignerr << msg << "\n";
+    gzerr << msg << "\n";
     return false;
 }
 
@@ -71,11 +71,11 @@ rgl_mat3x4f IgnPose3dToRglMatrix(
         const gz::math::Pose3<double>& pose)
 {
 
-    auto ignMatrix = gz::math::Matrix4<double>(pose);
+    auto gzMatrix = gz::math::Matrix4<double>(pose);
     rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 4; ++j) {
-            rglMatrix.value[i][j] = static_cast<float>(ignMatrix(i, j));
+            rglMatrix.value[i][j] = static_cast<float>(gzMatrix(i, j));
         }
     }
     return rglMatrix;

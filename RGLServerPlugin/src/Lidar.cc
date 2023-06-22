@@ -30,22 +30,22 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 {
     // Required parameters
     if (!sdf->HasElement(PARAM_UPDATE_RATE_ID)) {
-        ignerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_RANGE_ID)) {
-        ignerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_TOPIC_ID)) {
-        ignerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_FRAME_ID)) {
-        ignerr << "No '" << PARAM_FRAME_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_FRAME_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
@@ -90,7 +90,7 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
         !CheckRGL(rgl_node_points_compact(&rglNodeCompact)) ||
         !CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &identity))) {
 
-        ignerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
+        gzerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
@@ -99,7 +99,7 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
         
-        ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+        gzerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
@@ -150,7 +150,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     lastRaytraceTime = simTime;
 
     if (!CheckRGL(rgl_graph_run(rglNodeRaytrace))) {
-        ignerr << "Failed to perform raytrace.\n";
+        gzerr << "Failed to perform raytrace.\n";
         return;
     }
 
@@ -158,7 +158,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
         !CheckRGL(rgl_graph_get_result_data(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
-        ignerr << "Failed to get result data from RGL lidar.\n";
+        gzerr << "Failed to get result data from RGL lidar.\n";
         return;
     }
 
@@ -169,7 +169,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
-            ignerr << "Failed to get visualization data from RGL lidar.\n";
+            gzerr << "Failed to get visualization data from RGL lidar.\n";
             return;
         }
         auto worldMsg = CreatePointCloudMsg(worldFrameId, hitpointCount);
@@ -198,7 +198,7 @@ void RGLServerPluginInstance::DestroyLidar()
     }
 
     if (!CheckRGL(rgl_graph_destroy(rglNodeRaytrace))) {
-        ignerr << "Failed to destroy RGL lidar.\n";
+        gzerr << "Failed to destroy RGL lidar.\n";
     }
     // Reset publishers
     pointCloudPublisher = gz::transport::Node::Publisher();
