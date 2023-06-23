@@ -15,6 +15,7 @@
 #include <exception>
 
 #include "Utils.hh"
+#include <gz/math/Matrix4.hh>
 
 #define WORLD_ENTITY_ID 1
 
@@ -70,7 +71,6 @@ rgl_mat3x4f FindWorldPoseInRglMatrix(
 rgl_mat3x4f GzPose3dToRglMatrix(
         const gz::math::Pose3<double>& pose)
 {
-
     auto gzMatrix = gz::math::Matrix4<double>(pose);
     rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {

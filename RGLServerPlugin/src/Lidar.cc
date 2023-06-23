@@ -16,7 +16,7 @@
 
 #include "RGLServerPluginInstance.hh"
 #include "Utils.hh"
-
+#include <gz/msgs/PointCloudPackedUtils.hh>
 #define PARAM_UPDATE_RATE_ID "update_rate"
 #define PARAM_RANGE_ID "range"
 #define PARAM_TOPIC_ID "topic"

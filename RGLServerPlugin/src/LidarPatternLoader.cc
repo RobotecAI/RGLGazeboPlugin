@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "LidarPatternLoader.hh"
-
+#include <gz/math/Matrix4.hh>
 using namespace std::placeholders;
 namespace fs = std::filesystem;
 
@@ -241,6 +241,7 @@ rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const gz::math::Angle& roll,
                                                    const gz::math::Angle& yaw)
 {
     gz::math::Quaterniond quaternion(roll.Radian(), pitch.Radian(), yaw.Radian());
+
     gz::math::Matrix4d matrix4D(quaternion);
 
     rgl_mat3x4f rglMatrix;
