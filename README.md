@@ -29,30 +29,12 @@ Key features:
 
 ## Installation:
 
-### Using pre-built libraries
-1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
-2. Make RGL plugins visible to Gazebo:
-    - Move libraries to the plugin's directories.
-    ```shell
-    # If Gazebo installed from apt:
-    cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
-    ```
-    - Or set environment variables:
-    ```shell
-    # Assuming that libRGLServerPluginInstance.so and libRGLServerPluginManager.so
-    # are located in RGLServerPlugins directory,
-    # and libRGLVisualize.so in RGLGuiPlugins.
-    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugins:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugins:$IGN_GUI_PLUGIN_PATH
-    ```
 ### Building from source
 ```shell
 mkdir build
 cd build
 cmake ..
-make -j
+make
 sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
 sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
 
