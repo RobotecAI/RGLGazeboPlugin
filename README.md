@@ -53,8 +53,9 @@ mkdir build
 cd build
 cmake ..
 make -j
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$IGN_GUI_PLUGIN_PATH
+sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
+
 ```
 ## Demo:
 
@@ -62,8 +63,9 @@ export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 
 Launch the prepared simulation from `test_world` directory:
 ```shell
-ign gazebo sonoma_with_rgl.sdf
+gz sim sonoma_with_rgl.sdf
 ```
+If you have issues with crash refer https://github.com/RobotecAI/RGLGazeboPlugin/issues/12#issuecomment-1495622668
 
 1. Start the simulation by pressing play
 2. The lidar hits should be visible in the GUI
