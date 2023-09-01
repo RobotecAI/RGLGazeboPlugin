@@ -21,7 +21,7 @@ Key features:
 
 - OS: Linux
 
-- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Garden 7](https://gazebosim.org/docs/garden/install)
 
 - GPU: CUDA-enabled
 
@@ -29,12 +29,35 @@ Key features:
 
 ## Installation:
 
+### Using pre-built libraries
+1. Download libraries from release.
+2. Make RGL plugins visible to Gazebo:
+  - Move libraries to the plugin's directories.
+```shell
+# If Gazebo installed from apt:
+cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
+
+```
+Or set environment variables:
+```shell
+# Assuming that libraries:
+# libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
+# are located in RGLServerPlugin directory,
+# and libRGLVisualize.so in RGLGuiPlugin.
+export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_SIM_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_SIM_PLUGIN_PATH
+
+```
 ### Building from source
 ```shell
 mkdir build
 cd build
 cmake ..
-make
+make - j
+cd ..
 sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
 sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
 
