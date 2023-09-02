@@ -30,7 +30,7 @@ Key features:
 ## Installation:
 
 ### Using pre-built libraries
-1. Download libraries from release.
+1. Download libraries from [releases](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
 2. Make RGL plugins visible to Gazebo:
   - Move libraries to the plugin's directories.
 ```shell
@@ -49,15 +49,21 @@ Or set environment variables:
 # and libRGLVisualize.so in RGLGuiPlugin.
 export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
 export GZ_SIM_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_SIM_PLUGIN_PATH
-
 ```
 ### Building from source
 ```shell
 mkdir build
 cd build
 cmake ..
-make - j
-cd ..
+make -j
+```
+- Export gz-sim plugin path
+```shell
+export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_SIM_PLUGIN_PATH=`pwd`/RGLVisualize:$GZ_SIM_PLUGIN_PATH
+```
+- Copy shared library to gz-sim plugin path
+```shell
 sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
 sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
 
