@@ -121,6 +121,7 @@ Inside the link entity in your model, add a custom sensor:
 
 - **pattern_\<type\>** - definition of the lidar firing pattern. Each type has different parameters described below.
 
+- **publish_laserscan** - When using a uniform pattern for a 2D lidar which has vertical samples set to 1, you can choose to publish `LaserScan` messages instead of `PointCloudPacked` messages by setting this parameter to `true`. See example below. 
 ### Pattern types:
 
 - **pattern_uniform**\
@@ -139,6 +140,32 @@ Inside the link entity in your model, add a custom sensor:
       </vertical>
   </pattern_uniform>
   ```
+  **Note:** - Optionally for 2D lidar patterns (vertical samples = 1), you can use the `<publish_laserscan>` param like this
+  ```xml
+  <sensor name="UniformPattern2DLidar" type="custom">
+    <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+      <range>100</range>
+      <update_rate>10</update_rate>
+      <update_on_paused_sim>false</update_on_paused_sim>
+      <topic>rgl_lidar</topic>
+      <frame>RGLLidar</frame>
+      <pattern_uniform>
+        <horizontal>
+            <samples>1800</samples>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+        </horizontal>
+        <vertical>
+            <samples>1</samples>
+            <min_angle>-0.436332</min_angle>
+            <max_angle>0.261799</max_angle>
+        </vertical>
+    </pattern_uniform>
+    <publish_laserscan>true</publish_laserscan>
+    </plugin>
+  </sensor>
+  ```
+
 
 - **pattern_custom**\
   **channels** attribute defines the angular position of lidar channels (angles in radians). Horizontal samples are uniformly distributed.
