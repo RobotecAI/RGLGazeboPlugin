@@ -306,6 +306,8 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     if (outMsg.ranges_size() != hitpointCount) {
         for (int i=0; i < hitpointCount; ++i) {
             outMsg.add_ranges(resultDistances[i]);
+            outMsg.add_intensities(100.0);
+
         }
     }
 
