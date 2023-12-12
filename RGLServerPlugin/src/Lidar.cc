@@ -162,7 +162,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
         return;
     }
 
-    auto msg = CreatePointCloudMsg(frameId, hitpointCount);
+    auto msg = CreatePointCloudMsg(simTime, frameId, hitpointCount);
     pointCloudPublisher.Publish(msg);
 
     if (pointCloudWorldPublisher.HasConnections()) {
@@ -172,17 +172,18 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
             gzerr << "Failed to get visualization data from RGL lidar.\n";
             return;
         }
-        auto worldMsg = CreatePointCloudMsg(worldFrameId, hitpointCount);
+        auto worldMsg = CreatePointCloudMsg(simTime, worldFrameId, hitpointCount);
         pointCloudWorldPublisher.Publish(worldMsg);
     }
 }
 
-gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::string frame, int hitpointCount)
+gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
 {
     gz::msgs::PointCloudPacked outMsg;
     gz::msgs::InitPointCloudPacked(outMsg, frame, false,
                                          {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32}});
     outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
+    *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     outMsg.set_height(1);
     outMsg.set_width(hitpointCount);
 

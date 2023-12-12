@@ -19,7 +19,7 @@ QT5_ADD_RESOURCES(resources_RCC RGLVisualize.qrc)
 add_library(RGLVisualize SHARED
     RGLVisualize.cc
     ${resources_RCC}
-    )
+)
 
 target_link_libraries(RGLVisualize
     PRIVATE

@@ -19,7 +19,7 @@ Key features:
 
 ## Requirements:
 
-- OS: Linux
+- OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
 - Gazebo: [Garden 7](https://gazebosim.org/docs/garden/install)
 
@@ -56,18 +56,23 @@ mkdir build
 cd build
 cmake ..
 make -j
+make install
+cd ..
 ```
-- Export gz-sim plugin path
+
+### Option 1: Exporting Enviroment Variable
 ```shell
-export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
-export GZ_SIM_PLUGIN_PATH=`pwd`/RGLVisualize:$GZ_SIM_PLUGIN_PATH
+export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
 ```
-- Copy shared library to gz-sim plugin path
+
+### Option 2: Copy shared library to gz-sim plugin path
 ```shell
+cd build
 sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
 sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
-
 ```
+
 ## Demo:
 
 ![](docs/videos/prius.gif)
@@ -81,6 +86,13 @@ If you have issues with crash refer https://github.com/RobotecAI/RGLGazeboPlugin
 1. Start the simulation by pressing play
 2. The lidar hits should be visible in the GUI
 3. You can control the car using the Teleop plugin (preferably changing the steering to the keyboard and upping the speed to 15)
+
+The second sample world (rgl_playground.sdf) contains all supported object types with this plugin. Since the pattern_type is configured as `pattern_preset`, it is required to set `RGL_PATTERNS_DIR` environment variable before running the simulation:
+```shell
+# From the top-level directory of this repository
+export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
+ign gazebo test_world/rgl_playground.sdf
+```
 
 ## Using the plugin:
 
@@ -155,7 +167,7 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below). 
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
@@ -163,6 +175,11 @@ Inside the link entity in your model, add a custom sensor:
   <pattern_preset>OS1 64</pattern_preset>
   <pattern_preset>Pandar64</pattern_preset>
   <pattern_preset>Pandar40P</pattern_preset>
+  ```
+  **Note:** Before launching the simulation it is required to set `RGL_PATTERNS_DIR` environment variable with the path to pattern presets directory (`lidar_patterns` from repository).
+  ```shell
+  # For example
+  export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
   ```
 
 - **pattern_preset_path**\
