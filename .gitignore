@@ -31,7 +31,9 @@
 *.out
 *.app
 
-.vscode
+# IDE
+*.vscode
+
 .idea
 build
 install

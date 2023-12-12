@@ -21,7 +21,7 @@ Key features:
 
 - OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
-- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Garden 7](https://gazebosim.org/docs/garden/install)
 
 - GPU: CUDA-enabled
 
@@ -30,25 +30,9 @@ Key features:
 ## Installation:
 
 ### Using pre-built libraries
-1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
+1. Download libraries from [releases](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
 2. Make RGL plugins visible to Gazebo:
-    - Move libraries to the plugin's directories.
-    ```shell
-    # If Gazebo installed from apt:
-    cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
-    ```
-    - Or set environment variables:
-    ```shell
-    # Assuming that libraries:
-    # libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
-    # are located in RGLServerPlugin directory,
-    # and libRGLVisualize.so in RGLGuiPlugin.
-    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
-    ```
+
 ### Building from source
 ```shell
 mkdir build
@@ -57,17 +41,31 @@ cmake ..
 make -j
 make install
 cd ..
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
+
 ```
+
+### Option 1: Exporting Enviroment Variable
+```shell
+export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
+```
+
+### Option 2: Copy shared library to gz-sim plugin path
+```shell
+cd build
+sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
+```
+
 ## Demo:
 
 ![](docs/videos/prius.gif)
 
 Launch the prepared simulation from `test_world` directory:
 ```shell
-ign gazebo sonoma_with_rgl.sdf
+gz sim sonoma_with_rgl.sdf
 ```
+If you have issues with crash refer https://github.com/RobotecAI/RGLGazeboPlugin/issues/12#issuecomment-1495622668
 
 1. Start the simulation by pressing play
 2. The lidar hits should be visible in the GUI
@@ -77,7 +75,7 @@ The second sample world (rgl_playground.sdf) contains all supported object types
 ```shell
 # From the top-level directory of this repository
 export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
-ign gazebo test_world/rgl_playground.sdf
+gz sim test_world/rgl_playground.sdf
 ```
 
 ## Using the plugin:
