@@ -32,24 +32,7 @@ Key features:
 ### Using pre-built libraries
 1. Download libraries from [releases](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
 2. Make RGL plugins visible to Gazebo:
-  - Move libraries to the plugin's directories.
-```shell
-# If Gazebo installed from apt:
-cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
-cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
-cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
-cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
 
-```
-Or set environment variables:
-```shell
-# Assuming that libraries:
-# libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
-# are located in RGLServerPlugin directory,
-# and libRGLVisualize.so in RGLGuiPlugin.
-export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
-export GZ_SIM_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_SIM_PLUGIN_PATH
-```
 ### Building from source
 ```shell
 mkdir build
@@ -58,6 +41,7 @@ cmake ..
 make -j
 make install
 cd ..
+
 ```
 
 ### Option 1: Exporting Enviroment Variable
@@ -91,7 +75,7 @@ The second sample world (rgl_playground.sdf) contains all supported object types
 ```shell
 # From the top-level directory of this repository
 export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
-ign gazebo test_world/rgl_playground.sdf
+gz sim test_world/rgl_playground.sdf
 ```
 
 ## Using the plugin:

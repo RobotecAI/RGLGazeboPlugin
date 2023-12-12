@@ -18,7 +18,9 @@
 
 #define PATTERNS_DIR_ENV "RGL_PATTERNS_DIR"
 
+
 #include <gz/math/Matrix4.hh>
+
 using namespace std::placeholders;
 namespace fs = std::filesystem;
 
@@ -193,10 +195,12 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
     if (const char* presetDir = std::getenv(PATTERNS_DIR_ENV)) {
         presetPath = fs::path(presetDir) / presetNameToFilename[presetName];
     }
+
     gzmsg << "Loading pattern_preset '" << presetName << "'...\n";
     outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
         gzerr << "Failed to load preset. Make sure the environment variable '" << PATTERNS_DIR_ENV << "' is set correctly.\n";
+
         return false;
     }
     return true;

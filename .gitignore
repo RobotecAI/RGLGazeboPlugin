@@ -36,5 +36,6 @@
 
 .idea
 build
+install
 cmake-build-debug
 RGLServerPlugin/include/rgl
