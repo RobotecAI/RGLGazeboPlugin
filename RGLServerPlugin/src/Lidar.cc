@@ -22,67 +22,8 @@
 #define PARAM_TOPIC_ID "topic"
 #define PARAM_FRAME_ID "frame"
 #define PARAM_UPDATE_ON_PAUSED_SIM_ID "update_on_paused_sim"
-#define PARAM_PUBLISH_LASERSCAN "publish_laserscan"
-
 namespace rgl
 {
-
-bool RGLServerPluginInstance::LoadLaserScanParams(const std::shared_ptr<const sdf::Element>& sdf)
-{
-
-    if (!sdf->HasElement("pattern_uniform")) {
-        ignerr << "LaserScan messages require pattern_uniform element.\n";
-        return false;
-    }
-
-    if (!sdf->FindElement("pattern_uniform")->HasElement("vertical")) {
-        ignerr << "vertical element is required, but it is not set.\n";
-        return false;
-    }
-
-    if (!sdf->FindElement("pattern_uniform")->HasElement("horizontal")) {
-        ignerr << "horizontal element is required, but it is not set.\n";
-        return false;
-    }
-
-    sdf::ElementConstPtr vertical = sdf->FindElement("pattern_uniform")->FindElement("vertical");
-    sdf::ElementConstPtr horizontal = sdf->FindElement("pattern_uniform")->FindElement("horizontal");
-
-    if (!vertical->HasElement("samples")) {
-        ignerr << "vertical element has no samples but is required.\n";
-        return false;
-    }
-
-    int scanVSamples = vertical->Get<int>("samples");
-
-    // if there are more than 1 vertical samples publish pointcloud
-    if (scanVSamples > 1) {
-        publishLaserScan = false;
-        ignwarn << "vertical samples should be 1 for LaserScan message. Defaulting to PointCloudPacked.\n";
-        return false;
-    }
-
-    if (!horizontal->HasElement("samples")) {
-        ignerr << "horizontal element has no samples but is required.\n";
-        return false;
-    }
-
-    if (!horizontal->HasElement("min_angle")) {
-        ignerr << "horizontal element has no min_angle but is required.\n";
-        return false;
-    }
-
-    if (!horizontal->HasElement("max_angle")) {
-        ignerr << "horizontal element has no max_angle but is required.\n";
-        return false;
-    }
-
-    scanHMin = horizontal->Get<float>("min_angle");
-    scanHMax = horizontal->Get<float>("max_angle");
-    scanHSamples = horizontal->Get<int>("samples");
-
-    return true;
-}
 
 bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf::Element>& sdf)
 {
@@ -115,18 +56,10 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         updateOnPausedSim = sdf->Get<bool>(PARAM_UPDATE_ON_PAUSED_SIM_ID);
     }
 
-    // Check for LaserScan
-    if (!sdf->HasElement(PARAM_PUBLISH_LASERSCAN)) {
-        ignwarn << "No '" << PARAM_PUBLISH_LASERSCAN << "' parameter specified for the RGL lidar. "
-                << "Using default value: " << publishLaserScan << "\n";
-    } else {
-        publishLaserScan = sdf->Get<bool>(PARAM_PUBLISH_LASERSCAN);
-        if (publishLaserScan) {
-            if (!LoadLaserScanParams(sdf)){
-                ignwarn << "Could not load params for LaserScan message generation. Defaulting to PointCloudPacked.\n";
-                publishLaserScan=false;
-            }
-        }
+    // Check for 2d pattern and set LaserScan
+    if (sdf->HasElement("pattern_lidar2d")) {
+        ignmsg << "Lidar is 2D, switching to publish LaserScan messages";
+        publishLaserScan = true;
     }
 
     // Load configuration
@@ -283,8 +216,11 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
 ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
 {
     ignition::msgs::LaserScan outMsg;
+    ignition::math::Angle scanHMin;
+    ignition::math::Angle scanHMax;
+    int scanHSamples;
+
     *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
-    outMsg.mutable_header()->clear_data();
     auto _frame = outMsg.mutable_header()->add_data();
     _frame->set_key("frame_id");
     _frame->add_value(frame);
@@ -295,19 +231,20 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_range_min(0.0);
     outMsg.set_range_max(lidarRange);
 
+    scanHSamples = lidarPattern.size();
+    scanHMin = LidarPatternLoader::RglMat3x4fToAngles(lidarPattern[0])[2];
+    scanHMax = LidarPatternLoader::RglMat3x4fToAngles(lidarPattern[scanHSamples-1])[2];
+
     outMsg.set_angle_min(scanHMin.Radian());
     outMsg.set_angle_max(scanHMax.Radian());
 
     ignition::math::Angle hStep((scanHMax - scanHMin) / static_cast<double>(scanHSamples));
     outMsg.set_angle_step(hStep.Radian());
 
-    outMsg.clear_ranges();
-    outMsg.clear_intensities();
     if (outMsg.ranges_size() != hitpointCount) {
         for (int i=0; i < hitpointCount; ++i) {
             outMsg.add_ranges(resultDistances[i]);
             outMsg.add_intensities(100.0);
-
         }
     }
 

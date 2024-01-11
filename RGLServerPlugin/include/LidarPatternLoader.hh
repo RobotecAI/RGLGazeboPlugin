@@ -42,11 +42,13 @@ private:
     static bool LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
     static bool LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
     static bool LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
+    static bool LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
 
     static rgl_mat3x4f AnglesToRglMat3x4f(const ignition::math::Angle& roll,
                                           const ignition::math::Angle& pitch,
                                           const ignition::math::Angle& yaw);
-    
+    static std::vector<ignition::math::Angle> RglMat3x4fToAngles(const rgl_mat3x4f& rglMatrix);
+
     template<typename T>
     static std::vector<T> LoadVector(const std::filesystem::path& path);
 

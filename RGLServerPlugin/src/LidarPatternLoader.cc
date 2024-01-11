@@ -38,6 +38,7 @@ std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patt
     {"pattern_custom", std::bind(&LidarPatternLoader::LoadPatternFromCustom, _1, _2)},
     {"pattern_preset", std::bind(&LidarPatternLoader::LoadPatternFromPreset, _1, _2)},
     {"pattern_preset_path", std::bind(&LidarPatternLoader::LoadPatternFromPresetPath, _1, _2)}
+    {"pattern_lidar2d", std::bind(&LidarPatternLoader::LoadPatternFromLidar2d, _1, _2)}
 };
 
 bool LidarPatternLoader::Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
@@ -213,6 +214,37 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
     return true;
 }
 
+bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
+{
+    if (!sdf->HasElement("horizontal")) {
+        ignerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
+        return false;
+    }
+
+    ignition::math::Angle hMin, hMax;
+    int hSamples;
+
+    if (!LoadAnglesAndSamplesElement(sdf->FindElement("horizontal"), hMin, hMax, hSamples)) {
+        return false;
+    }
+
+    outPattern.reserve(hSamples);
+
+    ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
+
+    auto hAngle = hMin;
+    for (int i = 0; i < hSamples; ++i) {
+        outPattern.push_back(
+            AnglesToRglMat3x4f(ignition::math::Angle::Zero,
+                                // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
+                                ignition::math::Angle::HalfPi,
+                                hAngle));
+        hAngle += hStep;
+    }
+
+    return true;
+}
+
 template<typename T>
 std::vector<T> LidarPatternLoader::LoadVector(const fs::path& path)
 {
@@ -255,6 +287,28 @@ rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const ignition::math::Angle& 
         }
     }
     return rglMatrix;
+}
+
+std::vector<ignition::math::Angle> LidarPatternLoader::RglMat3x4fToAngles(const rgl_mat3x4f& rglMatrix)
+{
+    ignition::math::Matrix4d matrix4D;
+    ignition::math::Quaterniond quaternion;
+    ignition::math::Vector3d euler;
+    std::vector<ignition::math::Angle> angles;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            matrix4D(i, j) = rglMatrix.value[i][j];
+        }
+    }
+
+    quaternion = matrix4D.Rotation();
+    euler = quaternion.Euler();
+    for (int i = 0; i < 3; ++i) {
+        angles[i] = ignition::math::Angle(euler[i]);
+    }
+
+    return angles;
 }
 
 }  // namespace rgl

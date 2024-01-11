@@ -92,10 +92,6 @@ private:
     ignition::transport::Node::Publisher pointCloudWorldPublisher;
     ignition::transport::Node gazeboNode;
 
-    ignition::math::Angle scanHMin;
-    ignition::math::Angle scanHMax;
-    int scanHSamples;
-
     rgl_node_t rglNodeUseRays = nullptr;
     rgl_node_t rglNodeLidarPose = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
