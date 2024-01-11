@@ -37,7 +37,7 @@ std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patt
     {"pattern_uniform", std::bind(&LidarPatternLoader::LoadPatternFromUniform, _1, _2)},
     {"pattern_custom", std::bind(&LidarPatternLoader::LoadPatternFromCustom, _1, _2)},
     {"pattern_preset", std::bind(&LidarPatternLoader::LoadPatternFromPreset, _1, _2)},
-    {"pattern_preset_path", std::bind(&LidarPatternLoader::LoadPatternFromPresetPath, _1, _2)}
+    {"pattern_preset_path", std::bind(&LidarPatternLoader::LoadPatternFromPresetPath, _1, _2)},
     {"pattern_lidar2d", std::bind(&LidarPatternLoader::LoadPatternFromLidar2d, _1, _2)}
 };
 
