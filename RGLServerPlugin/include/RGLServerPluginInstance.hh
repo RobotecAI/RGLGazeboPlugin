@@ -69,8 +69,6 @@ private:
                         bool paused);
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
-    bool LoadLaserScanParams(const std::shared_ptr<const sdf::Element>& sdf);
-
     ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
     ignition::msgs::LaserScan CreateLaserScanMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
 
@@ -95,6 +93,7 @@ private:
     rgl_node_t rglNodeUseRays = nullptr;
     rgl_node_t rglNodeLidarPose = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
+    rgl_node_t rglNodeCompact = nullptr;
     rgl_node_t rglNodeYield = nullptr;
     rgl_node_t rglNodeToLidarFrame = nullptr;
 
