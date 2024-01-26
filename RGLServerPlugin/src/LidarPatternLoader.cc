@@ -289,26 +289,4 @@ rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const ignition::math::Angle& 
     return rglMatrix;
 }
 
-std::vector<ignition::math::Angle> LidarPatternLoader::RglMat3x4fToAngles(const rgl_mat3x4f& rglMatrix)
-{
-    ignition::math::Matrix4d matrix4D;
-    ignition::math::Quaterniond quaternion;
-    ignition::math::Vector3d euler;
-    std::vector<ignition::math::Angle> angles;
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            matrix4D(i, j) = rglMatrix.value[i][j];
-        }
-    }
-
-    quaternion = matrix4D.Rotation();
-    euler = quaternion.Euler();
-    for (int i = 0; i < 3; ++i) {
-        angles[i] = ignition::math::Angle(euler[i]);
-    }
-
-    return angles;
-}
-
 }  // namespace rgl

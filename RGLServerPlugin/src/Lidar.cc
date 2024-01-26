@@ -232,13 +232,31 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_range_max(lidarRange);
 
     scanHSamples = lidarPattern.size();
-    scanHMin = LidarPatternLoader::RglMat3x4fToAngles(lidarPattern[0])[2];
-    scanHMax = LidarPatternLoader::RglMat3x4fToAngles(lidarPattern[scanHSamples-1])[2];
 
-    outMsg.set_angle_min(scanHMin.Radian());
-    outMsg.set_angle_max(scanHMax.Radian());
+    ignition::math::Matrix3d matrix3DMin, matrix3DNext;
+    ignition::math::Quaterniond quaternionMin, quaternionNext;
+    ignition::math::Vector3d eulerMin, eulerNext;
 
-    ignition::math::Angle hStep((scanHMax - scanHMin) / static_cast<double>(scanHSamples));
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            matrix3DMin(i, j) = lidarPattern[0].value[i][j];
+            matrix3DNext(i, j) = lidarPattern[1].value[i][j];
+        }
+    }
+
+    quaternionMin.Matrix(matrix3DMin);
+    quaternionNext.Matrix(matrix3DNext);
+
+    scanHMin = ignition::math::Angle(quaternionMin.Roll());
+    ignition::math::Angle hStep((quaternionMin.Roll()-quaternionNext.Roll()));
+    scanHMax = ignition::math::Angle(hStep.Radian() * scanHSamples);
+
+    scanHMin.Normalize();
+    scanHMax.Normalize();
+
+    outMsg.set_angle_min(-scanHMin.Radian());
+    outMsg.set_angle_max(-scanHMax.Radian());
+
     outMsg.set_angle_step(hStep.Radian());
 
     if (outMsg.ranges_size() != hitpointCount) {

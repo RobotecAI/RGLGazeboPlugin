@@ -30,8 +30,6 @@ public:
     using LoadFuncType = std::function<bool(const sdf::ElementConstPtr&, std::vector<rgl_mat3x4f>&)>;
 
     static bool Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern);
-    static std::vector<ignition::math::Angle> RglMat3x4fToAngles(const rgl_mat3x4f& rglMatrix);
-
 private:
     LidarPatternLoader() {};
 
