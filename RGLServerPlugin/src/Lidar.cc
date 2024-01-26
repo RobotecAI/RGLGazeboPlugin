@@ -214,7 +214,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
 
     if (pointCloudWorldPublisher.HasConnections()) {
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
+            !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
             ignerr << "Failed to get visualization data from RGL lidar.\n";
             return;
