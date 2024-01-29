@@ -22,6 +22,7 @@
 #define PARAM_TOPIC_ID "topic"
 #define PARAM_FRAME_ID "frame"
 #define PARAM_UPDATE_ON_PAUSED_SIM_ID "update_on_paused_sim"
+
 namespace rgl
 {
 
@@ -56,12 +57,6 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         updateOnPausedSim = sdf->Get<bool>(PARAM_UPDATE_ON_PAUSED_SIM_ID);
     }
 
-    // Check for 2d pattern and set LaserScan
-    if (sdf->HasElement("pattern_lidar2d")) {
-        ignmsg << "Lidar is 2D, switching to publish LaserScan messages";
-        publishLaserScan = true;
-    }
-
     // Load configuration
     float updateRateHz = sdf->Get<float>(PARAM_UPDATE_RATE_ID);
     raytraceIntervalTime = std::chrono::microseconds(static_cast<int64_t>(1e6 / updateRateHz));
@@ -73,8 +68,17 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         return false;
     }
 
-    // Resize containers for result
-    resultDistances.resize(lidarPattern.size());
+    // Check for 2d pattern and get LaserScan parameters
+    if (sdf->HasElement("pattern_lidar2d")) {
+        ignmsg << "Lidar is 2D, switching to publish LaserScan messages";
+        publishLaserScan = true;
+        resultDistances.resize(lidarPattern.size());
+        scanHMin = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("min_angle");
+        scanHMax = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("max_angle");
+        scanHSamples = lidarPattern.size();
+    }
+
+    // Resize container for result point cloud
     resultPointCloud.resize(lidarPattern.size());
 
     return true;
@@ -227,10 +231,6 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
 ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
 {
     ignition::msgs::LaserScan outMsg;
-    ignition::math::Angle scanHMin;
-    ignition::math::Angle scanHMax;
-    int scanHSamples;
-
     *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
     auto _frame = outMsg.mutable_header()->add_data();
     _frame->set_key("frame_id");
@@ -242,32 +242,10 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_range_min(0.0);
     outMsg.set_range_max(lidarRange);
 
-    scanHSamples = lidarPattern.size();
+    ignition::math::Angle hStep((scanHMax-scanHMin)/scanHSamples);
 
-    ignition::math::Matrix3d matrix3DMin, matrix3DNext;
-    ignition::math::Quaterniond quaternionMin, quaternionNext;
-    ignition::math::Vector3d eulerMin, eulerNext;
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            matrix3DMin(i, j) = lidarPattern[0].value[i][j];
-            matrix3DNext(i, j) = lidarPattern[1].value[i][j];
-        }
-    }
-
-    quaternionMin.Matrix(matrix3DMin);
-    quaternionNext.Matrix(matrix3DNext);
-
-    scanHMin = ignition::math::Angle(quaternionMin.Roll());
-    ignition::math::Angle hStep((quaternionMin.Roll()-quaternionNext.Roll()));
-    scanHMax = ignition::math::Angle(hStep.Radian() * scanHSamples);
-
-    scanHMin.Normalize();
-    scanHMax.Normalize();
-
-    outMsg.set_angle_min(-scanHMin.Radian());
-    outMsg.set_angle_max(-scanHMax.Radian());
-
+    outMsg.set_angle_min(scanHMin.Radian());
+    outMsg.set_angle_max(scanHMax.Radian());
     outMsg.set_angle_step(hStep.Radian());
 
     if (outMsg.ranges_size() != hitpointCount) {

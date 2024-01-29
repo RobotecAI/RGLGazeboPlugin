@@ -77,6 +77,9 @@ private:
     std::string topicName;
     std::string frameId;
     float lidarRange;
+    ignition::math::Angle scanHMin;
+    ignition::math::Angle scanHMax;
+    int scanHSamples;
     std::vector<rgl_mat3x4f> lidarPattern;
     std::vector<rgl_vec3f> resultPointCloud;
     std::vector<float> resultDistances;
