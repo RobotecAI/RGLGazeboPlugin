@@ -128,7 +128,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeYield))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
-        ignmsg << "Topic: " << topicName << " is PointCloudPacked.\n";
+        ignmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
         pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
 
     } else {
@@ -136,7 +136,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeYield))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
-        ignmsg << "Topic: " << topicName << " is LaserScan.\n";
+        ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
         laserScanPublisher = gazeboNode.Advertise<ignition::msgs::LaserScan>(topicName);
 
     }
@@ -201,7 +201,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
             }
     } else {
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeRaytrace, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeRaytrace, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
+            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
 
         ignerr << "Failed to get result distances from RGL lidar.\n";
         return;
