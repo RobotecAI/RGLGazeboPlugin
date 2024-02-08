@@ -228,6 +228,7 @@ bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf,
         return false;
     }
 
+    outPattern.clear();
     outPattern.reserve(hSamples);
 
     ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
