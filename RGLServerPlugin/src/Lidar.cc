@@ -193,14 +193,14 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     int32_t hitpointCount = 0;
 
     if (!publishLaserScan) {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
+        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
             ignerr << "Failed to get result data from RGL lidar.\n";
             return;
             }
     } else {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeRaytrace, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
+        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
 
         ignerr << "Failed to get result distances from RGL lidar.\n";
