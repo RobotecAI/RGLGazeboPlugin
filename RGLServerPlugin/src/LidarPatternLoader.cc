@@ -37,7 +37,8 @@ std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patt
     {"pattern_uniform", std::bind(&LidarPatternLoader::LoadPatternFromUniform, _1, _2)},
     {"pattern_custom", std::bind(&LidarPatternLoader::LoadPatternFromCustom, _1, _2)},
     {"pattern_preset", std::bind(&LidarPatternLoader::LoadPatternFromPreset, _1, _2)},
-    {"pattern_preset_path", std::bind(&LidarPatternLoader::LoadPatternFromPresetPath, _1, _2)}
+    {"pattern_preset_path", std::bind(&LidarPatternLoader::LoadPatternFromPresetPath, _1, _2)},
+    {"pattern_lidar2d", std::bind(&LidarPatternLoader::LoadPatternFromLidar2d, _1, _2)}
 };
 
 bool LidarPatternLoader::Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
@@ -210,6 +211,38 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
         ignerr << "Failed to load preset from path.\n";
         return false;
     }
+    return true;
+}
+
+bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
+{
+    if (!sdf->HasElement("horizontal")) {
+        ignerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
+        return false;
+    }
+
+    ignition::math::Angle hMin, hMax;
+    int hSamples;
+
+    if (!LoadAnglesAndSamplesElement(sdf->FindElement("horizontal"), hMin, hMax, hSamples)) {
+        return false;
+    }
+
+    outPattern.clear();
+    outPattern.reserve(hSamples);
+
+    ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
+
+    auto hAngle = hMin;
+    for (int i = 0; i < hSamples; ++i) {
+        outPattern.push_back(
+            AnglesToRglMat3x4f(ignition::math::Angle::Zero,
+                                // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
+                                ignition::math::Angle::HalfPi,
+                                hAngle));
+        hAngle += hStep;
+    }
+
     return true;
 }
 

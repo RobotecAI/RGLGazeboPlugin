@@ -70,19 +70,26 @@ private:
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
     ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
+    ignition::msgs::LaserScan CreateLaserScanMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
 
     void DestroyLidar();
 
     std::string topicName;
     std::string frameId;
     float lidarRange;
+    ignition::math::Angle scanHMin;
+    ignition::math::Angle scanHMax;
+    int scanHSamples;
     std::vector<rgl_mat3x4f> lidarPattern;
     std::vector<rgl_vec3f> resultPointCloud;
+    std::vector<float> resultDistances;
 
     bool updateOnPausedSim = false;
+    bool publishLaserScan = false;
 
     ignition::gazebo::Entity thisLidarEntity;
     ignition::transport::Node::Publisher pointCloudPublisher;
+    ignition::transport::Node::Publisher laserScanPublisher;
     ignition::transport::Node::Publisher pointCloudWorldPublisher;
     ignition::transport::Node gazeboNode;
 
@@ -90,6 +97,7 @@ private:
     rgl_node_t rglNodeLidarPose = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
     rgl_node_t rglNodeCompact = nullptr;
+    rgl_node_t rglNodeYield = nullptr;
     rgl_node_t rglNodeToLidarFrame = nullptr;
 
     std::chrono::steady_clock::duration raytraceIntervalTime;

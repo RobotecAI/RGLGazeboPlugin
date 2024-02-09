@@ -185,6 +185,29 @@ Inside the link entity in your model, add a custom sensor:
   <pattern_preset_path>/home/some1/your-preset.mat3x4f</pattern_preset_path>
   ```
 
+- **pattern_lidar2d**\
+  Almost the same as `pattern_uniform` but only has 
+  the `horizontal` element and publishes a 
+  `LaserScan` message instead of a point cloud
+  ```xml
+  <sensor name="Pattern2DLidar" type="custom">
+    <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
+      <range>100</range>
+      <update_rate>10</update_rate>
+      <update_on_paused_sim>false</update_on_paused_sim>
+      <topic>rgl_lidar</topic>
+      <frame>RGLLidar</frame>
+      <pattern_lidar2d>
+        <horizontal>
+            <samples>1800</samples>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+        </horizontal>
+    </pattern_lidar2d>
+    </plugin>
+  </sensor>
+  ```
+
 ## How to visualize in Gazebo
 To enable non-uniform point clouds visualization in Gazebo Fortress that are produced by `RGLServerPlugin`, we port [PointCloud gui plugin](https://github.com/gazebosim/gz-gui/tree/gz-gui7/src/plugins/point_cloud) from Gazebo Garden and create `RGLVisualize`. It reimplements the minimal functionality of receiving PointCloudPacked messages (in a world coordinate frame) and rendering them in the scene.
 
