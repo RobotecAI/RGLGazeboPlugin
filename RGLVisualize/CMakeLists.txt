@@ -7,12 +7,18 @@ endif()
 
 project(RGLVisualize)
 
-find_package(ignition-rendering6 REQUIRED)
-
 set(CMAKE_AUTOMOC ON)
 
-find_package(ignition-gui6 REQUIRED)
-find_package(ignition-msgs8 REQUIRED)
+find_package(gz-cmake3 REQUIRED)
+gz_find_package(gz-msgs10 REQUIRED)
+set(GZ_MSGS_VER ${gz-msgs10_VERSION_MAJOR})
+
+gz_find_package(gz-rendering8 REQUIRED)
+set(GZ_RENDERING_VER ${gz-rendering8_VERSION_MAJOR})
+
+
+gz_find_package(gz-gui8 REQUIRED)
+set(GZ_GUI_VER ${gz-gui8_VERSION_MAJOR})
 
 QT5_ADD_RESOURCES(resources_RCC RGLVisualize.qrc)
 
@@ -23,9 +29,9 @@ add_library(RGLVisualize SHARED
 
 target_link_libraries(RGLVisualize
     PRIVATE
-    ignition-gui6::ignition-gui6
-    ignition-rendering6::ignition-rendering6
-    ignition-msgs8::ignition-msgs8
+    gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
+    gz-rendering${GZ_RENDERING_VER}::gz-rendering${GZ_RENDERING_VER}
+    gz-gui${GZ_GUI_VER}::gz-gui${GZ_GUI_VER}
 )
 
 ## Install libraries

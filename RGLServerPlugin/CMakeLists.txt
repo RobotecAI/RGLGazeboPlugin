@@ -2,8 +2,13 @@ cmake_minimum_required(VERSION 3.16)
 project(RGLServerPlugin)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(ignition-gazebo6 REQUIRED)
-find_package(ignition-plugin1 REQUIRED)
+find_package(gz-cmake3 REQUIRED)
+gz_find_package(gz-plugin2 REQUIRED COMPONENTS register)
+set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
+
+gz_find_package(gz-sim8 REQUIRED)
+set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
+
 
 include_directories(include)
 
@@ -29,16 +34,16 @@ set(RobotecGPULidar ${RGL_SO_PATH})
 
 add_library(RGLServerPluginManager SHARED src/RGLServerPluginManager.cc src/Mesh.cc src/Utils.cc src/Scene.cc)
 target_link_libraries(RGLServerPluginManager
-    ignition-gazebo6::ignition-gazebo6
-    ignition-plugin1::ignition-plugin1
+    PRIVATE gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
+    PRIVATE gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     ${RobotecGPULidar}
 )
 set_target_properties(RGLServerPluginManager PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 add_library(RGLServerPluginInstance SHARED src/RGLServerPluginInstance.cc src/Lidar.cc src/Utils.cc src/LidarPatternLoader.cc)
 target_link_libraries(RGLServerPluginInstance
-    ignition-gazebo6::ignition-gazebo6
-    ignition-plugin1::ignition-plugin1
+    PRIVATE gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
+    PRIVATE gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     ${RobotecGPULidar}
 )
 set_target_properties(RGLServerPluginInstance PROPERTIES INSTALL_RPATH "$ORIGIN")
