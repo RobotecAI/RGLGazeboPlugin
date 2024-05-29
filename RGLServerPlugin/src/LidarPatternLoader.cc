@@ -15,6 +15,7 @@
 #include <cstdlib>
 
 #include "LidarPatternLoader.hh"
+#include "gz/math/Matrix4.hh"
 
 #define PATTERNS_DIR_ENV "RGL_PATTERNS_DIR"
 
@@ -59,7 +60,7 @@ bool LidarPatternLoader::Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_m
 }
 
 bool LidarPatternLoader::LoadAnglesAndSamplesElement(const sdf::ElementConstPtr& sdf,
-                                                     ignition::math::Angle& angleMin, ignition::math::Angle& angleMax,
+                                                     gz::math::Angle& angleMin, gz::math::Angle& angleMax,
                                                      int& samples)
 {
     if (!sdf->HasElement("samples")) {
@@ -106,7 +107,7 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
         return false;
     }
 
-    ignition::math::Angle vMin, vMax, hMin, hMax;
+    gz::math::Angle vMin, vMax, hMin, hMax;
     int vSamples, hSamples;
 
     if (!LoadAnglesAndSamplesElement(sdf->FindElement("vertical"), vMin, vMax, vSamples)) {
@@ -119,17 +120,17 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
 
     outPattern.reserve(vSamples * hSamples);
 
-    ignition::math::Angle vStep((vMax - vMin) / static_cast<double>(vSamples));
-    ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
+    gz::math::Angle vStep((vMax - vMin) / static_cast<double>(vSamples));
+    gz::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
 
     auto vAngle = vMin;
     for (int i = 0; i < vSamples; ++i) {
         auto hAngle = hMin;
         for (int j = 0; j < hSamples; ++j) {
             outPattern.push_back(
-                AnglesToRglMat3x4f(ignition::math::Angle::Zero,
+                AnglesToRglMat3x4f(gz::math::Angle::Zero,
                                    // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
-                                   vAngle * -1 + ignition::math::Angle::HalfPi,
+                                   vAngle * -1 + gz::math::Angle::HalfPi,
                                    hAngle));
             hAngle += hStep;
         }
@@ -147,10 +148,10 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
 
     auto channelAngles = sdf->GetAttribute("channels");
 
-    std::vector<ignition::math::Angle> channels;
+    std::vector<gz::math::Angle> channels;
     std::istringstream iss(channelAngles->GetAsString());
-    std::copy(std::istream_iterator<ignition::math::Angle>(iss),
-              std::istream_iterator<ignition::math::Angle>(),
+    std::copy(std::istream_iterator<gz::math::Angle>(iss),
+              std::istream_iterator<gz::math::Angle>(),
               std::back_inserter(channels));
 
     if (channels.empty()) {
@@ -158,13 +159,13 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
         return false;
     }
 
-    ignition::math::Angle hMin, hMax;
+    gz::math::Angle hMin, hMax;
     int hSamples;
     if (!LoadAnglesAndSamplesElement(sdf->FindElement("horizontal"), hMin, hMax, hSamples)) {
         return false;
     }
 
-    ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
+    gz::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
 
     outPattern.reserve(channels.size() * hSamples);
 
@@ -172,9 +173,9 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
         auto hAngle = hMin;
         for (int j = 0; j < hSamples; ++j) {
             outPattern.push_back(
-                AnglesToRglMat3x4f(ignition::math::Angle::Zero,
+                AnglesToRglMat3x4f(gz::math::Angle::Zero,
                                    // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
-                                   channel * -1 + ignition::math::Angle::HalfPi,
+                                   channel * -1 + gz::math::Angle::HalfPi,
                                    hAngle));
             hAngle += hStep;
         }
@@ -221,7 +222,7 @@ bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf,
         return false;
     }
 
-    ignition::math::Angle hMin, hMax;
+    gz::math::Angle hMin, hMax;
     int hSamples;
 
     if (!LoadAnglesAndSamplesElement(sdf->FindElement("horizontal"), hMin, hMax, hSamples)) {
@@ -231,14 +232,14 @@ bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf,
     outPattern.clear();
     outPattern.reserve(hSamples);
 
-    ignition::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
+    gz::math::Angle hStep((hMax - hMin) / static_cast<double>(hSamples));
 
     auto hAngle = hMin;
     for (int i = 0; i < hSamples; ++i) {
         outPattern.push_back(
-            AnglesToRglMat3x4f(ignition::math::Angle::Zero,
+            AnglesToRglMat3x4f(gz::math::Angle::Zero,
                                 // Inverse and shift 90deg pitch to match uniform pattern from Gazebo
-                                ignition::math::Angle::HalfPi,
+                                gz::math::Angle::HalfPi,
                                 hAngle));
         hAngle += hStep;
     }
@@ -274,12 +275,12 @@ std::vector<T> LidarPatternLoader::LoadVector(const fs::path& path)
     return fileData;
 }
 
-rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const ignition::math::Angle& roll,
-                                                   const ignition::math::Angle& pitch,
-                                                   const ignition::math::Angle& yaw)
+rgl_mat3x4f LidarPatternLoader::AnglesToRglMat3x4f(const gz::math::Angle& roll,
+                                                   const gz::math::Angle& pitch,
+                                                   const gz::math::Angle& yaw)
 {
-    ignition::math::Quaterniond quaternion(roll.Radian(), pitch.Radian(), yaw.Radian());
-    ignition::math::Matrix4d matrix4D(quaternion);
+    gz::math::Quaterniond quaternion(roll.Radian(), pitch.Radian(), yaw.Radian());
+    gz::math::Matrix4d matrix4D(quaternion);
 
     rgl_mat3x4f rglMatrix;
     for (int i = 0; i < 3; ++i) {

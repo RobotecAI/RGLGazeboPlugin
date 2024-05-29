@@ -84,8 +84,8 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     return true;
 }
 
-void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
-                                          ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
+                                          gz::sim::EntityComponentManager& ecm)
 {
     thisLidarEntity = entity;
 
@@ -118,7 +118,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
-        
+
         ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
@@ -129,7 +129,7 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
         ignmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
-        pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
+        pointCloudPublisher = gazeboNode.Advertise<gz::msgs::PointCloudPacked>(topicName);
 
     } else {
 
@@ -137,18 +137,18 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
         ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
-        laserScanPublisher = gazeboNode.Advertise<ignition::msgs::LaserScan>(topicName);
+        laserScanPublisher = gazeboNode.Advertise<gz::msgs::LaserScan>(topicName);
 
     }
-    pointCloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
+    pointCloudWorldPublisher = gazeboNode.Advertise<gz::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
 
     isLidarInitialized = true;
 }
 
-void RGLServerPluginInstance::UpdateLidarPose(const ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginInstance::UpdateLidarPose(const gz::sim::EntityComponentManager& ecm)
 {
-    ignition::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
-    ignition::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
+    gz::math::Pose3<double> ignLidarToWorld = FindWorldPose(thisLidarEntity, ecm);
+    gz::math::Pose3<double> ignWorldToLidar = ignLidarToWorld.Inverse();
     rgl_mat3x4f rglLidarToWorld = IgnPose3dToRglMatrix(ignLidarToWorld);
     rgl_mat3x4f rglWorldToLidar = IgnPose3dToRglMatrix(ignWorldToLidar);
     CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &rglLidarToWorld));
@@ -228,10 +228,10 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     }
 }
 
-ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
+gz::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
 {
-    ignition::msgs::LaserScan outMsg;
-    *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
+    gz::msgs::LaserScan outMsg;
+    *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     auto _frame = outMsg.mutable_header()->add_data();
     _frame->set_key("frame_id");
     _frame->add_value(frame);
@@ -242,7 +242,7 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_range_min(0.0);
     outMsg.set_range_max(lidarRange);
 
-    ignition::math::Angle hStep((scanHMax-scanHMin)/scanHSamples);
+    gz::math::Angle hStep((scanHMax-scanHMin)/scanHSamples);
 
     outMsg.set_angle_min(scanHMin.Radian());
     outMsg.set_angle_max(scanHMax.Radian());
@@ -258,17 +258,17 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     return outMsg;
 }
 
-ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
+gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
 {
-    ignition::msgs::PointCloudPacked outMsg;
-    ignition::msgs::InitPointCloudPacked(outMsg, frame, false,
-                                         {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
+    gz::msgs::PointCloudPacked outMsg;
+    gz::msgs::InitPointCloudPacked(outMsg, frame, false,
+                                         {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32}});
     outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
-    *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
+    *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     outMsg.set_height(1);
     outMsg.set_width(hitpointCount);
 
-    ignition::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
+    gz::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
     memcpy(&(*xIterWorld), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
     return outMsg;
 }
@@ -284,11 +284,11 @@ void RGLServerPluginInstance::DestroyLidar()
     }
     // Reset publishers
     if (!publishLaserScan) {
-        pointCloudPublisher = ignition::transport::Node::Publisher();
+        pointCloudPublisher = gz::transport::Node::Publisher();
     } else {
-        laserScanPublisher = ignition::transport::Node::Publisher();
+        laserScanPublisher = gz::transport::Node::Publisher();
     }
-    pointCloudWorldPublisher = ignition::transport::Node::Publisher();
+    pointCloudWorldPublisher = gz::transport::Node::Publisher();
     isLidarInitialized = false;
 }
 

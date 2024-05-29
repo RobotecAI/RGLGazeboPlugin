@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ignition/gazebo/components/CustomSensor.hh>
-#include <ignition/gazebo/components/Link.hh>
-#include <ignition/gazebo/components/SystemPluginInfo.hh>
+#include <gz/sim/components/CustomSensor.hh>
+#include <gz/sim/components/Link.hh>
+#include <gz/sim/components/SystemPluginInfo.hh>
 
 #include "RGLServerPluginManager.hh"
 
@@ -28,17 +28,17 @@ namespace rgl
 
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::RegisterNewLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm)
 {
     // Plugin must be inside CustomSensor
-    if (!ecm.EntityHasComponentType(entity, ignition::gazebo::components::CustomSensor::typeId))
+    if (!ecm.EntityHasComponentType(entity, gz::sim::components::CustomSensor::typeId))
     {
         return true;
     }
 
     // Looking for plugin
-    auto pluginData = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
+    auto pluginData = ecm.ComponentData<gz::sim::components::SystemPluginInfo>(entity);
     if (pluginData == std::nullopt) {
         return true;
     }
@@ -68,8 +68,8 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
 
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::UnregisterLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm)
 {
     if (!lidarEntities.contains(entity)) {
         return true;
@@ -83,9 +83,9 @@ bool RGLServerPluginManager::UnregisterLidarCb(
 
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::LoadEntityToRGLCb(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry* geometry)
+        const gz::sim::Entity& entity,
+        const gz::sim::components::Visual*,
+        const gz::sim::components::Geometry* geometry)
 {
     if (entitiesToIgnore.contains(entity)) {
         return true;
@@ -110,9 +110,9 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
 
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::RemoveEntityFromRGLCb(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry*)
+        const gz::sim::Entity& entity,
+        const gz::sim::components::Visual*,
+        const gz::sim::components::Geometry*)
 {
     if (entitiesToIgnore.contains(entity)) {
         entitiesToIgnore.erase(entity);
@@ -132,7 +132,7 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
 }
 #pragma clang diagnostic pop
 
-void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginManager::UpdateRGLEntityPoses(const gz::sim::EntityComponentManager& ecm)
 {
     for (auto entity: entitiesInRgl) {
         rgl_mat3x4f rglMatrix = FindWorldPoseInRglMatrix(entity.first, ecm);
@@ -142,13 +142,13 @@ void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::Entity
     }
 }
 
-std::unordered_set<ignition::gazebo::Entity> RGLServerPluginManager::GetEntitiesInParentLink(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
+std::unordered_set<gz::sim::Entity> RGLServerPluginManager::GetEntitiesInParentLink(
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm)
 {
     auto parentEntity = ecm.ParentEntity(entity);
-    if (parentEntity == ignition::gazebo::kNullEntity ||
-        !ecm.EntityHasComponentType(parentEntity, ignition::gazebo::components::Link::typeId)) {
+    if (parentEntity == gz::sim::kNullEntity ||
+        !ecm.EntityHasComponentType(parentEntity, gz::sim::components::Link::typeId)) {
         return {};
     }
     return ecm.Descendants(parentEntity);
