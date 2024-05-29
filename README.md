@@ -21,7 +21,7 @@ Key features:
 
 - OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
-- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Fortress 8.3](https://gazebosim.org/docs/harmonic/installl)
 
 - GPU: CUDA-enabled
 
