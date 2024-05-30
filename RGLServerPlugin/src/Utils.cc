@@ -54,7 +54,7 @@ gz::math::Pose3<double> FindWorldPose(
             ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
             return gz::math::Pose3d::Zero;
         }
-        worldPose += parentPose->Data();
+        worldPose = parentPose->Data() * worldPose;
         thisEntity = parent;
     }
 

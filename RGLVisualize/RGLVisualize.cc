@@ -163,7 +163,8 @@ void RGLVisualize::OnRefresh()
   for (const auto& topic : allTopics)
   {
     std::vector<gz::transport::MessagePublisher> publishers;
-    this->dataPtr->node.TopicInfo(topic, publishers);
+    std::vector<gz::transport::MessagePublisher> subscriber;
+    this->dataPtr->node.TopicInfo(topic, publishers, subscriber);
     for (const auto& pub : publishers)
     {
       if (pub.MsgTypeName() == "gz.msgs.PointCloudPacked")
