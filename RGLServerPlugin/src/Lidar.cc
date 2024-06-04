@@ -96,17 +96,21 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
     };
 
     // set desired fields for API call
-    std::vector<rgl_field_t> yieldFields;
-    yieldFields.push_back(RGL_FIELD_XYZ_F32);
+    std::vector<rgl_field_t> yieldFields {
+        RGL_FIELD_XYZ_VEC3_F32
+    };
 
     if (publishLaserScan) {
         yieldFields.push_back(RGL_FIELD_DISTANCE_F32);
     }
 
+    rgl_vec2f rglLidarRange = {0.0f, lidarRange};  // TODO(msz-rai): Add min range support
+
     if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size())) ||
+        !CheckRGL(rgl_node_rays_set_range(&rglNodeSetRange, &rglLidarRange, 1)) ||
         !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
-        !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr, lidarRange)) ||
-        !CheckRGL(rgl_node_points_compact(&rglNodeCompact)) ||
+        !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr)) ||
+        !CheckRGL(rgl_node_points_compact_by_field(&rglNodeCompact, RGL_FIELD_IS_HIT_I32)) ||
         !CheckRGL(rgl_node_points_yield(&rglNodeYield, yieldFields.data(), yieldFields.size())) ||
         !CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &identity))) {
 
@@ -114,17 +118,17 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         return;
     }
 
-    if (!CheckRGL(rgl_graph_node_add_child(rglNodeUseRays, rglNodeLidarPose)) ||
+    if (!CheckRGL(rgl_graph_node_add_child(rglNodeUseRays, rglNodeSetRange)) ||
+        !CheckRGL(rgl_graph_node_add_child(rglNodeSetRange, rglNodeLidarPose)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
-        
+
         ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
     if (!publishLaserScan) {
-
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeYield))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
@@ -132,13 +136,11 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
 
     } else {
-
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeYield))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
         ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
         laserScanPublisher = gazeboNode.Advertise<ignition::msgs::LaserScan>(topicName);
-
     }
     pointCloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
 
@@ -193,32 +195,32 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     int32_t hitpointCount = 0;
 
     if (!publishLaserScan) {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
+        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_XYZ_VEC3_F32, &hitpointCount, nullptr)) ||
+            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_VEC3_F32, resultPointCloud.data()))) {
 
-            ignerr << "Failed to get result data from RGL lidar.\n";
+            ignerr << "Failed to get result xyz from RGL lidar.\n";
             return;
             }
     } else {
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
 
-        ignerr << "Failed to get result distances from RGL lidar.\n";
-        return;
+            ignerr << "Failed to get result distances from RGL lidar.\n";
+            return;
         }
     }
 
-    if (!publishLaserScan) {
-        auto msg = CreatePointCloudMsg(simTime, frameId, hitpointCount);
-        pointCloudPublisher.Publish(msg);
-    } else {
+    if (publishLaserScan) {
         auto msg = CreateLaserScanMsg(simTime, frameId, hitpointCount);
         laserScanPublisher.Publish(msg);
+    } else {  // publish PointCloud2
+        auto msg = CreatePointCloudMsg(simTime, frameId, hitpointCount);
+        pointCloudPublisher.Publish(msg);
     }
 
     if (pointCloudWorldPublisher.HasConnections()) {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
+        if (!CheckRGL(rgl_graph_get_result_size(rglNodeCompact, RGL_FIELD_XYZ_VEC3_F32, &hitpointCount, nullptr)) ||
+            !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_VEC3_F32, resultPointCloud.data()))) {
 
             ignerr << "Failed to get visualization data from RGL lidar.\n";
             return;

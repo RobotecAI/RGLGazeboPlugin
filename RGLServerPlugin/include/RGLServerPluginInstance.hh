@@ -95,6 +95,7 @@ private:
 
     rgl_node_t rglNodeUseRays = nullptr;
     rgl_node_t rglNodeLidarPose = nullptr;
+    rgl_node_t rglNodeSetRange = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
     rgl_node_t rglNodeCompact = nullptr;
     rgl_node_t rglNodeYield = nullptr;
