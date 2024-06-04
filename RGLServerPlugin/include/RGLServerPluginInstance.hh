@@ -69,8 +69,11 @@ private:
                         bool paused);
     void RayTrace(std::chrono::steady_clock::duration sim_time);
 
-    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
-    ignition::msgs::LaserScan CreateLaserScanMsg(std::chrono::steady_clock::duration sim_time, std::string frame, int hitpointCount);
+    bool FetchLaserScanResult();
+    bool FetchPointCloudResult(rgl_node_t formatNode);
+
+    ignition::msgs::PointCloudPacked CreatePointCloudMsg(std::chrono::steady_clock::duration sim_time, const std::string& frame);
+    ignition::msgs::LaserScan CreateLaserScanMsg(std::chrono::steady_clock::duration sim_time, const std::string& frame);
 
     void DestroyLidar();
 
@@ -81,8 +84,28 @@ private:
     ignition::math::Angle scanHMax;
     int scanHSamples;
     std::vector<rgl_mat3x4f> lidarPattern;
-    std::vector<rgl_vec3f> resultPointCloud;
-    std::vector<float> resultDistances;
+
+    struct ResultPointCloud
+    {
+        std::vector<char> data{};
+        int32_t hitPointCount{};
+        const std::size_t pointSize{sizeof(rgl_vec3f) + sizeof(float)};  // Based on rglFields
+        const std::vector<rgl_field_t> rglFields = {
+                RGL_FIELD_XYZ_VEC3_F32,
+                RGL_FIELD_LASER_RETRO_F32
+        };
+    } resultPointCloud{};
+
+    struct ResultLaserScan
+    {
+        std::vector<float> distances{};
+        std::vector<float> intensities{};
+        // No hitPointCount needed because LaserScan message contains non-hits also
+        const std::vector<rgl_field_t> rglFields = {
+            RGL_FIELD_DISTANCE_F32,
+            RGL_FIELD_LASER_RETRO_F32
+        };
+    } resultLaserScan{};
 
     bool updateOnPausedSim = false;
     bool publishLaserScan = false;
@@ -98,7 +121,9 @@ private:
     rgl_node_t rglNodeSetRange = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
     rgl_node_t rglNodeCompact = nullptr;
-    rgl_node_t rglNodeYield = nullptr;
+    rgl_node_t rglNodeYieldLaserScan = nullptr;
+    rgl_node_t rglNodeFormatPointCloudSensor = nullptr;
+    rgl_node_t rglNodeFormatPointCloudWorld = nullptr;
     rgl_node_t rglNodeToLidarFrame = nullptr;
 
     std::chrono::steady_clock::duration raytraceIntervalTime;

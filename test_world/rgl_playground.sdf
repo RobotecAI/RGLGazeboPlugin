@@ -42,6 +42,7 @@
           </surface>
         </collision>
         <visual name='visual'>
+          <laser_retro>0</laser_retro>
           <geometry>
             <plane>
               <normal>0 0 1</normal>
@@ -164,6 +165,7 @@
           </surface>
         </collision>
         <visual name='box_visual'>
+          <laser_retro>1</laser_retro>
           <geometry>
             <box>
               <size>1 1 1</size>
@@ -212,6 +214,7 @@
           </surface>
         </collision>
         <visual name='sphere_visual'>
+          <laser_retro>2</laser_retro>
           <geometry>
             <sphere>
               <radius>0.5</radius>
@@ -261,6 +264,7 @@
           </surface>
         </collision>
         <visual name='cylinder_visual'>
+          <laser_retro>3</laser_retro>
           <geometry>
             <cylinder>
               <radius>0.5</radius>
@@ -311,6 +315,7 @@
           </surface>
         </collision>
         <visual name='capsule_visual'>
+          <laser_retro>4</laser_retro>
           <geometry>
             <capsule>
               <radius>0.20000000000000001</radius>
@@ -360,6 +365,7 @@
           </surface>
         </collision>
         <visual name='ellipsoid_visual'>
+          <laser_retro>5</laser_retro>
           <geometry>
             <ellipsoid>
               <radii>0.2 0.3 0.5</radii>

@@ -45,17 +45,42 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm)
 {
-    ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return RegisterNewLidarCb(entity, ecm);});
+    ecm.EachNew<>
+            ([this, &ecm](auto&& entity) {
+                return RegisterNewLidarCb(
+                        std::forward<decltype(entity)>(entity),
+                        std::forward<decltype(ecm)>(ecm));
+            });
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return LoadEntityToRGLCb(
+                        std::forward<decltype(entity)>(entity),
+                        std::forward<decltype(visual)>(visual),
+                        std::forward<decltype(geometry)>(geometry));
+            });
 
-    ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return UnregisterLidarCb(entity, ecm);});
+    ecm.EachNew<ignition::gazebo::components::LaserRetro>
+            ([this](auto&& entity, auto&& laserRetro) {
+                return SetLaserRetroCb(
+                        std::forward<decltype(entity)>(entity),
+                        std::forward<decltype(laserRetro)>(laserRetro));
+            });
+
+    ecm.EachRemoved<>
+            ([this, &ecm](auto&& entity) {
+                return UnregisterLidarCb(
+                        std::forward<decltype(entity)>(entity),
+                        std::forward<decltype(ecm)>(ecm));
+            });
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return RemoveEntityFromRGLCb(
+                        std::forward<decltype(entity)>(entity),
+                        std::forward<decltype(visual)>(visual),
+                        std::forward<decltype(geometry)>(geometry));
+            });
 
     UpdateRGLEntityPoses(ecm);
 }

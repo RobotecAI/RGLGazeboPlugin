@@ -72,14 +72,10 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     if (sdf->HasElement("pattern_lidar2d")) {
         ignmsg << "Lidar is 2D, switching to publish LaserScan messages";
         publishLaserScan = true;
-        resultDistances.resize(lidarPattern.size());
         scanHMin = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("min_angle");
         scanHMax = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("max_angle");
         scanHSamples = lidarPattern.size();
     }
-
-    // Resize container for result point cloud
-    resultPointCloud.resize(lidarPattern.size());
 
     return true;
 }
@@ -95,13 +91,13 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         0, 0, 1, 0
     };
 
-    // set desired fields for API call
-    std::vector<rgl_field_t> yieldFields {
-        RGL_FIELD_XYZ_VEC3_F32
-    };
-
-    if (publishLaserScan) {
-        yieldFields.push_back(RGL_FIELD_DISTANCE_F32);
+    // Resize result data containers with the maximum possible point count (number of lasers).
+    // This improves performance in runtime because no additional allocations are needed.
+    resultPointCloud.data.resize(resultPointCloud.pointSize * lidarPattern.size());
+    if (publishLaserScan)
+    {
+        resultLaserScan.distances.resize(lidarPattern.size());
+        resultLaserScan.intensities.resize(lidarPattern.size());
     }
 
     rgl_vec2f rglLidarRange = {0.0f, lidarRange};  // TODO(msz-rai): Add min range support
@@ -111,7 +107,9 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
         !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr)) ||
         !CheckRGL(rgl_node_points_compact_by_field(&rglNodeCompact, RGL_FIELD_IS_HIT_I32)) ||
-        !CheckRGL(rgl_node_points_yield(&rglNodeYield, yieldFields.data(), yieldFields.size())) ||
+        !CheckRGL(rgl_node_points_yield(&rglNodeYieldLaserScan, resultLaserScan.rglFields.data(), resultLaserScan.rglFields.size())) ||
+        !CheckRGL(rgl_node_points_format(&rglNodeFormatPointCloudSensor, resultPointCloud.rglFields.data(), resultPointCloud.rglFields.size())) ||
+        !CheckRGL(rgl_node_points_format(&rglNodeFormatPointCloudWorld, resultPointCloud.rglFields.data(), resultPointCloud.rglFields.size())) ||
         !CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &identity))) {
 
         ignerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
@@ -122,25 +120,25 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         !CheckRGL(rgl_graph_node_add_child(rglNodeSetRange, rglNodeLidarPose)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
-        !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
+        !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame)) ||
+        !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeFormatPointCloudWorld))) {
 
         ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
-    if (!publishLaserScan) {
-        if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeYield))) {
-            ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
-        }
-        ignmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
-        pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
-
-    } else {
-        if(!CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeYield))) {
+    if (publishLaserScan) {
+        if(!CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeYieldLaserScan))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
         ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
         laserScanPublisher = gazeboNode.Advertise<ignition::msgs::LaserScan>(topicName);
+    } else {  // publish PointCloud
+        if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeFormatPointCloudSensor))) {
+            ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+        }
+        ignmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
+        pointCloudPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName);
     }
     pointCloudWorldPublisher = gazeboNode.Advertise<ignition::msgs::PointCloudPacked>(topicName + worldTopicPostfix);
 
@@ -192,46 +190,57 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
         return;
     }
 
-    int32_t hitpointCount = 0;
-
-    if (!publishLaserScan) {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_XYZ_VEC3_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_VEC3_F32, resultPointCloud.data()))) {
-
-            ignerr << "Failed to get result xyz from RGL lidar.\n";
-            return;
-            }
-    } else {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
-
-            ignerr << "Failed to get result distances from RGL lidar.\n";
+    if (publishLaserScan) {
+        if (!FetchLaserScanResult()) {
+            ignerr << "Failed to fetch LaserScan result data from RGL lidar.\n";
             return;
         }
-    }
-
-    if (publishLaserScan) {
-        auto msg = CreateLaserScanMsg(simTime, frameId, hitpointCount);
+        auto msg = CreateLaserScanMsg(simTime, frameId);
         laserScanPublisher.Publish(msg);
-    } else {  // publish PointCloud2
-        auto msg = CreatePointCloudMsg(simTime, frameId, hitpointCount);
+    } else {  // publish PointCloud
+        if (!FetchPointCloudResult(rglNodeFormatPointCloudSensor)) {
+            ignerr << "Failed to fetch PointCloud result data (sensor frame) from RGL lidar.\n";
+            return;
+        }
+        auto msg = CreatePointCloudMsg(simTime, frameId);
         pointCloudPublisher.Publish(msg);
     }
 
     if (pointCloudWorldPublisher.HasConnections()) {
-        if (!CheckRGL(rgl_graph_get_result_size(rglNodeCompact, RGL_FIELD_XYZ_VEC3_F32, &hitpointCount, nullptr)) ||
-            !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_VEC3_F32, resultPointCloud.data()))) {
-
-            ignerr << "Failed to get visualization data from RGL lidar.\n";
+        if (!FetchPointCloudResult(rglNodeFormatPointCloudWorld)) {
+            ignerr << "Failed to fetch PointCloud result data (world frame) from RGL lidar.\n";
             return;
         }
-        auto worldMsg = CreatePointCloudMsg(simTime, worldFrameId, hitpointCount);
-        pointCloudWorldPublisher.Publish(worldMsg);
+        auto msg = CreatePointCloudMsg(simTime, worldFrameId);
+        pointCloudWorldPublisher.Publish(msg);
     }
 }
 
-ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
+bool RGLServerPluginInstance::FetchLaserScanResult()
 {
+    if (!CheckRGL(rgl_graph_get_result_data(rglNodeYieldLaserScan, RGL_FIELD_DISTANCE_F32, resultLaserScan.distances.data())) ||
+        !CheckRGL(rgl_graph_get_result_data(rglNodeYieldLaserScan, RGL_FIELD_LASER_RETRO_F32, resultLaserScan.intensities.data()))) {
+        return false;
+    }
+    return true;
+}
+
+bool RGLServerPluginInstance::FetchPointCloudResult(rgl_node_t formatNode)
+{
+    int32_t rglPointSize = -1;
+    if (!CheckRGL(rgl_graph_get_result_size(formatNode, RGL_FIELD_DYNAMIC_FORMAT, &resultPointCloud.hitPointCount, &rglPointSize))) {
+        return false;
+    }
+    assert(rglPointSize == resultPointCloud.pointSize);
+    if (!CheckRGL(rgl_graph_get_result_data(formatNode, RGL_FIELD_DYNAMIC_FORMAT, resultPointCloud.data.data()))) {
+        return false;
+    }
+    return true;
+}
+
+ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, const std::string& frame)
+{
+    auto pointCount = resultLaserScan.distances.size();
     ignition::msgs::LaserScan outMsg;
     *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
     auto _frame = outMsg.mutable_header()->add_data();
@@ -239,7 +248,7 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     _frame->add_value(frame);
 
     outMsg.set_frame(frame);
-    outMsg.set_count(hitpointCount);
+    outMsg.set_count(pointCount);
 
     outMsg.set_range_min(0.0);
     outMsg.set_range_max(lidarRange);
@@ -250,28 +259,27 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_angle_max(scanHMax.Radian());
     outMsg.set_angle_step(hStep.Radian());
 
-    if (outMsg.ranges_size() != hitpointCount) {
-        for (int i=0; i < hitpointCount; ++i) {
-            outMsg.add_ranges(resultDistances[i]);
-            outMsg.add_intensities(100.0);
-        }
+    for (int i = 0; i < pointCount; ++i) {
+        outMsg.add_ranges(resultLaserScan.distances[i]);
+        outMsg.add_intensities(resultLaserScan.intensities[i]);
     }
 
     return outMsg;
 }
 
-ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
+ignition::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, const std::string& frame)
 {
     ignition::msgs::PointCloudPacked outMsg;
     ignition::msgs::InitPointCloudPacked(outMsg, frame, false,
-                                         {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32}});
-    outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
+                                         {{"xyz", ignition::msgs::PointCloudPacked::Field::FLOAT32},
+                                          {"intensity",ignition::msgs::PointCloudPacked::Field::FLOAT32}});
+    outMsg.mutable_data()->resize(resultPointCloud.hitPointCount * outMsg.point_step());
     *outMsg.mutable_header()->mutable_stamp() = ignition::msgs::Convert(simTime);
     outMsg.set_height(1);
-    outMsg.set_width(hitpointCount);
+    outMsg.set_width(resultPointCloud.hitPointCount);
 
-    ignition::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
-    memcpy(&(*xIterWorld), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
+    ignition::msgs::PointCloudPackedIterator<float> xIter(outMsg, "x");
+    memcpy(&(*xIter), resultPointCloud.data.data(), resultPointCloud.hitPointCount * resultPointCloud.pointSize);
     return outMsg;
 }
 

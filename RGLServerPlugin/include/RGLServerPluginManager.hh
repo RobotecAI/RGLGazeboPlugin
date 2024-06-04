@@ -21,6 +21,7 @@
 #include <ignition/common/MeshManager.hh>
 
 #include <ignition/gazebo/components/Geometry.hh>
+#include <ignition/gazebo/components/LaserRetro.hh>
 #include <ignition/gazebo/components/Visual.hh>
 #include <ignition/gazebo/System.hh>
 
@@ -90,6 +91,10 @@ private:
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
         const ignition::gazebo::components::Geometry*);
+
+    bool SetLaserRetroCb(
+        const ignition::gazebo::Entity& entity,
+        const ignition::gazebo::components::LaserRetro* laser_retro);
 
     void UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm);
 
