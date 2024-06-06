@@ -80,7 +80,10 @@
         <!-- Custom sensor with RGL plugin that simulates lidar -->
         <sensor name="RGLsensor" type="custom">
           <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-            <range>100</range>
+            <range>
+              <min>0</min>
+              <max>100</max>
+            </range>
             <update_rate>10</update_rate>
             <update_on_paused_sim>false</update_on_paused_sim>
             <topic>rgl_lidar</topic>

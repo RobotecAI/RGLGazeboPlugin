@@ -97,7 +97,10 @@ Inside the link entity in your model, add a custom sensor:
 ```xml
 <sensor name="UniqueSensorName" type="custom">
   <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-    <range>100</range>
+    <range>
+        <min>0</min>
+        <max>100</max>
+    </range>
     <update_rate>10</update_rate>
     <update_on_paused_sim>false</update_on_paused_sim>
     <topic>rgl_lidar</topic>
@@ -109,7 +112,7 @@ Inside the link entity in your model, add a custom sensor:
 *Note: All entities attached to the same \<link\> as lidar will be ignored from raycasting. This enables an adding visual representation of the sensor.*
 
 ### Parameters description:
-- **range** - the maximum range that the hits will be registered (in meters).
+- **range** - the minimum and maximum range that the hits will be registered (in meters).
 
 - **update_rate** - the frequency at which the lidar will perform raycasting (in Hz).
 

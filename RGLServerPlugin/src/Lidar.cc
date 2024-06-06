@@ -19,6 +19,8 @@
 
 #define PARAM_UPDATE_RATE_ID "update_rate"
 #define PARAM_RANGE_ID "range"
+#define PARAM_RANGE_MIN_ID "min"
+#define PARAM_RANGE_MAX_ID "max"
 #define PARAM_TOPIC_ID "topic"
 #define PARAM_FRAME_ID "frame"
 #define PARAM_UPDATE_ON_PAUSED_SIM_ID "update_on_paused_sim"
@@ -34,8 +36,14 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         return false;
     }
 
-    if (!sdf->HasElement(PARAM_RANGE_ID)) {
-        ignerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+    if (!sdf->HasElement(PARAM_RANGE_ID) ||
+        !sdf->FindElement(PARAM_RANGE_ID)->HasElement(PARAM_RANGE_MIN_ID) ||
+        !sdf->FindElement(PARAM_RANGE_ID)->HasElement(PARAM_RANGE_MAX_ID)) {
+        ignerr << "Range parameter is not defined correctly. Disabling plugin. Should be: \n"
+               << "<" PARAM_RANGE_ID << ">\n"
+               << "  <" << PARAM_RANGE_MIN_ID << ">" << "</" << PARAM_RANGE_MIN_ID << ">\n"
+               << "  <" << PARAM_RANGE_MAX_ID << ">" << "</" << PARAM_RANGE_MAX_ID << ">\n"
+               << "</" PARAM_RANGE_ID << ">\n";
         return false;
     }
 
@@ -60,7 +68,8 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     // Load configuration
     float updateRateHz = sdf->Get<float>(PARAM_UPDATE_RATE_ID);
     raytraceIntervalTime = std::chrono::microseconds(static_cast<int64_t>(1e6 / updateRateHz));
-    lidarRange = sdf->Get<float>(PARAM_RANGE_ID);
+    lidarMinMaxRange.value[0] = sdf->FindElement(PARAM_RANGE_ID)->Get<float>(PARAM_RANGE_MIN_ID);
+    lidarMinMaxRange.value[1] = sdf->FindElement(PARAM_RANGE_ID)->Get<float>(PARAM_RANGE_MAX_ID);
     topicName = sdf->Get<std::string>(PARAM_TOPIC_ID);
     frameId = sdf->Get<std::string>(PARAM_FRAME_ID);
 
@@ -100,10 +109,8 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         resultLaserScan.intensities.resize(lidarPattern.size());
     }
 
-    rgl_vec2f rglLidarRange = {0.0f, lidarRange};  // TODO(msz-rai): Add min range support
-
     if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size())) ||
-        !CheckRGL(rgl_node_rays_set_range(&rglNodeSetRange, &rglLidarRange, 1)) ||
+        !CheckRGL(rgl_node_rays_set_range(&rglNodeSetRange, &lidarMinMaxRange, 1)) ||
         !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
         !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr)) ||
         !CheckRGL(rgl_node_points_compact_by_field(&rglNodeCompact, RGL_FIELD_IS_HIT_I32)) ||
@@ -254,8 +261,8 @@ ignition::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chron
     outMsg.set_frame(frame);
     outMsg.set_count(pointCount);
 
-    outMsg.set_range_min(0.0);
-    outMsg.set_range_max(lidarRange);
+    outMsg.set_range_min(lidarMinMaxRange.value[0]);
+    outMsg.set_range_max(lidarMinMaxRange.value[1]);
 
     ignition::math::Angle hStep((scanHMax-scanHMin)/scanHSamples);
 

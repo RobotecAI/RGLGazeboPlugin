@@ -79,7 +79,7 @@ private:
 
     std::string topicName;
     std::string frameId;
-    float lidarRange;
+    rgl_vec2f lidarMinMaxRange;
     ignition::math::Angle scanHMin;
     ignition::math::Angle scanHMax;
     int scanHSamples;
