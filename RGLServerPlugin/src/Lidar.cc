@@ -120,7 +120,6 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         !CheckRGL(rgl_graph_node_add_child(rglNodeSetRange, rglNodeLidarPose)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
-        !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeFormatPointCloudWorld))) {
 
         ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
@@ -136,7 +135,8 @@ void RGLServerPluginInstance::CreateLidar(ignition::gazebo::Entity entity,
         ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
         laserScanPublisher = gazeboNode.Advertise<ignition::msgs::LaserScan>(topicName);
     } else {  // publish PointCloud
-        if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeFormatPointCloudSensor)) ||
+        if(!CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame)) ||
+           !CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeFormatPointCloudSensor)) ||
            // Optimization: rglNodeFormatPointCloudSensor should be prioritized because it will be requested first
            !CheckRGL(rgl_graph_node_set_priority(rglNodeFormatPointCloudSensor, 1))) {
             ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
