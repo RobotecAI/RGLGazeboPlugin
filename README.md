@@ -53,7 +53,7 @@ Key features:
 ```shell
 mkdir build
 cd build
-cmake ..
+cmake .. # Add `-DRGL_FORCE_DOWNLOAD=ON` to make sure the downloaded RGL will be up-to-date
 make -j
 make install
 cd ..
