@@ -229,3 +229,8 @@ At [Robotec.AI](https://robotec.ai/) we care about every little detail of our pr
 | **RGL uniform pattern** | **gpu_lidar uniform pattern** |
 |---|---|
 | ![](docs/images/RGL_uniform.png) | ![](docs/images/GPU_lidar_uniform.png) |
+
+## Acknowledgements
+
+The project benefited from significant contributions and support of [Dexory](https://www.dexory.com/).
+Features such as LaserScan publishing and Laser Retro as well as update to the newest RGL version were possible thanks to their dedication to the open source community.
