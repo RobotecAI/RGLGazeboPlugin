@@ -138,7 +138,6 @@ bool RGLServerPluginManager::SetLaserRetroCb(
 {
     if (!CheckRGL(rgl_entity_set_laser_retro(entitiesInRgl.at(entity).first, laser_retro->Data()))) {
         ignerr << "Failed to set Laser Retro for entity (" << entity << ").\n";
-        return false;
     }
     return true;
 }

@@ -89,8 +89,8 @@ private:
     {
         std::vector<char> data{};
         int32_t hitPointCount{};
-        const std::size_t pointSize{sizeof(rgl_vec3f) + sizeof(float)};  // Based on rglFields
-        const std::vector<rgl_field_t> rglFields = {
+        static constexpr std::size_t pointSize{sizeof(rgl_vec3f) + sizeof(float)};  // Based on rglFields
+        inline static const std::vector<rgl_field_t> rglFields = {
                 RGL_FIELD_XYZ_VEC3_F32,
                 RGL_FIELD_LASER_RETRO_F32
         };
@@ -101,7 +101,7 @@ private:
         std::vector<float> distances{};
         std::vector<float> intensities{};
         // No hitPointCount needed because LaserScan message contains non-hits also
-        const std::vector<rgl_field_t> rglFields = {
+        inline static const std::vector<rgl_field_t> rglFields = {
             RGL_FIELD_DISTANCE_F32,
             RGL_FIELD_LASER_RETRO_F32
         };

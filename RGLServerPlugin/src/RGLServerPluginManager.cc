@@ -47,39 +47,27 @@ void RGLServerPluginManager::PostUpdate(
 {
     ecm.EachNew<>
             ([this, &ecm](auto&& entity) {
-                return RegisterNewLidarCb(
-                        std::forward<decltype(entity)>(entity),
-                        std::forward<decltype(ecm)>(ecm));
+                return RegisterNewLidarCb(entity, ecm);
             });
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             ([this](auto&& entity, auto&& visual, auto&& geometry) {
-                return LoadEntityToRGLCb(
-                        std::forward<decltype(entity)>(entity),
-                        std::forward<decltype(visual)>(visual),
-                        std::forward<decltype(geometry)>(geometry));
+                return LoadEntityToRGLCb(entity, visual, geometry);
             });
 
     ecm.EachNew<ignition::gazebo::components::LaserRetro>
             ([this](auto&& entity, auto&& laserRetro) {
-                return SetLaserRetroCb(
-                        std::forward<decltype(entity)>(entity),
-                        std::forward<decltype(laserRetro)>(laserRetro));
+                return SetLaserRetroCb(entity, laserRetro);
             });
 
     ecm.EachRemoved<>
             ([this, &ecm](auto&& entity) {
-                return UnregisterLidarCb(
-                        std::forward<decltype(entity)>(entity),
-                        std::forward<decltype(ecm)>(ecm));
+                return UnregisterLidarCb(entity, ecm);
             });
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
             ([this](auto&& entity, auto&& visual, auto&& geometry) {
-                return RemoveEntityFromRGLCb(
-                        std::forward<decltype(entity)>(entity),
-                        std::forward<decltype(visual)>(visual),
-                        std::forward<decltype(geometry)>(geometry));
+                return RemoveEntityFromRGLCb(entity, visual, geometry);
             });
 
     UpdateRGLEntityPoses(ecm);
