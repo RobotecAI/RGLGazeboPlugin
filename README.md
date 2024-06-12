@@ -193,22 +193,13 @@ Inside the link entity in your model, add a custom sensor:
   the `horizontal` element and publishes a 
   `LaserScan` message instead of a point cloud
   ```xml
-  <sensor name="Pattern2DLidar" type="custom">
-    <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-      <range>100</range>
-      <update_rate>10</update_rate>
-      <update_on_paused_sim>false</update_on_paused_sim>
-      <topic>rgl_lidar</topic>
-      <frame>RGLLidar</frame>
-      <pattern_lidar2d>
-        <horizontal>
-            <samples>1800</samples>
-            <min_angle>-3.14159</min_angle>
-            <max_angle>3.14159</max_angle>
-        </horizontal>
-    </pattern_lidar2d>
-    </plugin>
-  </sensor>
+  <pattern_lidar2d>
+      <horizontal>
+          <samples>1800</samples>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+      </horizontal>
+  </pattern_lidar2d>
   ```
 
 ## How to visualize in Gazebo
