@@ -9,10 +9,10 @@
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>1000</real_time_update_rate>
     </physics>
-    <plugin name='ignition::gazebo::systems::Physics' filename='ignition-gazebo-physics-system'/>
-    <plugin name='ignition::gazebo::systems::UserCommands' filename='ignition-gazebo-user-commands-system'/>
-    <plugin name='ignition::gazebo::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
-    <plugin name='ignition::gazebo::systems::Contact' filename='ignition-gazebo-contact-system'/>
+    <plugin name='gz::sim::systems::Physics' filename='ignition-gazebo-physics-system'/>
+    <plugin name='gz::sim::systems::UserCommands' filename='ignition-gazebo-user-commands-system'/>
+    <plugin name='gz::sim::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
+    <plugin name='gz::sim::systems::Contact' filename='ignition-gazebo-contact-system'/>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>

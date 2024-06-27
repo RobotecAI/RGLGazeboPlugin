@@ -21,7 +21,7 @@ import QtQuick.Controls 2.1
 import QtQuick.Dialogs 1.0
 import QtQuick.Controls.Material 2.1
 import QtQuick.Layouts 1.3
-import ignition.gui 1.0
+import gz.gui 1.0
 import "qrc:/qml"
 
 ColumnLayout {

@@ -14,14 +14,14 @@ RGL Gazebo Plugin has been created by [Robotec.AI](https://robotec.ai/) to bring
 Key features:
 - Point cloud computation using hardware-accelerated raytracing (Nvidia OptiX)
 - High performance (~4x improvement over `gpu_lidar` sensor from Gazebo)
-- Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file 
+- Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file
 - Realistic presets of the most popular LiDARs
 
 ## Requirements:
 
 - OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
-- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Fortress 8.3](https://gazebosim.org/docs/harmonic/installl)
 
 - GPU: CUDA-enabled
 
@@ -46,8 +46,8 @@ Key features:
     # libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
     # are located in RGLServerPlugin directory,
     # and libRGLVisualize.so in RGLGuiPlugin.
-    export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
+    export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+    export GZ_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_GUI_PLUGIN_PATH
     ```
 ### Building from source
 ```shell
@@ -57,8 +57,8 @@ cmake ..
 make -j
 make install
 cd ..
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
+export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
 ```
 ## Demo:
 
@@ -66,7 +66,7 @@ export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 
 Launch the prepared simulation from `test_world` directory:
 ```shell
-ign gazebo sonoma_with_rgl.sdf
+gz sim sonoma_with_rgl.sdf
 ```
 
 1. Start the simulation by pressing play
@@ -77,7 +77,7 @@ The second sample world (rgl_playground.sdf) contains all supported object types
 ```shell
 # From the top-level directory of this repository
 export RGL_PATTERNS_DIR=`pwd`/lidar_patterns
-ign gazebo test_world/rgl_playground.sdf
+gz sim test_world/rgl_playground.sdf
 ```
 
 ## Using the plugin:
@@ -113,7 +113,7 @@ Inside the link entity in your model, add a custom sensor:
 
 - **update_rate** - the frequency at which the lidar will perform raycasting (in Hz).
 
--  **topic** - topic on which pointcloud message (ignition::msgs::PointCloudPacked) will be published. A second topic with the `/world` postfix will also be created for visualization purposes.
+-  **topic** - topic on which pointcloud message (gz::msgs::PointCloudPacked) will be published. A second topic with the `/world` postfix will also be created for visualization purposes.
 
 - **frame** - frame_id for point cloud message header.
 
@@ -153,7 +153,7 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below). 
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
@@ -186,8 +186,8 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_lidar2d**\
-  Almost the same as `pattern_uniform` but only has 
-  the `horizontal` element and publishes a 
+  Almost the same as `pattern_uniform` but only has
+  the `horizontal` element and publishes a
   `LaserScan` message instead of a point cloud
   ```xml
   <sensor name="Pattern2DLidar" type="custom">

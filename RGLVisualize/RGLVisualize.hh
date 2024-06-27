@@ -21,15 +21,15 @@
 
 #include <memory>
 
-#include <ignition/msgs/pointcloud_packed.pb.h>
-#include <ignition/gui/Plugin.hh>
+#include <gz/msgs/pointcloud_packed.pb.h>
+#include <gz/gui/Plugin.hh>
 
 namespace rgl
 {
 
 class RGLVisualizePrivate;
 
-/// \brief Visualize `ignition::msgs::PointCloudPacked` messages in a 3D
+/// \brief Visualize `gz::msgs::PointCloudPacked` messages in a 3D
 /// scene.
 ///
 /// This is a port of PointCloud gui plugin from Gazebo Garden to enable non-uniform
@@ -40,8 +40,8 @@ class RGLVisualizePrivate;
 ///
 /// Parameters:
 /// * `<point_cloud_topic>`: Topic to receive
-///      `ignition::msgs::PointCloudPacked` messages.
-class RGLVisualize : public ignition::gui::Plugin
+///      `gz::msgs::PointCloudPacked` messages.
+class RGLVisualize : public gz::gui::Plugin
 {
   Q_OBJECT
 
@@ -64,12 +64,12 @@ class RGLVisualize : public ignition::gui::Plugin
 
   /// \brief Callback function for point cloud topic.
   /// \param[in] _msg Point cloud message
-  public: void OnPointCloud(const ignition::msgs::PointCloudPacked &_msg);
+  public: void OnPointCloud(const gz::msgs::PointCloudPacked &_msg);
 
   /// \brief Callback function for point cloud service
   /// \param[in] _msg Point cloud message
   /// \param[out] _result True on success.
-  public: void OnPointCloudService(const ignition::msgs::PointCloudPacked &_msg,
+  public: void OnPointCloudService(const gz::msgs::PointCloudPacked &_msg,
                                    bool _result);
 
   /// \brief Get the topic list

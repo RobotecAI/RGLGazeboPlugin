@@ -20,15 +20,16 @@
 #include <string>
 #include <vector>
 
-#include <ignition/common/Console.hh>
-#include <ignition/common/Profiler.hh>
-#include <ignition/msgs/PointCloudPackedUtils.hh>
-#include <ignition/msgs/Utility.hh>
-#include <ignition/plugin/Register.hh>
-#include <ignition/transport/Node.hh>
+#include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
+#include <gz/msgs/PointCloudPackedUtils.hh>
+#include <gz/msgs/Utility.hh>
+#include <gz/msgs/marker.pb.h>
+#include <gz/plugin/Register.hh>
+#include <gz/transport/Node.hh>
 
-#include <ignition/gui/Application.hh>
-#include <ignition/gui/MainWindow.hh>
+#include <gz/gui/Application.hh>
+#include <gz/gui/MainWindow.hh>
 
 #include "RGLVisualize.hh"
 
@@ -45,7 +46,7 @@ class RGLVisualizePrivate
   public: void ClearMarkers();
 
   /// \brief Transport node
-  public: ignition::transport::Node node;
+  public: gz::transport::Node node;
 
   /// \brief Name of topic for PointCloudPacked
   public: std::string pointCloudTopic;
@@ -57,7 +58,7 @@ class RGLVisualizePrivate
   public: std::recursive_mutex mutex;
 
   /// \brief Point cloud message containing XYZ positions
-  public: ignition::msgs::PointCloudPacked pointCloudMsg;
+  public: gz::msgs::PointCloudPacked pointCloudMsg;
 
   /// \brief True if showing, changeable at runtime
   public: bool showing{true};
@@ -65,7 +66,7 @@ class RGLVisualizePrivate
 
 /////////////////////////////////////////////////
 RGLVisualize::RGLVisualize()
-    : ignition::gui::Plugin(),
+    : gz::gui::Plugin(),
       dataPtr(std::make_unique<RGLVisualizePrivate>())
 {
   this->OnRefresh();
@@ -98,7 +99,7 @@ void RGLVisualize::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
     }
   }
 
-  ignition::gui::App()->findChild<ignition::gui::MainWindow *>()->installEventFilter(this);
+  gz::gui::App()->findChild<gz::gui::MainWindow *>()->installEventFilter(this);
 }
 
 //////////////////////////////////////////////////
@@ -161,11 +162,12 @@ void RGLVisualize::OnRefresh()
   this->dataPtr->node.TopicList(allTopics);
   for (const auto& topic : allTopics)
   {
-    std::vector<ignition::transport::MessagePublisher> publishers;
-    this->dataPtr->node.TopicInfo(topic, publishers);
+    std::vector<gz::transport::MessagePublisher> publishers;
+    std::vector<gz::transport::MessagePublisher> subscriber;
+    this->dataPtr->node.TopicInfo(topic, publishers, subscriber);
     for (const auto& pub : publishers)
     {
-      if (pub.MsgTypeName() == "ignition.msgs.PointCloudPacked")
+      if (pub.MsgTypeName() == "gz.msgs.PointCloudPacked")
       {
         if (std::find(this->dataPtr->pointCloudTopicList.begin(),
                       this->dataPtr->pointCloudTopicList.end(),
@@ -203,7 +205,7 @@ void RGLVisualize::SetPointCloudTopicList(
 
 //////////////////////////////////////////////////
 void RGLVisualize::OnPointCloud(
-    const ignition::msgs::PointCloudPacked &_msg)
+    const gz::msgs::PointCloudPacked &_msg)
 {
   std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
   this->dataPtr->pointCloudMsg = _msg;
@@ -212,7 +214,7 @@ void RGLVisualize::OnPointCloud(
 
 //////////////////////////////////////////////////
 void RGLVisualize::OnPointCloudService(
-    const ignition::msgs::PointCloudPacked &_msg, bool _result)
+    const gz::msgs::PointCloudPacked &_msg, bool _result)
 {
   if (!_result)
   {
@@ -225,7 +227,7 @@ void RGLVisualize::OnPointCloudService(
 //////////////////////////////////////////////////
 void RGLVisualizePrivate::PublishMarkers()
 {
-  IGN_PROFILE("RGLVisualize::PublishMarkers");
+  GZ_PROFILE("RGLVisualize::PublishMarkers");
 
   if (!this->showing)
   {
@@ -240,18 +242,18 @@ void RGLVisualizePrivate::PublishMarkers()
   }
 
   std::lock_guard<std::recursive_mutex> lock(this->mutex);
-  ignition::msgs::Marker marker;
+  gz::msgs::Marker marker;
   marker.set_ns(this->pointCloudTopic);
   marker.set_id(1);
-  marker.set_action(ignition::msgs::Marker::ADD_MODIFY);
-  marker.set_type(ignition::msgs::Marker::POINTS);
-  marker.set_visibility(ignition::msgs::Marker::GUI);
+  marker.set_action(gz::msgs::Marker::ADD_MODIFY);
+  marker.set_type(gz::msgs::Marker::POINTS);
+  marker.set_visibility(gz::msgs::Marker::GUI);
 
-  ignition::msgs::PointCloudPackedIterator<float>
+  gz::msgs::PointCloudPackedIterator<float>
       iterX(this->pointCloudMsg, "x");
-  ignition::msgs::PointCloudPackedIterator<float>
+  gz::msgs::PointCloudPackedIterator<float>
       iterY(this->pointCloudMsg, "y");
-  ignition::msgs::PointCloudPackedIterator<float>
+  gz::msgs::PointCloudPackedIterator<float>
       iterZ(this->pointCloudMsg, "z");
 
   // Index of point in point cloud, visualized or not
@@ -266,8 +268,8 @@ void RGLVisualizePrivate::PublishMarkers()
   for (; ptIdx < std::min<int>((int)this->pointCloudMsg.data().size(), (int)num_points);
         ++iterX, ++iterY, ++iterZ, ++ptIdx)
   {
-    ignition::msgs::Set(marker.add_point(),
-                        ignition::math::Vector3d(*iterX,
+    gz::msgs::Set(marker.add_point(),
+                        gz::math::Vector3d(*iterX,
                                                  *iterY,
                                                  *iterZ));
   }
@@ -284,10 +286,10 @@ void RGLVisualizePrivate::ClearMarkers()
   }
 
   std::lock_guard<std::recursive_mutex> lock(this->mutex);
-  ignition::msgs::Marker msg;
+  gz::msgs::Marker msg;
   msg.set_ns(this->pointCloudTopic);
   msg.set_id(0);
-  msg.set_action(ignition::msgs::Marker::DELETE_ALL);
+  msg.set_action(gz::msgs::Marker::DELETE_ALL);
 
   igndbg << "Clearing markers on "
          << this->pointCloudTopic
@@ -297,6 +299,6 @@ void RGLVisualizePrivate::ClearMarkers()
 }
 
 // Register this plugin
-IGNITION_ADD_PLUGIN(RGLVisualize, ::ignition::gui::Plugin)
+GZ_ADD_PLUGIN(RGLVisualize, ::gz::gui::Plugin)
 
 }  // namespace rgl
