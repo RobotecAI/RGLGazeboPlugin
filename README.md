@@ -52,8 +52,9 @@ export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
 
 ### Option 2: Copy shared library to gz-sim plugin path
 ```shell
-cd build
+cd install
 sudo cp RGLServerPlugin/libRGLServerPlugin* /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
+sudo cp RGLServerPlugin/libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/
 sudo cp RGLVisualize/libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-7/plugins/gui/
 ```
 

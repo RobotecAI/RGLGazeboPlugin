@@ -28,4 +28,8 @@ target_link_libraries(RGLVisualize
     gz-msgs9::gz-msgs9
     )
 
+## Install libraries
 
+install(TARGETS RGLVisualize
+    DESTINATION RGLVisualize
+)
