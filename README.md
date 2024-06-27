@@ -22,10 +22,11 @@ Key features:
 - OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
 - Gazebo: [Garden 7](https://gazebosim.org/docs/garden/install)
+  - **Note: The Plugin is not actively supported for this Gazebo version. Use at your own risk. It is recommended to follow `main` branch or any supported version.**
 
 - GPU: CUDA-enabled
 
- - Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
 
 ## Installation:
 
