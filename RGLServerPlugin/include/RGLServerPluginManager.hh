@@ -18,84 +18,84 @@
 
 #include "Utils.hh"
 
-#include <ignition/common/MeshManager.hh>
+#include <gz/common/MeshManager.hh>
 
-#include <ignition/gazebo/components/Geometry.hh>
-#include <ignition/gazebo/components/Visual.hh>
-#include <ignition/gazebo/System.hh>
+#include <gz/sim/components/Geometry.hh>
+#include <gz/sim/components/Visual.hh>
+#include <gz/sim/System.hh>
 
-#include <ignition/transport/Node.hh>
+#include <gz/transport/Node.hh>
 
 namespace rgl
 {
 
 class RGLServerPluginManager :
-    public ignition::gazebo::System,
-    public ignition::gazebo::ISystemConfigure,
-    public ignition::gazebo::ISystemPostUpdate
+    public gz::sim::System,
+    public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPostUpdate
 {
 public:
-    using MeshInfo = std::variant<std::monostate, const ignition::common::Mesh*, ignition::common::SubMesh>;
+    using MeshInfo = std::variant<std::monostate, const gz::common::Mesh*, gz::common::SubMesh>;
 
     RGLServerPluginManager() = default;
     ~RGLServerPluginManager() override = default;
 
     // only called once, when plugin is being loaded
     void Configure(
-        const ignition::gazebo::Entity& entity,
+        const gz::sim::Entity& entity,
         const std::shared_ptr<const sdf::Element>& sdf,
-        ignition::gazebo::EntityComponentManager& ecm,
-        ignition::gazebo::EventManager& eventMgr) override;
+        gz::sim::EntityComponentManager& ecm,
+        gz::sim::EventManager& eventMgr) override;
 
     // called every time after physics runs (can't change entities)
     void PostUpdate(
-        const ignition::gazebo::UpdateInfo& info,
-        const ignition::gazebo::EntityComponentManager& ecm) override;
+        const gz::sim::UpdateInfo& info,
+        const gz::sim::EntityComponentManager& ecm) override;
 
 private:
     ////////////////////////////////////////////// Variables /////////////////////////////////////////////
 
     ////////////////////////////// Lidar ////////////////////////////////
     // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
-    std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entitiesInRgl;
+    std::unordered_map<gz::sim::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entitiesInRgl;
 
     // the entity ids, that the lidars are attached to
-    std::unordered_set<ignition::gazebo::Entity> lidarEntities;
+    std::unordered_set<gz::sim::Entity> lidarEntities;
 
     // all entities, that the lidar should ignore
-    std::unordered_set<ignition::gazebo::Entity> entitiesToIgnore;
+    std::unordered_set<gz::sim::Entity> entitiesToIgnore;
 
     ////////////////////////////// Mesh /////////////////////////////////
 
-    ignition::common::MeshManager* meshManager{ignition::common::MeshManager::Instance()};
+    gz::common::MeshManager* meshManager{gz::common::MeshManager::Instance()};
 
     ////////////////////////////////////////////// Functions /////////////////////////////////////////////
 
     ////////////////////////////// Scene ////////////////////////////////
 
     bool RegisterNewLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm);
 
     bool UnregisterLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm);
 
     bool LoadEntityToRGLCb(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry* geometry);
+        const gz::sim::Entity& entity,
+        const gz::sim::components::Visual*,
+        const gz::sim::components::Geometry* geometry);
 
     bool RemoveEntityFromRGLCb(
-        const ignition::gazebo::Entity& entity,
-        const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry*);
+        const gz::sim::Entity& entity,
+        const gz::sim::components::Visual*,
+        const gz::sim::components::Geometry*);
 
-    void UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm);
+    void UpdateRGLEntityPoses(const gz::sim::EntityComponentManager& ecm);
 
-    std::unordered_set<ignition::gazebo::Entity> GetEntitiesInParentLink(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
+    std::unordered_set<gz::sim::Entity> GetEntitiesInParentLink(
+        gz::sim::Entity entity,
+        const gz::sim::EntityComponentManager& ecm);
 
     ////////////////////////////// Mesh /////////////////////////////////
 
