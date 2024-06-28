@@ -45,17 +45,30 @@ void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm)
 {
-    ecm.EachNew<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return RegisterNewLidarCb(entity, ecm);});
+    ecm.EachNew<>
+            ([this, &ecm](auto&& entity) {
+                return RegisterNewLidarCb(entity, ecm);
+            });
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return LoadEntityToRGLCb(entity, visual, geometry);
+            });
 
-    ecm.EachRemoved<>([&](const ignition::gazebo::Entity& entity)-> bool {
-        return UnregisterLidarCb(entity, ecm);});
+    ecm.EachNew<ignition::gazebo::components::LaserRetro>
+            ([this](auto&& entity, auto&& laserRetro) {
+                return SetLaserRetroCb(entity, laserRetro);
+            });
+
+    ecm.EachRemoved<>
+            ([this, &ecm](auto&& entity) {
+                return UnregisterLidarCb(entity, ecm);
+            });
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return RemoveEntityFromRGLCb(entity, visual, geometry);
+            });
 
     UpdateRGLEntityPoses(ecm);
 }

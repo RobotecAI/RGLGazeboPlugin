@@ -130,6 +130,17 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
     entitiesInRgl.erase(entity);
     return true;
 }
+
+// always returns true, because the ecm will stop if it encounters false
+bool RGLServerPluginManager::SetLaserRetroCb(
+        const ignition::gazebo::Entity& entity,
+        const ignition::gazebo::components::LaserRetro* laser_retro)
+{
+    if (!CheckRGL(rgl_entity_set_laser_retro(entitiesInRgl.at(entity).first, laser_retro->Data()))) {
+        ignerr << "Failed to set Laser Retro for entity (" << entity << ").\n";
+    }
+    return true;
+}
 #pragma clang diagnostic pop
 
 void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm)
