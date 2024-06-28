@@ -49,13 +49,13 @@ bool LidarPatternLoader::Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_m
         if (!sdf->HasElement(patterName)) {
             continue;
         }
-        ignmsg << "Trying to load '" << patterName << "' pattern...\n";
+        gzmsg << "Trying to load '" << patterName << "' pattern...\n";
         if (loadFunction(sdf->FindElement(patterName), outPattern)) {
-            ignmsg << "Successfully loaded pattern '" << patterName << "'.\n";
+            gzmsg << "Successfully loaded pattern '" << patterName << "'.\n";
             return true;
         }
     }
-    ignerr << "Failed to load lidar pattern. See plugin's documentation for available options.\n";
+    gzerr << "Failed to load lidar pattern. See plugin's documentation for available options.\n";
     return false;
 }
 
@@ -64,17 +64,17 @@ bool LidarPatternLoader::LoadAnglesAndSamplesElement(const sdf::ElementConstPtr&
                                                      int& samples)
 {
     if (!sdf->HasElement("samples")) {
-        ignerr << "Failed to load '" << sdf->GetName() << "' element. A 'samples' element is required inside, but it is not set.\n";
+        gzerr << "Failed to load '" << sdf->GetName() << "' element. A 'samples' element is required inside, but it is not set.\n";
         return false;
     }
 
     if (!sdf->HasElement("min_angle")) {
-        ignerr << "Failed to load '" << sdf->GetName() << "' element. A 'min_angle' element is required inside, but it is not set.\n";
+        gzerr << "Failed to load '" << sdf->GetName() << "' element. A 'min_angle' element is required inside, but it is not set.\n";
         return false;
     }
 
     if (!sdf->HasElement("max_angle")) {
-        ignerr << "Failed to load '" << sdf->GetName() << "' element. A 'max_angle' element is required inside, but it is not set.\n";
+        gzerr << "Failed to load '" << sdf->GetName() << "' element. A 'max_angle' element is required inside, but it is not set.\n";
         return false;
     }
 
@@ -83,12 +83,12 @@ bool LidarPatternLoader::LoadAnglesAndSamplesElement(const sdf::ElementConstPtr&
     samples = sdf->Get<int>("samples");
 
     if (angleMin > angleMax) {
-        ignerr << "Failed to load '" << sdf->GetName() << "' element. Min angle greater than vertical max angle.\n";
+        gzerr << "Failed to load '" << sdf->GetName() << "' element. Min angle greater than vertical max angle.\n";
         return false;
     }
 
     if (samples <= 0) {
-        ignerr << "Failed to load '" << sdf->GetName() << "' element. Samples must be a positive value.\n";
+        gzerr << "Failed to load '" << sdf->GetName() << "' element. Samples must be a positive value.\n";
         return false;
     }
 
@@ -98,12 +98,12 @@ bool LidarPatternLoader::LoadAnglesAndSamplesElement(const sdf::ElementConstPtr&
 bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
 {
     if (!sdf->HasElement("vertical")) {
-        ignerr << "Failed to load uniform pattern. A vertical element is required, but it is not set.\n";
+        gzerr << "Failed to load uniform pattern. A vertical element is required, but it is not set.\n";
         return false;
     }
 
     if (!sdf->HasElement("horizontal")) {
-        ignerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
+        gzerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
         return false;
     }
 
@@ -142,7 +142,7 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
 bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
 {
     if (!sdf->HasAttribute("channels")) {
-        ignerr << "Failed to load custom pattern. A channels attribute is required, but it is not set.\n";
+        gzerr << "Failed to load custom pattern. A channels attribute is required, but it is not set.\n";
         return false;
     }
 
@@ -155,7 +155,7 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
               std::back_inserter(channels));
 
     if (channels.empty()) {
-        ignerr << "Failed to load custom pattern. No channels provided.\n";
+        gzerr << "Failed to load custom pattern. No channels provided.\n";
         return false;
     }
 
@@ -187,17 +187,17 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
 {
     auto presetName = sdf->Get<std::string>();
     if (!presetNameToFilename.contains(presetName)) {
-        ignerr << "Failed to load preset pattern. Preset '" << presetName << "' is not available.\n";
+        gzerr << "Failed to load preset pattern. Preset '" << presetName << "' is not available.\n";
         return false;
     }
     fs::path presetPath = presetNameToFilename[presetName];
     if (const char* presetDir = std::getenv(PATTERNS_DIR_ENV)) {
         presetPath = fs::path(presetDir) / presetNameToFilename[presetName];
     }
-    ignmsg << "Loading pattern_preset '" << presetName << "'...\n";
+    gzmsg << "Loading pattern_preset '" << presetName << "'...\n";
     outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
-        ignerr << "Failed to load preset. Make sure the environment variable '" << PATTERNS_DIR_ENV << "' is set correctly.\n";
+        gzerr << "Failed to load preset. Make sure the environment variable '" << PATTERNS_DIR_ENV << "' is set correctly.\n";
         return false;
     }
     return true;
@@ -206,10 +206,10 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
 bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
 {
     fs::path presetPath = fs::path(sdf->Get<std::string>());
-    ignmsg << "Loading preset from path '" << presetPath << "'...\n";
+    gzmsg << "Loading preset from path '" << presetPath << "'...\n";
     outPattern = LoadVector<rgl_mat3x4f>(presetPath);
     if (outPattern.size() == 0) {
-        ignerr << "Failed to load preset from path.\n";
+        gzerr << "Failed to load preset from path.\n";
         return false;
     }
     return true;
@@ -218,7 +218,7 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
 bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern)
 {
     if (!sdf->HasElement("horizontal")) {
-        ignerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
+        gzerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
         return false;
     }
 
@@ -255,7 +255,7 @@ std::vector<T> LidarPatternLoader::LoadVector(const fs::path& path)
     std::ifstream file(path, std::ios::binary);
 
     if (!file.is_open() || file.eof()) {
-       ignerr << "failed to open file '" << path << "' or file is empty, data will not be loaded.\n";
+       gzerr << "failed to open file '" << path << "' or file is empty, data will not be loaded.\n";
        return std::vector<T>();
     }
 
@@ -265,7 +265,7 @@ std::vector<T> LidarPatternLoader::LoadVector(const fs::path& path)
     file.seekg(0, std::ios::beg);
 
     if (fileSize % sizeof(T) != 0) {
-        ignerr << "invalid file size: '" << path << "'.\n";
+        gzerr << "invalid file size: '" << path << "'.\n";
         return std::vector<T>();
     }
 

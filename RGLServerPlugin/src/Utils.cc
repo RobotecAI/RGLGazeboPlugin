@@ -30,7 +30,7 @@ bool CheckRGL(rgl_status_t status)
 
     const char* msg;
     rgl_get_last_error_string(&msg);
-    ignerr << msg << "\n";
+    gzerr << msg << "\n";
     return false;
 }
 
@@ -40,7 +40,7 @@ gz::math::Pose3<double> FindWorldPose(
 {
     auto localPose = ecm.Component<gz::sim::components::Pose>(entity);
     if (nullptr == localPose) {
-        ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+        gzmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
         return gz::math::Pose3d::Zero;
     }
     auto worldPose = localPose->Data();
@@ -51,7 +51,7 @@ gz::math::Pose3<double> FindWorldPose(
     while ((parent = ecm.ParentEntity(thisEntity)) != WORLD_ENTITY_ID) {
         auto parentPose = ecm.Component<gz::sim::components::Pose>(parent);
         if (nullptr == parentPose) {
-            ignmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
+            gzmsg << "pose data missing - using default pose (0, 0, 0, 0, 0, 0)\n";
             return gz::math::Pose3d::Zero;
         }
         worldPose = parentPose->Data() * worldPose;

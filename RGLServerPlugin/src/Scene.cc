@@ -91,17 +91,17 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
         return true;
     }
     if (entitiesInRgl.contains(entity)) {
-        ignwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
+        gzwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
         return true;
     }
     rgl_mesh_t rglMesh;
     if (!LoadMeshToRGL(&rglMesh, geometry->Data())) {
-        ignerr << "Failed to load mesh to RGL from entity (" << entity << "). Skipping...\n";
+        gzerr << "Failed to load mesh to RGL from entity (" << entity << "). Skipping...\n";
         return true;
     }
     rgl_entity_t rglEntity;
     if (!CheckRGL(rgl_entity_create(&rglEntity, nullptr, rglMesh))) {
-        ignerr << "Failed to load entity (" << entity << ") to RGL. Skipping...\n";
+        gzerr << "Failed to load entity (" << entity << ") to RGL. Skipping...\n";
         return true;
     }
     entitiesInRgl.insert({entity, {rglEntity, rglMesh}});
@@ -122,12 +122,23 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
         return true;
     }
     if (!CheckRGL(rgl_entity_destroy(entitiesInRgl.at(entity).first))) {
-        ignerr << "Failed to remove entity (" << entity << ") from RGL.\n";
+        gzerr << "Failed to remove entity (" << entity << ") from RGL.\n";
     }
     if (!CheckRGL(rgl_mesh_destroy(entitiesInRgl.at(entity).second))) {
-        ignerr << "Failed to remove mesh from entity (" << entity << ") in RGL.\n";
+        gzerr << "Failed to remove mesh from entity (" << entity << ") in RGL.\n";
     }
     entitiesInRgl.erase(entity);
+    return true;
+}
+
+// always returns true, because the ecm will stop if it encounters false
+bool RGLServerPluginManager::SetLaserRetroCb(
+        const gz::sim::Entity& entity,
+        const gz::sim::components::LaserRetro* laser_retro)
+{
+    if (!CheckRGL(rgl_entity_set_laser_retro(entitiesInRgl.at(entity).first, laser_retro->Data()))) {
+        gzerr << "Failed to set Laser Retro for entity (" << entity << ").\n";
+    }
     return true;
 }
 #pragma clang diagnostic pop
@@ -137,7 +148,7 @@ void RGLServerPluginManager::UpdateRGLEntityPoses(const gz::sim::EntityComponent
     for (auto entity: entitiesInRgl) {
         rgl_mat3x4f rglMatrix = FindWorldPoseInRglMatrix(entity.first, ecm);
         if (!CheckRGL(rgl_entity_set_pose(entity.second.first, &rglMatrix))) {
-            ignerr << "Failed to update pose for entity (" << entity.first << ").\n";
+            gzerr << "Failed to update pose for entity (" << entity.first << ").\n";
         }
     }
 }
