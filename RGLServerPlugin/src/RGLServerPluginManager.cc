@@ -17,6 +17,7 @@
 
 #include "RGLServerPluginManager.hh"
 
+#define PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID "do_ignore_entities_in_lidar_link"
 
 GZ_ADD_PLUGIN(
     rgl::RGLServerPluginManager,
@@ -32,13 +33,17 @@ namespace rgl
 
 void RGLServerPluginManager::Configure(
         const gz::sim::Entity& entity,
-        const std::shared_ptr<const sdf::Element>&,
+        const std::shared_ptr<const sdf::Element>& sdf,
         gz::sim::EntityComponentManager& ecm,
         gz::sim::EventManager& evm)
 {
     ValidateRGLVersion();
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
         gzerr << "Failed to configure RGL logging.\n";
+    }
+
+    if (sdf->HasElement(PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID)) {
+        doIgnoreEntitiesInLidarLink = sdf->Get<bool>(PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID);
     }
 }
 
