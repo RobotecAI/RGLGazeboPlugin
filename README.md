@@ -19,13 +19,13 @@ Key features:
 
 ## Requirements:
 
-- OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
+- OS: [Ubuntu 22.04](https://releases.ubuntu.com/jammy/) or [Ubuntu 24.04](https://releases.ubuntu.com/noble/)
 
-- Gazebo: [Fortress 8.3](https://gazebosim.org/docs/harmonic/installl)
+- Gazebo: [Harmonic](https://gazebosim.org/docs/harmonic/install)
 
 - GPU: CUDA-enabled
 
- - Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.17.0#runtime-requirements)
 
 ## Installation:
 
