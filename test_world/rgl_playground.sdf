@@ -2,7 +2,15 @@
   <world name='rgl_playground'>
 
     <!-- Global RGL scene manager required to upload meshes to GPU -->
-    <plugin name='rgl::RGLServerPluginManager' filename='RGLServerPluginManager'/>
+    <plugin name='rgl::RGLServerPluginManager' filename='RGLServerPluginManager'>
+      <ignore_links>
+        lidar_link
+        base_bpearl_back_left_link
+        base_bpearl_front_right_link
+      </ignore_links>
+    </plugin>
+
+
 
     <physics name='1ms' type='ignored'>
       <max_step_size>0.001</max_step_size>

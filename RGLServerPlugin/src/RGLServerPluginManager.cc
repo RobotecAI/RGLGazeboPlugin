@@ -17,6 +17,8 @@
 
 #include "RGLServerPluginManager.hh"
 
+#define PARAM_IGNORE_LINKS_ID "ignore_links"
+
 IGNITION_ADD_PLUGIN(
     rgl::RGLServerPluginManager,
     ignition::gazebo::System,
@@ -31,7 +33,7 @@ namespace rgl
 
 void RGLServerPluginManager::Configure(
         const ignition::gazebo::Entity& entity,
-        const std::shared_ptr<const sdf::Element>&,
+        const std::shared_ptr<const sdf::Element>& sdf,
         ignition::gazebo::EntityComponentManager& ecm,
         ignition::gazebo::EventManager& evm)
 {
@@ -39,30 +41,58 @@ void RGLServerPluginManager::Configure(
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
         ignerr << "Failed to configure RGL logging.\n";
     }
+
+    if (sdf->HasElement(PARAM_IGNORE_LINKS_ID)) {
+        auto ignoreLinksStr = sdf->Get<std::string>(PARAM_IGNORE_LINKS_ID);
+
+        std::istringstream iss(ignoreLinksStr);
+        std::copy(std::istream_iterator<std::string>(iss),
+                  std::istream_iterator<std::string>(),
+                  inserter(linksToIgnore, linksToIgnore.begin()));
+    }
+
+    for (auto&& s : linksToIgnore) {
+        ignerr << "ignore link: " << s << "\n";
+    }
 }
 
 void RGLServerPluginManager::PostUpdate(
         const ignition::gazebo::UpdateInfo& info,
         const ignition::gazebo::EntityComponentManager& ecm)
 {
-    ecm.EachNew<>
-            ([this, &ecm](auto&& entity) {
-                return RegisterNewLidarCb(entity, ecm);
+//    // Debug: Print name of the entity
+//    ecm.EachNew<ignition::gazebo::components::Name>(
+//            [](const ignition::gazebo::Entity &_entity,
+//               const ignition::gazebo::components::Name *_name) -> bool
+//            {
+//                std::cout << "New entity name: " << _name->Data() << std::endl;
+//                return true;
+//            });
+
+    ecm.EachNew<ignition::gazebo::components::Link>(
+            [&](const ignition::gazebo::Entity& entity,
+                const ignition::gazebo::components::Link* link) {
+                auto linkName = ecm.Component<ignition::gazebo::components::Name>(entity);
+                if (linkName) {
+                    ignerr << "new link: " << linkName->Data() << "\n";
+                    if (linksToIgnore.contains(linkName->Data())) {
+                        for (auto descendant: ecm.Descendants(entity)) {
+                            ignerr << "entity ignored: " << descendant << " in link " << linkName->Data() << "\n";
+                            entitiesToIgnore.insert(descendant);
+                        }
+                    }
+                }
+                return true;
             });
 
     ecm.EachNew<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>
-            ([this](auto&& entity, auto&& visual, auto&& geometry) {
-                return LoadEntityToRGLCb(entity, visual, geometry);
+            ([this, &ecm](auto&& entity, auto&& visual, auto&& geometry) {
+                return LoadEntityToRGLCb(entity, visual, geometry, ecm);
             });
 
     ecm.EachNew<ignition::gazebo::components::LaserRetro>
             ([this](auto&& entity, auto&& laserRetro) {
                 return SetLaserRetroCb(entity, laserRetro);
-            });
-
-    ecm.EachRemoved<>
-            ([this, &ecm](auto&& entity) {
-                return UnregisterLidarCb(entity, ecm);
             });
 
     ecm.EachRemoved<ignition::gazebo::components::Visual, ignition::gazebo::components::Geometry>

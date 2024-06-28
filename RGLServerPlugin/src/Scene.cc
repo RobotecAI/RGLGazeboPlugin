@@ -26,66 +26,13 @@ namespace rgl
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "ConstantFunctionResult"
 
-// always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::RegisterNewLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
-{
-    // Plugin must be inside CustomSensor
-    if (!ecm.EntityHasComponentType(entity, ignition::gazebo::components::CustomSensor::typeId))
-    {
-        return true;
-    }
-
-    // Looking for plugin
-    auto pluginData = ecm.ComponentData<ignition::gazebo::components::SystemPluginInfo>(entity);
-    if (pluginData == std::nullopt) {
-        return true;
-    }
-    auto plugins = pluginData->plugins();
-    for (const auto& plugin : plugins) {
-        if (plugin.name() == RGL_INSTANCE) {
-            lidarEntities.insert(entity);
-            for (auto descendant: ecm.Descendants(entity)) {
-                entitiesToIgnore.insert(descendant);
-            }
-        }
-    }
-
-    // RGL lidar plugin not found
-    if (!lidarEntities.contains(entity)) {
-        return true;
-    }
-
-    // Ignore all entities in link associated with RGL lidar
-    // Link could contain visual representation of the lidar
-    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
-        entitiesToIgnore.insert(entityInParentLink);
-    }
-
-    return true;
-}
-
-// always returns true, because the ecm will stop if it encounters false
-bool RGLServerPluginManager::UnregisterLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm)
-{
-    if (!lidarEntities.contains(entity)) {
-        return true;
-    }
-    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
-        entitiesToIgnore.erase(entityInParentLink);
-    }
-    lidarEntities.erase(entity);
-    return true;
-}
 
 // always returns true, because the ecm will stop if it encounters false
 bool RGLServerPluginManager::LoadEntityToRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry* geometry)
+        const ignition::gazebo::components::Geometry* geometry,
+        const ignition::gazebo::EntityComponentManager& ecm)
 {
     if (entitiesToIgnore.contains(entity)) {
         return true;
@@ -94,6 +41,7 @@ bool RGLServerPluginManager::LoadEntityToRGLCb(
         ignwarn << "Trying to add same entity (" << entity << ") to rgl multiple times!\n";
         return true;
     }
+//    ignerr << "Uploading entity: " << entity << "\n";
     rgl_mesh_t rglMesh;
     if (!LoadMeshToRGL(&rglMesh, geometry->Data())) {
         ignerr << "Failed to load mesh to RGL from entity (" << entity << "). Skipping...\n";

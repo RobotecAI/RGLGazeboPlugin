@@ -20,8 +20,14 @@
 
 #include <ignition/common/MeshManager.hh>
 
+#include <ignition/gazebo/components/Joint.hh>
+#include <ignition/gazebo/components/ChildLinkName.hh>
+#include <ignition/gazebo/components/ParentEntity.hh>
+#include <ignition/gazebo/components/SystemPluginInfo.hh>
 #include <ignition/gazebo/components/Geometry.hh>
 #include <ignition/gazebo/components/LaserRetro.hh>
+#include <ignition/gazebo/components/Link.hh>
+#include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Visual.hh>
 #include <ignition/gazebo/System.hh>
 
@@ -60,11 +66,11 @@ private:
     // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
     std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entitiesInRgl;
 
-    // the entity ids, that the lidars are attached to
-    std::unordered_set<ignition::gazebo::Entity> lidarEntities;
-
     // all entities, that the lidar should ignore
     std::unordered_set<ignition::gazebo::Entity> entitiesToIgnore;
+
+    // all links, that the lidar should ignore
+    std::unordered_set<std::string> linksToIgnore;
 
     ////////////////////////////// Mesh /////////////////////////////////
 
@@ -74,18 +80,11 @@ private:
 
     ////////////////////////////// Scene ////////////////////////////////
 
-    bool RegisterNewLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
-
-    bool UnregisterLidarCb(
-        ignition::gazebo::Entity entity,
-        const ignition::gazebo::EntityComponentManager& ecm);
-
     bool LoadEntityToRGLCb(
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::Visual*,
-        const ignition::gazebo::components::Geometry* geometry);
+        const ignition::gazebo::components::Geometry* geometry,
+        const ignition::gazebo::EntityComponentManager& ecm);
 
     bool RemoveEntityFromRGLCb(
         const ignition::gazebo::Entity& entity,
