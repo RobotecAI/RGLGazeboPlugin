@@ -46,8 +46,10 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
     for (const auto& plugin : plugins) {
         if (plugin.name() == RGL_INSTANCE) {
             lidarEntities.insert(entity);
-            for (auto descendant: ecm.Descendants(entity)) {
-                entitiesToIgnore.insert(descendant);
+            if (doIgnoreEntitiesInLidarLink) {
+                for (auto descendant: ecm.Descendants(entity)) {
+                    entitiesToIgnore.insert(descendant);
+                }
             }
         }
     }
@@ -57,10 +59,12 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
         return true;
     }
 
-    // Ignore all entities in link associated with RGL lidar
-    // Link could contain visual representation of the lidar
-    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
-        entitiesToIgnore.insert(entityInParentLink);
+    if (doIgnoreEntitiesInLidarLink) {
+        // Ignore all entities in link associated with RGL lidar
+        // Link could contain visual representation of the lidar
+        for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
+            entitiesToIgnore.insert(entityInParentLink);
+        }
     }
 
     return true;

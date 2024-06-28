@@ -86,8 +86,15 @@ RGLServerPlugin contains two plugins: `RGLServerPluginManager` and `RGLServerPlu
 
 ## How to include RGLServerPluginManager in your sdf:
 ```xml
-<plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"></plugin>
+<plugin name='rgl::RGLServerPluginManager' filename='RGLServerPluginManager'>
+    <do_ignore_entities_in_lidar_link>true</do_ignore_entities_in_lidar_link>
+</plugin>
 ```
+
+### Parameters description:
+- **do_ignore_entities_in_lidar_link** - if enabled, all entities attached to the same \<link\> as lidar will be ignored from raycasting. It could be useful when a visual representation of the sensor is added. (optional, default: true) \
+*Note: It has been noticed that when the lidar link is chained to another link with a joint component, the entity tree is simplified and the parent link becomes the lidar link. In such case, the whole robot could be ignored from raycasting. Yet to be resolved.*
+
 This is a global plugin and should be included only once per sdf, preferably inside the world entity. RGLServerPluginManager is responsible for synchronizing the scene between Gazebo and GPU (CUDA). At the moment manager handles all primitive geometry types (Box, Capsule, Cylinder, Ellipsoid, Sphere), planes, meshes and submeshes.
 
 ![](docs/images/RGLServerPluginManager.png)
@@ -109,7 +116,6 @@ Inside the link entity in your model, add a custom sensor:
   </plugin>
 </sensor>
 ```
-*Note: All entities attached to the same \<link\> as lidar will be ignored from raycasting. This enables an adding visual representation of the sensor.*
 
 ### Parameters description:
 - **range** - the minimum and maximum range that the hits will be registered (in meters).
