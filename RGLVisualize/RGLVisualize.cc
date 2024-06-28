@@ -110,7 +110,7 @@ void RGLVisualize::OnPointCloudTopic(const QString &_pointCloudTopic)
   if (!this->dataPtr->pointCloudTopic.empty() &&
       !this->dataPtr->node.Unsubscribe(this->dataPtr->pointCloudTopic))
   {
-    ignerr << "Unable to unsubscribe from topic ["
+    gzerr << "Unable to unsubscribe from topic ["
            << this->dataPtr->pointCloudTopic << "]" << std::endl;
   }
 
@@ -127,11 +127,11 @@ void RGLVisualize::OnPointCloudTopic(const QString &_pointCloudTopic)
   if (!this->dataPtr->node.Subscribe(this->dataPtr->pointCloudTopic,
                                      &RGLVisualize::OnPointCloud, this))
   {
-    ignerr << "Unable to subscribe to topic ["
+    gzerr << "Unable to subscribe to topic ["
             << this->dataPtr->pointCloudTopic << "]\n";
     return;
   }
-  ignmsg << "Subscribed to " << this->dataPtr->pointCloudTopic << std::endl;
+  gzmsg << "Subscribed to " << this->dataPtr->pointCloudTopic << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -152,7 +152,7 @@ void RGLVisualize::Show(bool _show)
 void RGLVisualize::OnRefresh()
 {
   std::lock_guard<std::recursive_mutex> lock(this->dataPtr->mutex);
-  ignmsg << "Refreshing topic list for point cloud messages." << std::endl;
+  gzmsg << "Refreshing topic list for point cloud messages." << std::endl;
 
   // Clear
   this->dataPtr->pointCloudTopicList.clear();
@@ -218,7 +218,7 @@ void RGLVisualize::OnPointCloudService(
 {
   if (!_result)
   {
-    ignerr << "Service request failed." << std::endl;
+    gzerr << "Service request failed." << std::endl;
     return;
   }
   this->OnPointCloud(_msg);
@@ -262,7 +262,7 @@ void RGLVisualizePrivate::PublishMarkers()
       this->pointCloudMsg.data().size() / this->pointCloudMsg.point_step();
   if (this->pointCloudMsg.data().size() % this->pointCloudMsg.point_step() != 0)
   {
-    ignwarn << "Mal-formatted point cloud" << std::endl;
+    gzwarn << "Mal-formatted point cloud" << std::endl;
   }
 
   for (; ptIdx < std::min<int>((int)this->pointCloudMsg.data().size(), (int)num_points);
