@@ -21,6 +21,7 @@
 #include <gz/common/MeshManager.hh>
 
 #include <gz/sim/components/Geometry.hh>
+#include <gz/sim/components/LaserRetro.hh>
 #include <gz/sim/components/Visual.hh>
 #include <gz/sim/System.hh>
 
@@ -90,6 +91,10 @@ private:
         const gz::sim::Entity& entity,
         const gz::sim::components::Visual*,
         const gz::sim::components::Geometry*);
+
+    bool SetLaserRetroCb(
+        const gz::sim::Entity& entity,
+        const gz::sim::components::LaserRetro* laser_retro);
 
     void UpdateRGLEntityPoses(const gz::sim::EntityComponentManager& ecm);
 

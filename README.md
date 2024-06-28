@@ -53,7 +53,7 @@ Key features:
 ```shell
 mkdir build
 cd build
-cmake ..
+cmake .. # Add `-DRGL_FORCE_DOWNLOAD=ON` to make sure the downloaded RGL will be up-to-date
 make -j
 make install
 cd ..
@@ -97,7 +97,10 @@ Inside the link entity in your model, add a custom sensor:
 ```xml
 <sensor name="UniqueSensorName" type="custom">
   <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-    <range>100</range>
+    <range>
+        <min>0</min>
+        <max>100</max>
+    </range>
     <update_rate>10</update_rate>
     <update_on_paused_sim>false</update_on_paused_sim>
     <topic>rgl_lidar</topic>
@@ -109,7 +112,7 @@ Inside the link entity in your model, add a custom sensor:
 *Note: All entities attached to the same \<link\> as lidar will be ignored from raycasting. This enables an adding visual representation of the sensor.*
 
 ### Parameters description:
-- **range** - the maximum range that the hits will be registered (in meters).
+- **range** - the minimum and maximum range that the hits will be registered (in meters).
 
 - **update_rate** - the frequency at which the lidar will perform raycasting (in Hz).
 
@@ -190,22 +193,13 @@ Inside the link entity in your model, add a custom sensor:
   the `horizontal` element and publishes a
   `LaserScan` message instead of a point cloud
   ```xml
-  <sensor name="Pattern2DLidar" type="custom">
-    <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-      <range>100</range>
-      <update_rate>10</update_rate>
-      <update_on_paused_sim>false</update_on_paused_sim>
-      <topic>rgl_lidar</topic>
-      <frame>RGLLidar</frame>
-      <pattern_lidar2d>
-        <horizontal>
-            <samples>1800</samples>
-            <min_angle>-3.14159</min_angle>
-            <max_angle>3.14159</max_angle>
-        </horizontal>
-    </pattern_lidar2d>
-    </plugin>
-  </sensor>
+  <pattern_lidar2d>
+      <horizontal>
+          <samples>1800</samples>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+      </horizontal>
+  </pattern_lidar2d>
   ```
 
 ## How to visualize in Gazebo
@@ -226,3 +220,8 @@ At [Robotec.AI](https://robotec.ai/) we care about every little detail of our pr
 | **RGL uniform pattern** | **gpu_lidar uniform pattern** |
 |---|---|
 | ![](docs/images/RGL_uniform.png) | ![](docs/images/GPU_lidar_uniform.png) |
+
+## Acknowledgements
+
+The project benefited from significant contributions and support of [Dexory](https://www.dexory.com/).
+Features such as LaserScan publishing and Laser Retro as well as update to the newest RGL version were possible thanks to their dedication to the open source community.

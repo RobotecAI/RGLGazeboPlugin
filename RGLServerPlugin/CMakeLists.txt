@@ -12,22 +12,38 @@ set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 
 include_directories(include)
 
-set(RGL_VERSION "0.11.3")
-set(RGL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rgl")
-set(RGL_SO_PATH "${RGL_PATH}/libRobotecGPULidar.so")
-set(RGL_API_PATH "${RGL_PATH}/api/core.h")
-set(RGL_COMMIT "e5ea8a1a74c253a304f4d1d4652391bca9d448e6")
-set(RGL_SO_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/v${RGL_VERSION}/libRobotecGPULidar.so")
-set(RGL_API_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/${RGL_COMMIT}/include/rgl/api/core.h")
+# Use this variable to make sure the downloaded RGL will be up-to-date
+set(RGL_FORCE_DOWNLOAD OFF BOOL)
 
-# You have to delete old files manually in order to download
-# new ones automatically if a new version is available.
-if(NOT EXISTS ${RGL_SO_PATH})
-    file(DOWNLOAD ${RGL_SO_URL} ${RGL_SO_PATH})
+set(RGL_TAG "v0.17.0")
+
+set(RGL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rgl")
+set(RGL_SO_FILENAME "libRobotecGPULidar.so")
+set(RGL_SO_PATH "${RGL_PATH}/${RGL_SO_FILENAME}")
+set(RGL_API_HEADER_PATH "${RGL_PATH}/api/core.h")
+
+set(RGL_SO_ZIP_FILENAME "RGL-core-linux-x64.zip")
+set(RGL_SO_ZIP_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/${RGL_TAG}/${RGL_SO_ZIP_FILENAME}")
+set(RGL_API_HEADER_URL "https://raw.githubusercontent.com/RobotecAI/RobotecGPULidar/${RGL_TAG}/include/rgl/api/core.h")
+
+if (RGL_FORCE_DOWNLOAD)
+    file(REMOVE_RECURSE ${RGL_PATH})
 endif()
 
+# Download RGL library
+if(NOT EXISTS ${RGL_SO_PATH})
+    file(DOWNLOAD ${RGL_SO_ZIP_URL} ${RGL_PATH}/${RGL_SO_ZIP_FILENAME})
+    file(ARCHIVE_EXTRACT INPUT ${RGL_PATH}/${RGL_SO_ZIP_FILENAME}
+        DESTINATION ${RGL_PATH}
+        PATTERNS ${RGL_SO_FILENAME}
+        VERBOSE
+    )
+    file(REMOVE ${RGL_PATH}/${RGL_SO_ZIP_FILENAME})
+endif()
+
+# Download RGL API header
 if(NOT EXISTS ${RGL_API_PATH})
-    file(DOWNLOAD ${RGL_API_URL} ${RGL_API_PATH})
+    file(DOWNLOAD ${RGL_API_HEADER_URL} ${RGL_API_HEADER_PATH})
 endif()
 
 set(RobotecGPULidar ${RGL_SO_PATH})
