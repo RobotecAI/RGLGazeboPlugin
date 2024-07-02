@@ -13,7 +13,8 @@ set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 include_directories(include)
 
 # Use this variable to make sure the downloaded RGL will be up-to-date
-set(RGL_FORCE_DOWNLOAD OFF BOOL)
+set(RGL_FORCE_DOWNLOAD OFF CACHE BOOL
+    "Removes existing RGL binaries and downloads a new one")
 
 set(RGL_TAG "v0.17.0")
 
