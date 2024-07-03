@@ -60,6 +60,9 @@ private:
     // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
     std::unordered_map<ignition::gazebo::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entitiesInRgl;
 
+    // whether to ignore entities attached to the same link as the lidar
+    bool doIgnoreEntitiesInLidarLink{true};
+
     // the entity ids, that the lidars are attached to
     std::unordered_set<ignition::gazebo::Entity> lidarEntities;
 
