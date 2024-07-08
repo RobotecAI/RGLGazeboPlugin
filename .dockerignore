@@ -2,16 +2,8 @@
 *
 
 # First-order allow exception for select directories
-# !/.dockerignore
-# !/.git
-# !/.gitignore
 !/CMakeLists.txt
-# !/Dockerfile
-# !/LICENSE
-# !/README.md
 !/RGLServerPlugin
 !/RGLVisualize
-# !/docs
 !/lidar_patterns
 !/package.xml
-# !/test_world
