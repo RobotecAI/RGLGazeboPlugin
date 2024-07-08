@@ -50,6 +50,15 @@ Key features:
     export GZ_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_GUI_PLUGIN_PATH
     ```
 ### Building from source
+
+#### Docker
+```shell
+docker build \
+   --target=exporter \
+   --output=build .
+```
+
+#### Manual
 ```shell
 mkdir build
 cd build
