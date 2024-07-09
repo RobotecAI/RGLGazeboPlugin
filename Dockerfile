@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=base
-FROM ros:jazzy AS base
+FROM ros:iron AS base
 
 # Edit apt config for caching and update once
 RUN mv /etc/apt/apt.conf.d/docker-clean /etc/apt/ && \
