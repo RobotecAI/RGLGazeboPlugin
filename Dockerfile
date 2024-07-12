@@ -31,9 +31,12 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
 FROM prepper AS builder
 
 # Copy source tree
-COPY . src/RGLGazeboPlugin
+COPY . /tmp/RGLGazeboPlugin
+RUN --mount=type=cache,target=src/,rw \
+    cp -r /tmp/RGLGazeboPlugin src/RGLGazeboPlugin
 
-RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
+RUN --mount=type=cache,target=src/,rw \
+    . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build
 
 ################################################################################
@@ -46,7 +49,8 @@ FROM builder AS dancer
 #     cp -rT build /dancer
 
 # Copy only the lib and bin directories
-RUN mkdir /dancer && \
+RUN --mount=type=cache,target=src/,rw \
+    mkdir /dancer && \
     find install -type f -name "*.so" -exec cp {} /dancer/ \;
 
 ################################################################################
