@@ -47,8 +47,7 @@ FROM builder AS dancer
 
 # Copy only the lib and bin directories
 RUN mkdir /dancer && \
-    cp build/RGLGazeboPlugin/RGLServerPlugin/*.so /dancer/ && \
-    cp build/RGLGazeboPlugin/RGLVisualize/*.so /dancer/
+    find install -type f -name "*.so" -exec cp {} /dancer/ \;
 
 ################################################################################
 # MARK: exporter - export rgl binaries and executables
