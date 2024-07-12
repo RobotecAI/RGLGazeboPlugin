@@ -3,6 +3,15 @@
 # RobotecGPULidar
 ########################################################################
 
+# Expected project tree:
+# RobotecGPULidar
+# ├── include
+# │   └── rgl
+# │       └── api
+# │           └── core.h
+# └── lib
+#     └── libRobotecGPULidar.so
+
 # Use this variable to make sure the downloaded RGL will be up-to-date
 set(RGL_FORCE_DOWNLOAD OFF CACHE BOOL
     "Removes existing RGL binaries and downloads a new one")
