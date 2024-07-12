@@ -35,7 +35,7 @@ COPY . /tmp/RGLGazeboPlugin
 RUN --mount=type=cache,target=src/,rw \
     cp -r /tmp/RGLGazeboPlugin src/RGLGazeboPlugin
 
-RUN --mount=type=cache,target=src/,ro \
+RUN --mount=type=cache,target=src/,rw \
     . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build
 
@@ -51,7 +51,7 @@ FROM builder AS dancer
 # Copy only the lib and bin directories
 RUN --mount=type=cache,target=src/,ro \
     mkdir /dancer && \
-    find install -type f -name "*.so" -exec cp {} /dancer/ \;
+    find src -type f -name "*.so" -exec cp {} /dancer/ \;
 
 ################################################################################
 # MARK: exporter - export rgl binaries and executables
