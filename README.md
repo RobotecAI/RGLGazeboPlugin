@@ -55,7 +55,7 @@ Key features:
 ```shell
 docker build \
    --target=exporter \
-   --output=build .
+   --output=install .
 ```
 
 #### Manual
