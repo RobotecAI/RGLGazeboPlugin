@@ -46,9 +46,8 @@ FROM builder AS dancer
 #     cp -rT build /dancer
 
 # Copy only the lib and bin directories
-RUN --mount=type=cache,target=src/,ro \
-    mkdir /dancer && \
-    find src -type f -name "*.so" -exec cp {} /dancer/ \;
+RUN mkdir /dancer && \
+    cp -rT install /dancer
 
 ################################################################################
 # MARK: exporter - export rgl binaries and executables
