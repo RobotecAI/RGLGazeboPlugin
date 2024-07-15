@@ -31,12 +31,9 @@ RUN --mount=type=cache,sharing=locked,target=/var/cache/apt \
 FROM prepper AS builder
 
 # Copy source tree
-COPY . /tmp/RGLGazeboPlugin
-RUN --mount=type=cache,target=src/,rw \
-    cp -r /tmp/RGLGazeboPlugin src/RGLGazeboPlugin
+COPY . src/RGLGazeboPlugin
 
-RUN --mount=type=cache,target=src/,rw \
-    . /opt/ros/$ROS_DISTRO/setup.sh && \
+RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build
 
 ################################################################################
