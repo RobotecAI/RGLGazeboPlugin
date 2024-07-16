@@ -18,7 +18,7 @@ set(RGL_CUSTOM_API_HEADER_PATH "" CACHE PATH
      In most cases it will be path to `include` directory of RobotecGPULidar project")
 
 if((RGL_CUSTOM_LIBRARY_PATH AND NOT RGL_CUSTOM_API_HEADER_PATH) OR
-    NOT RGL_CUSTOM_LIBRARY_PATH AND RGL_CUSTOM_API_HEADER_PATH)
+   (NOT RGL_CUSTOM_LIBRARY_PATH AND RGL_CUSTOM_API_HEADER_PATH))
     message(FATAL_ERROR "It is required to set both `RGL_CUSTOM_LIBRARY_PATH` and `RGL_CUSTOM_API_HEADER_PATH`\
                          to finish custom RobotecGPULidar configuration")
 endif()
