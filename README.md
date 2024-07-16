@@ -62,13 +62,28 @@ docker build \
 ```shell
 mkdir build
 cd build
-cmake .. # Add `-DRGL_FORCE_DOWNLOAD=ON` to make sure the downloaded RGL will be up-to-date
+cmake ..
 make -j
 make install
 cd ..
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
 export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 ```
+
+#### Using custom build of RobotecGPULidar
+
+By default, the `RGLGazebPlugin` downloads `RobotecGPULidar` binaries from [the official release](https://github.com/RobotecAI/RobotecGPULidar/releases). To use your own build of `RobotecGPULidar`, set the following CMake variables when configuring the project:
+```shell
+# RGL_CUSTOM_LIBRARY_PATH - Path to the custom RobotecGPULidar library build
+# RGL_CUSTOM_API_HEADER_PATH - Path to the include directory with API headers compatible with the custom library build
+#                              (`include` directory of `RobotecGPULidar` project)
+# Example:
+cmake \
+  -DRGL_CUSTOM_LIBRARY_PATH="$HOME/RobotecGPULidar/build/lib/libRobotecGPULidar.so" \
+  -DRGL_CUSTOM_API_HEADER_PATH="$HOME/RobotecGPULidar/include" \
+  ..
+```
+
 ## Demo:
 
 ![](docs/videos/prius.gif)
