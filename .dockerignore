@@ -1,0 +1,12 @@
+# Ignore everything by default
+*
+
+# First-order allow exception for select directories
+!/external
+!/lidar_patterns
+!/RGLServerPlugin
+!/RGLVisualize
+
+# First-order allow exception for select files
+!/CMakeLists.txt
+!/package.xml

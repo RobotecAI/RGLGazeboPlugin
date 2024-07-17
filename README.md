@@ -50,6 +50,15 @@ Key features:
     export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
     ```
 ### Building from source
+
+#### Docker
+```shell
+docker build \
+   --target=exporter \
+   --output=install .
+```
+
+#### Manual
 ```shell
 mkdir build
 cd build
