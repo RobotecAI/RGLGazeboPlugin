@@ -36,4 +36,6 @@
 build
 install
 cmake-build-debug
-RGLServerPlugin/include/rgl
+
+external/*
+!external/CMakeLists.txt
