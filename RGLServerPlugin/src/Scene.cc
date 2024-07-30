@@ -140,6 +140,15 @@ bool RGLServerPluginManager::SetLaserRetroCb(
         const gz::sim::Entity& entity,
         const gz::sim::components::LaserRetro* laser_retro)
 {
+    if (entitiesToIgnore.contains(entity)) {
+        return true;
+    }
+
+    if (!entitiesInRgl.contains(entity)) {
+        gzerr << "Trying to set Laser Retro for entity (" << entity << ") not loaded to RGL!\n";
+        return true;
+    }
+
     if (!CheckRGL(rgl_entity_set_laser_retro(entitiesInRgl.at(entity).first, laser_retro->Data()))) {
         gzerr << "Failed to set Laser Retro for entity (" << entity << ").\n";
     }
