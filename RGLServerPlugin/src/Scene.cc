@@ -145,7 +145,7 @@ bool RGLServerPluginManager::SetLaserRetroCb(
     }
 
     if (!entitiesInRgl.contains(entity)) {
-        gzerr << "Trying to set Laser Retro for entity (" << entity << ") not loaded to RGL!\n";
+        ignerr << "Trying to set Laser Retro for entity (" << entity << ") not loaded to RGL!\n";
         return true;
     }
 
