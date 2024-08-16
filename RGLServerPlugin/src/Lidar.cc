@@ -288,6 +288,7 @@ gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chr
     *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     outMsg.set_height(1);
     outMsg.set_width(resultPointCloud.hitPointCount);
+    outMsg.set_row_step(resultPointCloud.hitPointCount * outMsg.point_step());
 
     gz::msgs::PointCloudPackedIterator<float> xIter(outMsg, "x");
     memcpy(&(*xIter), resultPointCloud.data.data(), resultPointCloud.hitPointCount * resultPointCloud.pointSize);
