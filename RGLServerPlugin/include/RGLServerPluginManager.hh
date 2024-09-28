@@ -99,7 +99,7 @@ private:
         const gz::sim::Entity& entity,
         const gz::sim::components::LaserRetro* laser_retro);
 
-    void UpdateRGLEntityPoses(const gz::sim::EntityComponentManager& ecm);
+    void UpdateRGLEntityTransforms(const gz::sim::EntityComponentManager& ecm);
 
     std::unordered_set<gz::sim::Entity> GetEntitiesInParentLink(
         gz::sim::Entity entity,
