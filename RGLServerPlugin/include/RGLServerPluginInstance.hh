@@ -66,6 +66,7 @@ private:
                      gz::sim::EntityComponentManager& ecm);
 
     void UpdateLidarPose(const gz::sim::EntityComponentManager& ecm);
+    void UpdateAlternatingLidarPattern();
 
     bool ShouldRayTrace(std::chrono::steady_clock::duration sim_time,
                         bool paused);
@@ -86,6 +87,7 @@ private:
     gz::math::Angle scanHMax;
     int scanHSamples;
     std::vector<rgl_mat3x4f> lidarPattern;
+    std::size_t alternatingPatternIndex = 0;
 
     struct ResultPointCloud
     {
@@ -118,7 +120,7 @@ private:
     gz::transport::Node::Publisher pointCloudWorldPublisher;
     gz::transport::Node gazeboNode;
 
-    rgl_node_t rglNodeUseRays = nullptr;
+    std::vector<rgl_node_t> rglNodesUseRays;
     rgl_node_t rglNodeLidarPose = nullptr;
     rgl_node_t rglNodeSetRange = nullptr;
     rgl_node_t rglNodeRaytrace = nullptr;
@@ -135,6 +137,8 @@ private:
 
     int onPausedSimUpdateCounter = 0;
     const int onPausedSimRaytraceInterval = 100;
+
+    std::size_t lidarPatternSampleSize = 0;
 
     const std::string worldFrameId = "world";
     const std::string worldTopicPostfix = "/world";
