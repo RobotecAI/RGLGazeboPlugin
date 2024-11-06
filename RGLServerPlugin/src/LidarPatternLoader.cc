@@ -37,6 +37,7 @@ std::map<std::string, std::pair<std::string, std::size_t>> LidarPatternLoader::p
     {"Pandar40P", {"HesaiPandar40P.mat3x4f", 0}},
     {"Livox Avia", {"LivoxAvia.mat3x4f", 24000}},
     {"Livox Horizon", {"LivoxHorizon.mat3x4f", 24000}},
+    {"Livox Mid40", {"LivoxMid40.mat3x4f", 10000}},
     {"Livox Mid360", {"LivoxMid360.mat3x4f", 20000}},
 };
 
