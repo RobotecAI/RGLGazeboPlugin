@@ -35,6 +35,7 @@ std::map<std::string, std::pair<std::string, std::size_t>> LidarPatternLoader::p
     {"OS1 64", {"OusterOS1_64.mat3x4f", 0}},
     {"Pandar64", {"HesaiPandarQT64.mat3x4f", 0}},
     {"Pandar40P", {"HesaiPandar40P.mat3x4f", 0}},
+    {"Livox Mid360", {"LivoxMid360.mat3x4f", 20000}},
 };
 
 std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patternLoadFunctions = {
