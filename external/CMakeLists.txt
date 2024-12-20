@@ -28,7 +28,7 @@ if(RGL_CUSTOM_LIBRARY_PATH AND RGL_CUSTOM_API_HEADER_PATH) # Copy custom Robotec
     file(COPY ${RGL_CUSTOM_LIBRARY_PATH} DESTINATION ${RGL_LIBRARY_DIR})
     file(COPY ${RGL_CUSTOM_API_HEADER_PATH} DESTINATION ${RGL_PROJECT_DIR})
 else() # Download RobotecGPULidar from the release
-    set(RGL_TAG "v0.17.0")
+    set(RGL_TAG "v0.20.0")
     set(RGL_API_CORE_HEADER_PATH "${RGL_API_HEADERS_DIR}/core.h")
     set(RGL_SO_ZIP_FILENAME "RGL-core-linux-x64.zip")
     set(RGL_SO_ZIP_URL "https://github.com/RobotecAI/RobotecGPULidar/releases/download/${RGL_TAG}/${RGL_SO_ZIP_FILENAME}")
