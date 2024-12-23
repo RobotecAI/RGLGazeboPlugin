@@ -33,13 +33,20 @@ Key features:
 1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
 2. Make RGL plugins visible to Gazebo:
     - Move libraries to the plugin's directories.
-    ```shell
-    # If Gazebo installed from apt:
-    cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
-    ```
+      - If Gazebo installed from apt:
+        ```shell
+        cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins/gui
+        ```
+      - If Gazebo installed from the ROS repository ([see](https://gazebosim.org/docs/latest/ros_installation/#installing-the-default-gazebo-ros-pairing)):
+        ```shell
+        cp libRobotecGPULidar.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLServerPluginInstance.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLServerPluginManager.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLVisualize.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins/gui
+        ```
     - Or set environment variables:
     ```shell
     # Assuming that libraries:
