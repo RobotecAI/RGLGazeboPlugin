@@ -30,28 +30,28 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 {
     // Required parameters
     if (!sdf->HasElement(PARAM_UPDATE_RATE_ID)) {
-        ignerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_UPDATE_RATE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_RANGE_ID)) {
-        ignerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_TOPIC_ID)) {
-        ignerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_TOPIC_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     if (!sdf->HasElement(PARAM_FRAME_ID)) {
-        ignerr << "No '" << PARAM_FRAME_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
+        gzerr << "No '" << PARAM_FRAME_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
         return false;
     }
 
     // Optional parameters
     if (!sdf->HasElement(PARAM_UPDATE_ON_PAUSED_SIM_ID)) {
-        ignwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the RGL lidar. "
+        gzwarn << "No '" << PARAM_UPDATE_ON_PAUSED_SIM_ID << "' parameter specified for the RGL lidar. "
                 << "Using default value: " << updateOnPausedSim << "\n";
     } else {
         updateOnPausedSim = sdf->Get<bool>(PARAM_UPDATE_ON_PAUSED_SIM_ID);
@@ -70,7 +70,7 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
 
     // Check for 2d pattern and get LaserScan parameters
     if (sdf->HasElement("pattern_lidar2d")) {
-        ignmsg << "Lidar is 2D, switching to publish LaserScan messages";
+        gzmsg << "Lidar is 2D, switching to publish LaserScan messages";
         publishLaserScan = true;
         resultDistances.resize(lidarPattern.size());
         scanHMin = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("min_angle");
@@ -110,7 +110,7 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
         !CheckRGL(rgl_node_points_yield(&rglNodeYield, yieldFields.data(), yieldFields.size())) ||
         !CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &identity))) {
 
-        ignerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
+        gzerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
@@ -119,24 +119,24 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeCompact, rglNodeToLidarFrame))) {
 
-        ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+        gzerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         return;
     }
 
     if (!publishLaserScan) {
 
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeToLidarFrame, rglNodeYield))) {
-            ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+            gzerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
-        ignmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
+        gzmsg << "Start publishing PointCloudPacked messages on topic '" << topicName << "'\n";
         pointCloudPublisher = gazeboNode.Advertise<gz::msgs::PointCloudPacked>(topicName);
 
     } else {
 
         if(!CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeYield))) {
-            ignerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
+            gzerr << "Failed to connect RGL nodes when initializing lidar. Disabling plugin.\n";
         }
-        ignmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
+        gzmsg << "Start publishing LaserScan messages on topic '" << topicName << "'\n";
         laserScanPublisher = gazeboNode.Advertise<gz::msgs::LaserScan>(topicName);
 
     }
@@ -186,7 +186,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     lastRaytraceTime = simTime;
 
     if (!CheckRGL(rgl_graph_run(rglNodeRaytrace))) {
-        ignerr << "Failed to perform raytrace.\n";
+        gzerr << "Failed to perform raytrace.\n";
         return;
     }
 
@@ -196,14 +196,14 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
-            ignerr << "Failed to get result data from RGL lidar.\n";
+            gzerr << "Failed to get result data from RGL lidar.\n";
             return;
             }
     } else {
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeYield, RGL_FIELD_DISTANCE_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeYield, RGL_FIELD_DISTANCE_F32, resultDistances.data()))) {
 
-        ignerr << "Failed to get result distances from RGL lidar.\n";
+        gzerr << "Failed to get result distances from RGL lidar.\n";
         return;
         }
     }
@@ -220,7 +220,7 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
         if (!CheckRGL(rgl_graph_get_result_size(rglNodeToLidarFrame, RGL_FIELD_XYZ_F32, &hitpointCount, nullptr)) ||
             !CheckRGL(rgl_graph_get_result_data(rglNodeCompact, RGL_FIELD_XYZ_F32, resultPointCloud.data()))) {
 
-            ignerr << "Failed to get visualization data from RGL lidar.\n";
+            gzerr << "Failed to get visualization data from RGL lidar.\n";
             return;
         }
         auto worldMsg = CreatePointCloudMsg(simTime, worldFrameId, hitpointCount);
@@ -280,7 +280,7 @@ void RGLServerPluginInstance::DestroyLidar()
     }
 
     if (!CheckRGL(rgl_graph_destroy(rglNodeRaytrace))) {
-        ignerr << "Failed to destroy RGL lidar.\n";
+        gzerr << "Failed to destroy RGL lidar.\n";
     }
     // Reset publishers
     if (!publishLaserScan) {

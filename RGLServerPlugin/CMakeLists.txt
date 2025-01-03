@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 project(RGLServerPlugin)
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(gz-cmake3 REQUIRED)
-gz_find_package(gz-plugin2 REQUIRED COMPONENTS register)
-set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
+find_package(gz-cmake4 REQUIRED)
+gz_find_package(gz-plugin3 REQUIRED COMPONENTS register)
+set(GZ_PLUGIN_VER ${gz-plugin3_VERSION_MAJOR})
 
-gz_find_package(gz-sim8 REQUIRED)
-set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
+gz_find_package(gz-sim9 REQUIRED)
+set(GZ_SIM_VER ${gz-sim9_VERSION_MAJOR})
 
 
 include_directories(include)

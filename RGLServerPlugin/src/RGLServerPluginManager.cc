@@ -38,7 +38,7 @@ void RGLServerPluginManager::Configure(
 {
     ValidateRGLVersion();
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
-        ignerr << "Failed to configure RGL logging.\n";
+        gzerr << "Failed to configure RGL logging.\n";
     }
 }
 
