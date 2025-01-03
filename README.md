@@ -19,13 +19,13 @@ Key features:
 
 ## Requirements:
 
-- OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
+- OS: [Ubuntu 22.04](https://releases.ubuntu.com/jammy/) or [Ubuntu 24.04](https://releases.ubuntu.com/noble/)
 
-- Gazebo: [Fortress 8.3](https://gazebosim.org/docs/harmonic/installl)
+- Gazebo: [Harmonic](https://gazebosim.org/docs/harmonic/install)
 
 - GPU: CUDA-enabled
 
- - Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.17.0#runtime-requirements)
 
 ## Installation:
 
@@ -50,6 +50,15 @@ Key features:
     export GZ_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_GUI_PLUGIN_PATH
     ```
 ### Building from source
+
+#### Docker
+```shell
+docker build \
+   --target=exporter \
+   --output=install .
+```
+
+#### Manual
 ```shell
 mkdir build
 cd build
@@ -60,6 +69,21 @@ cd ..
 export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
 export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
 ```
+
+#### Using custom build of RobotecGPULidar
+
+By default, the `RGLGazebPlugin` downloads `RobotecGPULidar` binaries from [the official release](https://github.com/RobotecAI/RobotecGPULidar/releases). To use your own build of `RobotecGPULidar`, set the following CMake variables when configuring the project:
+```shell
+# RGL_CUSTOM_LIBRARY_PATH - Path to the custom RobotecGPULidar library build
+# RGL_CUSTOM_API_HEADER_PATH - Path to the include directory with API headers compatible with the custom library build
+#                              (`include` directory of `RobotecGPULidar` project)
+# Example:
+cmake \
+  -DRGL_CUSTOM_LIBRARY_PATH="$HOME/RobotecGPULidar/build/lib/libRobotecGPULidar.so" \
+  -DRGL_CUSTOM_API_HEADER_PATH="$HOME/RobotecGPULidar/include" \
+  ..
+```
+
 ## Demo:
 
 ![](docs/videos/prius.gif)
@@ -86,8 +110,15 @@ RGLServerPlugin contains two plugins: `RGLServerPluginManager` and `RGLServerPlu
 
 ## How to include RGLServerPluginManager in your sdf:
 ```xml
-<plugin filename="RGLServerPluginManager" name="rgl::RGLServerPluginManager"></plugin>
+<plugin name='rgl::RGLServerPluginManager' filename='RGLServerPluginManager'>
+    <do_ignore_entities_in_lidar_link>true</do_ignore_entities_in_lidar_link>
+</plugin>
 ```
+
+### Parameters description:
+- **do_ignore_entities_in_lidar_link** - if enabled, all entities attached to the same \<link\> as lidar will be ignored from raycasting. It could be useful when a visual representation of the sensor is added. (optional, default: true) \
+*Note: It has been noticed that when the lidar link is chained to another link with a joint component, the entity tree is simplified and the parent link becomes the lidar link. In such case, the whole robot could be ignored from raycasting. Yet to be resolved.*
+
 This is a global plugin and should be included only once per sdf, preferably inside the world entity. RGLServerPluginManager is responsible for synchronizing the scene between Gazebo and GPU (CUDA). At the moment manager handles all primitive geometry types (Box, Capsule, Cylinder, Ellipsoid, Sphere), planes, meshes and submeshes.
 
 ![](docs/images/RGLServerPluginManager.png)
@@ -97,7 +128,10 @@ Inside the link entity in your model, add a custom sensor:
 ```xml
 <sensor name="UniqueSensorName" type="custom">
   <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-    <range>100</range>
+    <range>
+        <min>0</min>
+        <max>100</max>
+    </range>
     <update_rate>10</update_rate>
     <update_on_paused_sim>false</update_on_paused_sim>
     <topic>rgl_lidar</topic>
@@ -106,10 +140,9 @@ Inside the link entity in your model, add a custom sensor:
   </plugin>
 </sensor>
 ```
-*Note: All entities attached to the same \<link\> as lidar will be ignored from raycasting. This enables an adding visual representation of the sensor.*
 
 ### Parameters description:
-- **range** - the maximum range that the hits will be registered (in meters).
+- **range** - the minimum and maximum range that the hits will be registered (in meters).
 
 - **update_rate** - the frequency at which the lidar will perform raycasting (in Hz).
 
@@ -190,22 +223,13 @@ Inside the link entity in your model, add a custom sensor:
   the `horizontal` element and publishes a
   `LaserScan` message instead of a point cloud
   ```xml
-  <sensor name="Pattern2DLidar" type="custom">
-    <plugin filename="RGLServerPluginInstance" name="rgl::RGLServerPluginInstance">
-      <range>100</range>
-      <update_rate>10</update_rate>
-      <update_on_paused_sim>false</update_on_paused_sim>
-      <topic>rgl_lidar</topic>
-      <frame>RGLLidar</frame>
-      <pattern_lidar2d>
-        <horizontal>
-            <samples>1800</samples>
-            <min_angle>-3.14159</min_angle>
-            <max_angle>3.14159</max_angle>
-        </horizontal>
-    </pattern_lidar2d>
-    </plugin>
-  </sensor>
+  <pattern_lidar2d>
+      <horizontal>
+          <samples>1800</samples>
+          <min_angle>-3.14159</min_angle>
+          <max_angle>3.14159</max_angle>
+      </horizontal>
+  </pattern_lidar2d>
   ```
 
 ## How to visualize in Gazebo
@@ -226,3 +250,8 @@ At [Robotec.AI](https://robotec.ai/) we care about every little detail of our pr
 | **RGL uniform pattern** | **gpu_lidar uniform pattern** |
 |---|---|
 | ![](docs/images/RGL_uniform.png) | ![](docs/images/GPU_lidar_uniform.png) |
+
+## Acknowledgements
+
+The project benefited from significant contributions and support of [Dexory](https://www.dexory.com/).
+Features such as LaserScan publishing and Laser Retro as well as update to the newest RGL version were possible thanks to their dedication to the open source community.

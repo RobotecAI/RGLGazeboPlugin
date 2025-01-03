@@ -46,8 +46,10 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
     for (const auto& plugin : plugins) {
         if (plugin.name() == RGL_INSTANCE) {
             lidarEntities.insert(entity);
-            for (auto descendant: ecm.Descendants(entity)) {
-                entitiesToIgnore.insert(descendant);
+            if (doIgnoreEntitiesInLidarLink) {
+                for (auto descendant: ecm.Descendants(entity)) {
+                    entitiesToIgnore.insert(descendant);
+                }
             }
         }
     }
@@ -57,10 +59,12 @@ bool RGLServerPluginManager::RegisterNewLidarCb(
         return true;
     }
 
-    // Ignore all entities in link associated with RGL lidar
-    // Link could contain visual representation of the lidar
-    for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
-        entitiesToIgnore.insert(entityInParentLink);
+    if (doIgnoreEntitiesInLidarLink) {
+        // Ignore all entities in link associated with RGL lidar
+        // Link could contain visual representation of the lidar
+        for (auto entityInParentLink : GetEntitiesInParentLink(entity, ecm)) {
+            entitiesToIgnore.insert(entityInParentLink);
+        }
     }
 
     return true;
@@ -128,6 +132,26 @@ bool RGLServerPluginManager::RemoveEntityFromRGLCb(
         gzerr << "Failed to remove mesh from entity (" << entity << ") in RGL.\n";
     }
     entitiesInRgl.erase(entity);
+    return true;
+}
+
+// always returns true, because the ecm will stop if it encounters false
+bool RGLServerPluginManager::SetLaserRetroCb(
+        const gz::sim::Entity& entity,
+        const gz::sim::components::LaserRetro* laser_retro)
+{
+    if (entitiesToIgnore.contains(entity)) {
+        return true;
+    }
+
+    if (!entitiesInRgl.contains(entity)) {
+        gzerr << "Trying to set Laser Retro for entity (" << entity << ") not loaded to RGL!\n";
+        return true;
+    }
+
+    if (!CheckRGL(rgl_entity_set_laser_retro(entitiesInRgl.at(entity).first, laser_retro->Data()))) {
+        gzerr << "Failed to set Laser Retro for entity (" << entity << ").\n";
+    }
     return true;
 }
 #pragma clang diagnostic pop

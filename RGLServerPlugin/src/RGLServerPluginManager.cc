@@ -17,6 +17,7 @@
 
 #include "RGLServerPluginManager.hh"
 
+#define PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID "do_ignore_entities_in_lidar_link"
 
 GZ_ADD_PLUGIN(
     rgl::RGLServerPluginManager,
@@ -32,7 +33,7 @@ namespace rgl
 
 void RGLServerPluginManager::Configure(
         const gz::sim::Entity& entity,
-        const std::shared_ptr<const sdf::Element>&,
+        const std::shared_ptr<const sdf::Element>& sdf,
         gz::sim::EntityComponentManager& ecm,
         gz::sim::EventManager& evm)
 {
@@ -40,23 +41,40 @@ void RGLServerPluginManager::Configure(
     if (!CheckRGL(rgl_configure_logging(RGL_LOG_LEVEL_ERROR, nullptr, true))) {
         gzerr << "Failed to configure RGL logging.\n";
     }
+
+    if (sdf->HasElement(PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID)) {
+        doIgnoreEntitiesInLidarLink = sdf->Get<bool>(PARAM_DO_IGNORE_ENTITIES_IN_LIDAR_LINK_ID);
+    }
 }
 
 void RGLServerPluginManager::PostUpdate(
         const gz::sim::UpdateInfo& info,
         const gz::sim::EntityComponentManager& ecm)
 {
-    ecm.EachNew<>([&](const gz::sim::Entity& entity)-> bool {
-        return RegisterNewLidarCb(entity, ecm);});
+    ecm.EachNew<>
+            ([this, &ecm](auto&& entity) {
+                return RegisterNewLidarCb(entity, ecm);
+            });
 
     ecm.EachNew<gz::sim::components::Visual, gz::sim::components::Geometry>
-            (std::bind(&RGLServerPluginManager::LoadEntityToRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return LoadEntityToRGLCb(entity, visual, geometry);
+            });
 
-    ecm.EachRemoved<>([&](const gz::sim::Entity& entity)-> bool {
-        return UnregisterLidarCb(entity, ecm);});
+    ecm.EachNew<gz::sim::components::LaserRetro>
+            ([this](auto&& entity, auto&& laserRetro) {
+                return SetLaserRetroCb(entity, laserRetro);
+            });
+
+    ecm.EachRemoved<>
+            ([this, &ecm](auto&& entity) {
+                return UnregisterLidarCb(entity, ecm);
+            });
 
     ecm.EachRemoved<gz::sim::components::Visual, gz::sim::components::Geometry>
-            (std::bind(&RGLServerPluginManager::RemoveEntityFromRGLCb, this, _1, _2, _3));
+            ([this](auto&& entity, auto&& visual, auto&& geometry) {
+                return RemoveEntityFromRGLCb(entity, visual, geometry);
+            });
 
     UpdateRGLEntityPoses(ecm);
 }

@@ -21,6 +21,7 @@
 #include <gz/common/MeshManager.hh>
 
 #include <gz/sim/components/Geometry.hh>
+#include <gz/sim/components/LaserRetro.hh>
 #include <gz/sim/components/Visual.hh>
 #include <gz/sim/System.hh>
 
@@ -59,6 +60,9 @@ private:
     // contains pointers to all entities that were loaded to rgl (as well as to their meshes)
     std::unordered_map<gz::sim::Entity, std::pair<rgl_entity_t, rgl_mesh_t>> entitiesInRgl;
 
+    // whether to ignore entities attached to the same link as the lidar
+    bool doIgnoreEntitiesInLidarLink{true};
+
     // the entity ids, that the lidars are attached to
     std::unordered_set<gz::sim::Entity> lidarEntities;
 
@@ -90,6 +94,10 @@ private:
         const gz::sim::Entity& entity,
         const gz::sim::components::Visual*,
         const gz::sim::components::Geometry*);
+
+    bool SetLaserRetroCb(
+        const gz::sim::Entity& entity,
+        const gz::sim::components::LaserRetro* laser_retro);
 
     void UpdateRGLEntityPoses(const gz::sim::EntityComponentManager& ecm);
 
