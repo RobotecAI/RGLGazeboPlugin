@@ -36,10 +36,6 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         return false;
     }
 
-<<<<<<< HEAD
-    if (!sdf->HasElement(PARAM_RANGE_ID)) {
-        gzerr << "No '" << PARAM_RANGE_ID << "' parameter specified for the RGL lidar. Disabling plugin.\n";
-=======
     if (!sdf->HasElement(PARAM_RANGE_ID) ||
         !sdf->FindElement(PARAM_RANGE_ID)->HasElement(PARAM_RANGE_MIN_ID) ||
         !sdf->FindElement(PARAM_RANGE_ID)->HasElement(PARAM_RANGE_MAX_ID)) {
@@ -48,7 +44,6 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
                << "  <" << PARAM_RANGE_MIN_ID << ">" << "</" << PARAM_RANGE_MIN_ID << ">\n"
                << "  <" << PARAM_RANGE_MAX_ID << ">" << "</" << PARAM_RANGE_MAX_ID << ">\n"
                << "</" PARAM_RANGE_ID << ">\n";
->>>>>>> main
         return false;
     }
 
@@ -232,10 +227,6 @@ void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTi
     }
 }
 
-<<<<<<< HEAD
-gz::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
-{
-=======
 bool RGLServerPluginInstance::FetchLaserScanResult()
 {
     if (!CheckRGL(rgl_graph_get_result_data(rglNodeYieldLaserScan, RGL_FIELD_DISTANCE_F32, resultLaserScan.distances.data())) ||
@@ -261,7 +252,6 @@ bool RGLServerPluginInstance::FetchPointCloudResult(rgl_node_t formatNode)
 gz::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::steady_clock::duration simTime, const std::string& frame)
 {
     auto pointCount = resultLaserScan.distances.size();
->>>>>>> main
     gz::msgs::LaserScan outMsg;
     *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     auto _frame = outMsg.mutable_header()->add_data();
@@ -288,14 +278,6 @@ gz::msgs::LaserScan RGLServerPluginInstance::CreateLaserScanMsg(std::chrono::ste
     return outMsg;
 }
 
-<<<<<<< HEAD
-gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, std::string frame, int hitpointCount)
-{
-    gz::msgs::PointCloudPacked outMsg;
-    gz::msgs::InitPointCloudPacked(outMsg, frame, false,
-                                         {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32}});
-    outMsg.mutable_data()->resize(hitpointCount * outMsg.point_step());
-=======
 gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chrono::steady_clock::duration simTime, const std::string& frame)
 {
     gz::msgs::PointCloudPacked outMsg;
@@ -303,19 +285,13 @@ gz::msgs::PointCloudPacked RGLServerPluginInstance::CreatePointCloudMsg(std::chr
                                          {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32},
                                           {"intensity",gz::msgs::PointCloudPacked::Field::FLOAT32}});
     outMsg.mutable_data()->resize(resultPointCloud.hitPointCount * outMsg.point_step());
->>>>>>> main
     *outMsg.mutable_header()->mutable_stamp() = gz::msgs::Convert(simTime);
     outMsg.set_height(1);
     outMsg.set_width(resultPointCloud.hitPointCount);
     outMsg.set_row_step(resultPointCloud.hitPointCount * outMsg.point_step());
 
-<<<<<<< HEAD
-    gz::msgs::PointCloudPackedIterator<float> xIterWorld(outMsg, "x");
-    memcpy(&(*xIterWorld), resultPointCloud.data(), hitpointCount * sizeof(rgl_vec3f));
-=======
     gz::msgs::PointCloudPackedIterator<float> xIter(outMsg, "x");
     memcpy(&(*xIter), resultPointCloud.data.data(), resultPointCloud.hitPointCount * resultPointCloud.pointSize);
->>>>>>> main
     return outMsg;
 }
 
