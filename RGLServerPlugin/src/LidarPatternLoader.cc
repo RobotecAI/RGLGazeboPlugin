@@ -26,21 +26,20 @@ namespace fs = std::filesystem;
 namespace rgl
 {
 
-// map preset name to pair of filename and sample size (for alternating patterns)
-// set sample size to 0 to indicate non-alternating patterns
-std::map<std::string, std::pair<std::string, std::size_t>> LidarPatternLoader::presetNameToFilename = {
-    {"Alpha Prime", {"VelodyneVLS128.mat3x4f", 0}},
-    {"Puck", {"VelodyneVLP16.mat3x4f", 0}},
-    {"Ultra Puck", {"VelodyneVLP32C.mat3x4f", 0}},
-    {"OS1 64", {"OusterOS1_64.mat3x4f", 0}},
-    {"Pandar64", {"HesaiPandarQT64.mat3x4f", 0}},
-    {"Pandar40P", {"HesaiPandar40P.mat3x4f", 0}},
-    {"Livox Avia", {"LivoxAvia.mat3x4f", 24000}},
-    {"Livox Horizon", {"LivoxHorizon.mat3x4f", 24000}},
-    {"Livox Mid40", {"LivoxMid40.mat3x4f", 10000}},
-    {"Livox Mid70", {"LivoxMid70.mat3x4f", 10000}},
-    {"Livox Mid360", {"LivoxMid360.mat3x4f", 20000}},
-    {"Livox Tele15", {"LivoxTele15.mat3x4f", 24000}},
+// map preset name to pair of filename and number of patterns contained in the file (> 1 for alternating patterns)
+std::map<std::string, std::pair<std::string, std::size_t>> LidarPatternLoader::presetNameToLoadInfo = {
+    {"Alpha Prime", {"VelodyneVLS128.mat3x4f", 1}},
+    {"Puck", {"VelodyneVLP16.mat3x4f", 1}},
+    {"Ultra Puck", {"VelodyneVLP32C.mat3x4f", 1}},
+    {"OS1 64", {"OusterOS1_64.mat3x4f", 1}},
+    {"Pandar64", {"HesaiPandarQT64.mat3x4f", 1}},
+    {"Pandar40P", {"HesaiPandar40P.mat3x4f", 1}},
+    {"Livox Avia", {"LivoxAvia.mat3x4f", 40}},
+    {"Livox Horizon", {"LivoxHorizon.mat3x4f", 40}},
+    {"Livox Mid40", {"LivoxMid40.mat3x4f", 40}},
+    {"Livox Mid70", {"LivoxMid70.mat3x4f", 40}},
+    {"Livox Mid360", {"LivoxMid360.mat3x4f", 40}},
+    {"Livox Tele15", {"LivoxTele15.mat3x4f", 40}},
 };
 
 std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patternLoadFunctions = {
@@ -52,16 +51,16 @@ std::map<std::string, LidarPatternLoader::LoadFuncType> LidarPatternLoader::patt
 };
 
 bool LidarPatternLoader::Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern,
-                              std::size_t& outPatternSampleSize)
+                              std::size_t& outPatternScanSize)
 {
-    for (const auto &[patterName, loadFunction]: patternLoadFunctions)
+    for (const auto &[patternName, loadFunction]: patternLoadFunctions)
     {
-        if (!sdf->HasElement(patterName)) {
+        if (!sdf->HasElement(patternName)) {
             continue;
         }
-        gzmsg << "Trying to load '" << patterName << "' pattern...\n";
-        if (loadFunction(sdf->FindElement(patterName), outPattern, outPatternSampleSize)) {
-            gzmsg << "Successfully loaded pattern '" << patterName << "'.\n";
+        gzmsg << "Trying to load '" << patternName << "' pattern...\n";
+        if (loadFunction(sdf->FindElement(patternName), outPattern, outPatternScanSize)) {
+            gzmsg << "Successfully loaded pattern '" << patternName << "'.\n";
             return true;
         }
     }
@@ -105,7 +104,7 @@ bool LidarPatternLoader::LoadAnglesAndSamplesElement(const sdf::ElementConstPtr&
     return true;
 }
 
-bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize)
+bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize)
 {
     if (!sdf->HasElement("vertical")) {
         gzerr << "Failed to load uniform pattern. A vertical element is required, but it is not set.\n";
@@ -147,12 +146,12 @@ bool LidarPatternLoader::LoadPatternFromUniform(const sdf::ElementConstPtr& sdf,
         vAngle += vStep;
     }
 
-    outPatternSampleSize = outPattern.size();
+    outPatternScanSize = outPattern.size();
 
     return true;
 }
 
-bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize)
+bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize)
 {
     if (!sdf->HasAttribute("channels")) {
         gzerr << "Failed to load custom pattern. A channels attribute is required, but it is not set.\n";
@@ -194,43 +193,44 @@ bool LidarPatternLoader::LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, 
         }
     }
 
-    outPatternSampleSize = outPattern.size();
+    outPatternScanSize = outPattern.size();
 
     return true;
 }
 
-bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize)
+bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize)
 {
-    auto presetName = sdf->Get<std::string>();
-    if (!presetNameToFilename.contains(presetName)) {
+    const auto presetName = sdf->Get<std::string>();
+    if (!presetNameToLoadInfo.contains(presetName)) {
         gzerr << "Failed to load preset pattern. Preset '" << presetName << "' is not available.\n";
         return false;
     }
-    fs::path presetPath;
-    std::tie(presetPath, outPatternSampleSize) = presetNameToFilename[presetName];
+
+    auto [presetPath, presetPatternCount] = presetNameToLoadInfo[presetName];
     if (const char* presetDir = std::getenv(PATTERNS_DIR_ENV)) {
         presetPath = fs::path(presetDir) / presetPath;
     }
+
     gzmsg << "Loading pattern_preset '" << presetName << "'...\n";
     outPattern = LoadVector<rgl_mat3x4f>(presetPath);
+
     if (outPattern.size() == 0) {
         gzerr << "Failed to load preset. Make sure the environment variable '" << PATTERNS_DIR_ENV << "' is set correctly.\n";
         return false;
     }
 
-    if (outPatternSampleSize == 0) {
-        // non-alternating patterns have sample size equal to total pattern size
-        outPatternSampleSize = outPattern.size();
-    }
-    else if (outPattern.size() % outPatternSampleSize != 0) {
-        gzerr << "Failed to load preset alternating pattern. Total pattern size (" << outPattern.size() << ") must be a multiple of the sample size!\n";
+    if (outPattern.size() % presetPatternCount != 0) {
+        gzerr << "Failed to load preset with alternating pattern. Total pattern vector size (" << outPattern.size()
+              << ") must be a multiple of the pattern count (" << presetPatternCount << ")!\n";
         return false;
     }
+
+    outPatternScanSize = outPattern.size() / presetPatternCount;
 
     return true;
 }
 
-bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize)
+bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize)
 {
     fs::path presetPath = fs::path(sdf->Get<std::string>());
     gzmsg << "Loading preset from path '" << presetPath << "'...\n";
@@ -240,12 +240,12 @@ bool LidarPatternLoader::LoadPatternFromPresetPath(const sdf::ElementConstPtr& s
         return false;
     }
 
-    outPatternSampleSize = outPattern.size();
+    outPatternScanSize = outPattern.size();
 
     return true;
 }
 
-bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize)
+bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize)
 {
     if (!sdf->HasElement("horizontal")) {
         gzerr << "Failed to load uniform pattern. A horizontal element is required, but it is not set.\n";
@@ -274,7 +274,7 @@ bool LidarPatternLoader::LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf,
         hAngle += hStep;
     }
 
-    outPatternSampleSize = outPattern.size();
+    outPatternScanSize = outPattern.size();
 
     return true;
 }

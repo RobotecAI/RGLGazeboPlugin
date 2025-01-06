@@ -33,7 +33,7 @@ public:
     using LoadFuncType = std::function<bool(const sdf::ElementConstPtr&, std::vector<rgl_mat3x4f>&, std::size_t&)>;
 
     static bool Load(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern,
-                     std::size_t& outPatternSampleSize);
+                     std::size_t& outPatternScanSize);
 
 private:
     LidarPatternLoader() {};
@@ -42,11 +42,11 @@ private:
                                             gz::math::Angle& angleMin, gz::math::Angle& angleMax,
                                             int& samples);
 
-    static bool LoadPatternFromUniform(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize);
-    static bool LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize);
-    static bool LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize);
-    static bool LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize);
-    static bool LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternSampleSize);
+    static bool LoadPatternFromUniform(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize);
+    static bool LoadPatternFromCustom(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize);
+    static bool LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize);
+    static bool LoadPatternFromPresetPath(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize);
+    static bool LoadPatternFromLidar2d(const sdf::ElementConstPtr& sdf, std::vector<rgl_mat3x4f>& outPattern, std::size_t& outPatternScanSize);
 
     static rgl_mat3x4f AnglesToRglMat3x4f(const gz::math::Angle& roll,
                                           const gz::math::Angle& pitch,
@@ -55,7 +55,7 @@ private:
     template<typename T>
     static std::vector<T> LoadVector(const std::filesystem::path& path);
 
-    static std::map<std::string, std::pair<std::string, std::size_t>> presetNameToFilename;
+    static std::map<std::string, std::pair<std::string, std::size_t>> presetNameToLoadInfo;
     static std::map<std::string, LoadFuncType> patternLoadFunctions;
 };
 
