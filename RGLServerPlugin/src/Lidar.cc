@@ -73,7 +73,12 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
     topicName = sdf->Get<std::string>(PARAM_TOPIC_ID);
     frameId = sdf->Get<std::string>(PARAM_FRAME_ID);
 
-    if (!LidarPatternLoader::Load(sdf, lidarPattern)) {
+    if (!LidarPatternLoader::Load(sdf, lidarPattern, lidarPatternSampleSize)) {
+        return false;
+    }
+
+    if ((lidarPattern.size() % lidarPatternSampleSize) != 0) {
+        gzerr << "Total pattern size (" << lidarPattern.size() << ") must be a multiple of the sample size (" << lidarPatternSampleSize << "). Disabling plugin.\n";
         return false;
     }
 
@@ -83,7 +88,7 @@ bool RGLServerPluginInstance::LoadConfiguration(const std::shared_ptr<const sdf:
         publishLaserScan = true;
         scanHMin = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("min_angle");
         scanHMax = sdf->FindElement("pattern_lidar2d")->FindElement("horizontal")->Get<float>("max_angle");
-        scanHSamples = lidarPattern.size();
+        scanHSamples = lidarPatternSampleSize;
     }
 
     return true;
@@ -102,15 +107,25 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
 
     // Resize result data containers with the maximum possible point count (number of lasers).
     // This improves performance in runtime because no additional allocations are needed.
-    resultPointCloud.data.resize(resultPointCloud.pointSize * lidarPattern.size());
+    resultPointCloud.data.resize(resultPointCloud.pointSize * lidarPatternSampleSize);
     if (publishLaserScan)
     {
-        resultLaserScan.distances.resize(lidarPattern.size());
-        resultLaserScan.intensities.resize(lidarPattern.size());
+        resultLaserScan.distances.resize(lidarPatternSampleSize);
+        resultLaserScan.intensities.resize(lidarPatternSampleSize);
     }
 
-    if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodeUseRays, lidarPattern.data(), lidarPattern.size())) ||
-        !CheckRGL(rgl_node_rays_set_range(&rglNodeSetRange, &lidarMinMaxRange, 1)) ||
+    for (std::size_t i = 0; i < lidarPattern.size(); i += lidarPatternSampleSize)
+    {
+      rglNodesUseRays.emplace_back();
+      if (!CheckRGL(rgl_node_rays_from_mat3x4f(&rglNodesUseRays.back(),
+                                               lidarPattern.data() + i,
+                                               lidarPatternSampleSize))) {
+          gzerr << "Failed to create RGL nodes when initializing lidar. Disabling plugin.\n";
+          return;
+      }
+    }
+
+    if (!CheckRGL(rgl_node_rays_set_range(&rglNodeSetRange, &lidarMinMaxRange, 1)) ||
         !CheckRGL(rgl_node_rays_transform(&rglNodeLidarPose, &identity)) ||
         !CheckRGL(rgl_node_raytrace(&rglNodeRaytrace, nullptr)) ||
         !CheckRGL(rgl_node_points_compact_by_field(&rglNodeCompact, RGL_FIELD_IS_HIT_I32)) ||
@@ -123,7 +138,7 @@ void RGLServerPluginInstance::CreateLidar(gz::sim::Entity entity,
         return;
     }
 
-    if (!CheckRGL(rgl_graph_node_add_child(rglNodeUseRays, rglNodeSetRange)) ||
+    if (!CheckRGL(rgl_graph_node_add_child(rglNodesUseRays.front(), rglNodeSetRange)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeSetRange, rglNodeLidarPose)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeLidarPose, rglNodeRaytrace)) ||
         !CheckRGL(rgl_graph_node_add_child(rglNodeRaytrace, rglNodeCompact)) ||
@@ -166,6 +181,25 @@ void RGLServerPluginInstance::UpdateLidarPose(const gz::sim::EntityComponentMana
     CheckRGL(rgl_node_points_transform(&rglNodeToLidarFrame, &rglWorldToLidar));
 }
 
+void RGLServerPluginInstance::UpdateAlternatingLidarPattern()
+{
+    // remove old child
+    if(!CheckRGL(rgl_graph_node_remove_child(rglNodesUseRays[alternatingPatternIndex], rglNodeSetRange)))
+    {
+        gzerr << "Failed to update alternating lidar pattern, not able to remove child.\n";
+        return;
+    }
+
+    alternatingPatternIndex = (alternatingPatternIndex + 1) % rglNodesUseRays.size();
+
+    // add new child
+    if(!CheckRGL(rgl_graph_node_add_child(rglNodesUseRays[alternatingPatternIndex], rglNodeSetRange)))
+    {
+        gzerr << "Failed to update alternating lidar pattern, not able to add new child.\n";
+        return;
+    }
+}
+
 bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration simTime,
                                              bool paused)
 {
@@ -194,6 +228,10 @@ bool RGLServerPluginInstance::ShouldRayTrace(std::chrono::steady_clock::duration
 
 void RGLServerPluginInstance::RayTrace(std::chrono::steady_clock::duration simTime)
 {
+    if (rglNodesUseRays.size() > 1) {
+        UpdateAlternatingLidarPattern();
+    }
+
     lastRaytraceTime = simTime;
 
     if (!CheckRGL(rgl_graph_run(rglNodeRaytrace))) {

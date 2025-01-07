@@ -194,6 +194,12 @@ Inside the link entity in your model, add a custom sensor:
   <pattern_preset>OS1 64</pattern_preset>
   <pattern_preset>Pandar64</pattern_preset>
   <pattern_preset>Pandar40P</pattern_preset>
+  <pattern_preset>Livox Avia</pattern_preset>
+  <pattern_preset>Livox Horizon</pattern_preset>
+  <pattern_preset>Livox Mid40</pattern_preset>
+  <pattern_preset>Livox Mid70</pattern_preset>
+  <pattern_preset>Livox Mid360</pattern_preset>
+  <pattern_preset>Livox Tele15</pattern_preset>
   ```
   **Note:** Before launching the simulation it is required to set `RGL_PATTERNS_DIR` environment variable with the path to pattern presets directory (`lidar_patterns` from repository).
   ```shell
