@@ -25,7 +25,7 @@ Key features:
 
 - GPU: CUDA-enabled
 
-- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.17.0#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.20.0#runtime-requirements)
 
 ## Installation:
 
@@ -33,21 +33,26 @@ Key features:
 1. Download libraries from [release](https://github.com/RobotecAI/RGLGazeboPlugin/releases).
 2. Make RGL plugins visible to Gazebo:
     - Move libraries to the plugin's directories.
-    ```shell
-    # If Gazebo installed from apt:
-    cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/
-    cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/gui/
-    ```
+      - If Gazebo installed from apt:
+        ```shell
+        cp libRobotecGPULidar.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLServerPluginInstance.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLServerPluginManager.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins
+        cp libRGLVisualize.so /usr/lib/x86_64-linux-gnu/gz-sim-8/plugins/gui
+        ```
+      - If Gazebo installed from the ROS repository ([see](https://gazebosim.org/docs/latest/ros_installation/#installing-the-default-gazebo-ros-pairing)):
+        ```shell
+        cp libRobotecGPULidar.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLServerPluginInstance.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLServerPluginManager.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins
+        cp libRGLVisualize.so /opt/ros/${ROS_DISTRO}/opt/gz_sim_vendor/lib/gz-sim-8/plugins/gui
+        ```
     - Or set environment variables:
     ```shell
-    # Assuming that libraries:
-    # libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
-    # are located in RGLServerPlugin directory,
-    # and libRGLVisualize.so in RGLGuiPlugin.
+    # Assuming that system plugin libraries are located in RGLServerPlugin directory,
+    # and gui plugins (libRGLVisualize.so) in RGLVisualize.
     export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
-    export GZ_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$GZ_GUI_PLUGIN_PATH
+    export GZ_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$GZ_GUI_PLUGIN_PATH
     ```
 ### Building from source
 
@@ -57,15 +62,14 @@ docker build \
    --target=exporter \
    --output=install .
 ```
+*Note: Build with [ROS Jazzy](https://docs.ros.org/en/jazzy/index.html) using [colcon](https://colcon.readthedocs.io/en/released/)*
 
 #### Manual
 ```shell
-mkdir build
-cd build
-cmake ..
-make -j
-make install
+mkdir build && cd build
+cmake .. && make -j && make install
 cd ..
+# Make it visible to Gazebo via environment variables:
 export GZ_SIM_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$GZ_SIM_SYSTEM_PLUGIN_PATH
 export GZ_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$GZ_GUI_PLUGIN_PATH
 ```
@@ -186,7 +190,8 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).\
+  *Note: All presets are assumed to work at 10Hz update rate*
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
