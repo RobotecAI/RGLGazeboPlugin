@@ -190,7 +190,8 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).\
+  *Note: All presets are assumed to work at 10Hz update rate*
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
