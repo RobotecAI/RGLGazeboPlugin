@@ -14,18 +14,18 @@ RGL Gazebo Plugin has been created by [Robotec.AI](https://robotec.ai/) to bring
 Key features:
 - Point cloud computation using hardware-accelerated raytracing (Nvidia OptiX)
 - High performance (~4x improvement over `gpu_lidar` sensor from Gazebo)
-- Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file 
+- Multiple LiDAR pattern configuration methods, including importing a pattern from a binary file
 - Realistic presets of the most popular LiDARs
 
 ## Requirements:
 
 - OS: [Ubuntu 20.04](https://releases.ubuntu.com/focal/) or [Ubuntu 22.04](https://releases.ubuntu.com/jammy/)
 
-- Gazebo: [Fortress 6.14](https://gazebosim.org/docs/fortress/install)
+- Gazebo: [Fortress](https://gazebosim.org/docs/fortress/install)
 
 - GPU: CUDA-enabled
 
- - Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.11.3#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.20.0#runtime-requirements)
 
 ## Installation:
 
@@ -42,12 +42,10 @@ Key features:
     ```
     - Or set environment variables:
     ```shell
-    # Assuming that libraries:
-    # libRGLServerPluginInstance.so, libRGLServerPluginManager.so and libRobotecGPULidar.so
-    # are located in RGLServerPlugin directory,
-    # and libRGLVisualize.so in RGLGuiPlugin.
+    # Assuming that system plugin libraries are located in RGLServerPlugin directory,
+    # and gui plugins (libRGLVisualize.so) in RGLVisualize.
     export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
-    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLGuiPlugin:$IGN_GUI_PLUGIN_PATH
+    export IGN_GUI_PLUGIN_PATH=`pwd`/RGLVisualize:$IGN_GUI_PLUGIN_PATH
     ```
 ### Building from source
 
@@ -57,15 +55,14 @@ docker build \
    --target=exporter \
    --output=install .
 ```
+*Note: Build with [ROS Iron](https://docs.ros.org/en/iron/index.html) using [colcon](https://colcon.readthedocs.io/en/released/)*
 
 #### Manual
 ```shell
-mkdir build
-cd build
-cmake ..
-make -j
-make install
+mkdir build && cd build
+cmake .. && make -j && make install
 cd ..
+# Make it visible to Gazebo via environment variables:
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=`pwd`/install/RGLServerPlugin:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
 export IGN_GUI_PLUGIN_PATH=`pwd`/install/RGLVisualize:$IGN_GUI_PLUGIN_PATH
 ```
@@ -186,7 +183,8 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_preset**\
-  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below). 
+  We have prepared several lidar presets. You can type in the name of a LiDAR to use its pattern (all available patterns are shown below).\
+  *Note: All presets are assumed to work at 10Hz update rate*
   ```xml
   <pattern_preset>Alpha Prime</pattern_preset>
   <pattern_preset>Puck</pattern_preset>
@@ -225,8 +223,8 @@ Inside the link entity in your model, add a custom sensor:
   ```
 
 - **pattern_lidar2d**\
-  Almost the same as `pattern_uniform` but only has 
-  the `horizontal` element and publishes a 
+  Almost the same as `pattern_uniform` but only has
+  the `horizontal` element and publishes a
   `LaserScan` message instead of a point cloud
   ```xml
   <pattern_lidar2d>

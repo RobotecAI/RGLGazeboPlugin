@@ -99,7 +99,7 @@ private:
         const ignition::gazebo::Entity& entity,
         const ignition::gazebo::components::LaserRetro* laser_retro);
 
-    void UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm);
+    void UpdateRGLEntityTransforms(const ignition::gazebo::EntityComponentManager& ecm);
 
     std::unordered_set<ignition::gazebo::Entity> GetEntitiesInParentLink(
         ignition::gazebo::Entity entity,
