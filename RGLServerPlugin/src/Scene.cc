@@ -156,12 +156,12 @@ bool RGLServerPluginManager::SetLaserRetroCb(
 }
 #pragma clang diagnostic pop
 
-void RGLServerPluginManager::UpdateRGLEntityPoses(const ignition::gazebo::EntityComponentManager& ecm)
+void RGLServerPluginManager::UpdateRGLEntityTransforms(const ignition::gazebo::EntityComponentManager& ecm)
 {
     for (auto entity: entitiesInRgl) {
         rgl_mat3x4f rglMatrix = FindWorldPoseInRglMatrix(entity.first, ecm);
-        if (!CheckRGL(rgl_entity_set_pose(entity.second.first, &rglMatrix))) {
-            ignerr << "Failed to update pose for entity (" << entity.first << ").\n";
+        if (!CheckRGL(rgl_entity_set_transform(entity.second.first, &rglMatrix))) {
+            ignerr << "Failed to update transform for entity (" << entity.first << ").\n";
         }
     }
 }
