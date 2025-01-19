@@ -9,16 +9,12 @@ project(RGLVisualize)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(gz-cmake4 REQUIRED)
-gz_find_package(gz-msgs11 REQUIRED)
-set(GZ_MSGS_VER ${gz-msgs11_VERSION_MAJOR})
-
-gz_find_package(gz-rendering9 REQUIRED)
-set(GZ_RENDERING_VER ${gz-rendering9_VERSION_MAJOR})
-
-
-gz_find_package(gz-gui9 REQUIRED)
-set(GZ_GUI_VER ${gz-gui9_VERSION_MAJOR})
+find_package(gz_msgs_vendor REQUIRED)
+find_package(gz-msgs REQUIRED)
+find_package(gz_rendering_vendor REQUIRED)
+find_package(gz-rendering REQUIRED)
+find_package(gz_gui_vendor REQUIRED)
+find_package(gz-gui REQUIRED)
 
 QT5_ADD_RESOURCES(resources_RCC RGLVisualize.qrc)
 
@@ -29,9 +25,9 @@ add_library(RGLVisualize SHARED
 
 target_link_libraries(RGLVisualize
     PRIVATE
-    gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
-    gz-rendering${GZ_RENDERING_VER}::gz-rendering${GZ_RENDERING_VER}
-    gz-gui${GZ_GUI_VER}::gz-gui${GZ_GUI_VER}
+    gz-msgs::gz-msgs
+    gz-rendering::gz-rendering
+    gz-gui::gz-gui
 )
 
 ## Install libraries
