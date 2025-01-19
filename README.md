@@ -21,7 +21,7 @@ Key features:
 
 - OS: [Ubuntu 22.04](https://releases.ubuntu.com/jammy/) or [Ubuntu 24.04](https://releases.ubuntu.com/noble/)
 
-- Gazebo: [Harmonic](https://gazebosim.org/docs/harmonic/install)
+- Gazebo: [Ionic](https://gazebosim.org/docs/ionic/install/)
 
 - GPU: CUDA-enabled
 
