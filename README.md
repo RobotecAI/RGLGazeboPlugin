@@ -25,7 +25,7 @@ Key features:
 
 - GPU: CUDA-enabled
 
-- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.20.0#runtime-requirements)
+- Nvidia Driver: [See RGL requirements](https://github.com/RobotecAI/RobotecGPULidar/tree/v0.21.0#runtime-requirements)
 
 ## Installation:
 
