@@ -207,8 +207,28 @@ bool LidarPatternLoader::LoadPatternFromPreset(const sdf::ElementConstPtr& sdf, 
     }
 
     auto [presetPath, presetPatternCount] = presetNameToLoadInfo[presetName];
-    if (const char* presetDir = std::getenv(PATTERNS_DIR_ENV)) {
-        presetPath = fs::path(presetDir) / presetPath;
+    if (const char* presetDirs = std::getenv(PATTERNS_DIR_ENV)) {
+
+        std::stringstream ss(presetDirs);
+        std::string dir;
+        bool found = false;
+    
+        while (std::getline(ss, dir, ':')) {
+            fs::path potentialPath = fs::path(dir) / presetPath;
+    
+            if (fs::exists(potentialPath)) {
+                presetPath = potentialPath;
+                found = true;
+                break;
+            }
+        }
+    
+        if (!found) {
+            gzerr << "Failed to find preset '" << presetName << "' in any of the directories in '" << PATTERNS_DIR_ENV << "'\n";
+            return false;
+        }
+
+        presetPath = fs::path(presetDirs) / presetPath;
     }
 
     gzmsg << "Loading pattern_preset '" << presetName << "'...\n";
