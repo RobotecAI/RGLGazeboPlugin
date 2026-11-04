@@ -1,0 +1,10 @@
+RGLGazeboPlugin
+Copyright 2022-2026 Robotec.ai sp. z o.o.
+
+This product includes software derived from gz-gui (Apache-2.0),
+Copyright (C) 2022 Open Source Robotics Foundation.
+RGLVisualize is derived from the gz-gui PointCloud plugin,
+https://github.com/gazebosim/gz-gui
+
+This product downloads and uses RobotecGPULidar (Apache-2.0),
+Copyright Robotec.ai sp. z o.o., https://github.com/RobotecAI/RobotecGPULidar
