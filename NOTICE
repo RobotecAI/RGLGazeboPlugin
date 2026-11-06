@@ -8,3 +8,8 @@ https://github.com/gazebosim/gz-gui
 
 This product downloads and uses RobotecGPULidar (Apache-2.0),
 Copyright Robotec.ai sp. z o.o., https://github.com/RobotecAI/RobotecGPULidar
+
+The Livox presets in lidar_patterns/ (LivoxAvia, LivoxHorizon, LivoxMid40, LivoxMid70, LivoxMid360,
+LivoxTele15) are derived from Livox's published scan patterns, scan_mode/*.csv of livox_laser_simulation
+(MIT License), Copyright (c) 2021 livox, https://github.com/Livox-SDK/livox_laser_simulation.
+The licence text is in lidar_patterns/LICENSE-livox.txt.
